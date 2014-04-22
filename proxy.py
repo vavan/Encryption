@@ -20,14 +20,7 @@ class RecordMixIn:
     def __init__(self):
         self.unsecure = None
     def nice(self, data):
-        out = ''
-        for c in data:
-            i = ord(c)
-            if i < 127:
-                out += ':%02s'%c
-            else:
-                out += ':%02X'%i
-        return out
+        return  ":".join("{:02x}".format(ord(c)) for c in data)
     def wsend(self, data):
         logging.debug(">>>%s"%self.nice(data))
     def wrecv(self, data):
@@ -107,12 +100,22 @@ class Client(Pipe):
         self.s.connect((self.ip, int(self.port)))
         log("Client connected")
 
+class Socket2(socket.socket):
+    def __init__(self, other):
+        fd = dup(other.fileno())
+        socket.socket.__init__(self, other.family, other.type, other.proto, fileno=fd)
+        self.settimeout(other.gettimeout())
+    def recv(self, buf, flags = 0):
+        log("!!!!!!!!!!!!!")
+        return super.recv(buf, flags)
+
 class Server(Pipe):
     def __init__(self, parent, secure, socket):
         Pipe.__init__(self, parent, secure, socket)
     def create(self):
         if self.secure:
-            self.s = ssl.wrap_socket(self.s,
+            z = Socket2(self.s)
+            self.s = ssl.wrap_socket(z,
                                server_side=True,
                                certfile="cert.pem",
                                keyfile="cert.pem",
