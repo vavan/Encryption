@@ -20,9 +20,9 @@ class RecordMixIn:
     fn = None
     def __init__(self):
         self.unsecure = None
-        self.fn = fn
+        self.fn = RecordMixIn.fn
         if self.fn:
-            self.f = open(fn, 'wb+')
+            self.f = open(self.fn, 'wb+')
     def __del__(self):
         if self.fn:
             self.f.close()
