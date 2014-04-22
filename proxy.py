@@ -19,10 +19,19 @@ def log(msg):
 class RecordMixIn:
     def __init__(self):
         self.unsecure = None
+    def nice(self, data):
+        out = ''
+        for c in data:
+            i = ord(c)
+            if i < 127:
+                out += '%02s:'%c
+            else:
+                out += '%02X:'%i
+        return out
     def wsend(self, data):
-        logging.debug(">>", data)
+        logging.debug(">>", nice(data))
     def wrecv(self, data):
-        logging.debug("<<", data)
+        logging.debug("<<", nice(data))
 
 
 
