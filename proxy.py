@@ -16,17 +16,9 @@ logging.basicConfig(level=logging.DEBUG,
 def log(msg):
     logging.error(msg)
 
-
-class DummyMixIn:
-    def __init__(self, fn):
-        self.unsecure = None
-    def wsend(self, data):
-        pass
-    def wrecv(self, data):
-        pass
-
 class RecordMixIn:
-    def __init__(self, fn):
+    fn = None
+    def __init__(self):
         self.unsecure = None
         self.fn = fn
         if self.fn:
@@ -45,7 +37,7 @@ class RecordMixIn:
 
 
 
-class Pipe(threading.Thread, DummyMixIn):
+class Pipe(threading.Thread):
     BUFFER_SIZE = 10000
     def __init__(self, parent, secure, socket = None):
         threading.Thread.__init__(self)
@@ -61,8 +53,11 @@ class Pipe(threading.Thread, DummyMixIn):
         self.other = other
         other.other = self
     def recv(self, data):
-        self.wrecv(data)
-        self.other.send(data)
+        data = self.s.recv(Pipe.BUFFER_SIZE)
+        log("Pipe received %s bytes"%len(data))
+        if data:
+            self.other.send(data)
+        return data
     def unqueue(self):
         for i in self.queue:
             log("Pipe un-queued %d bytes"%len(i))
@@ -74,7 +69,6 @@ class Pipe(threading.Thread, DummyMixIn):
             self.queue.append(data)
         else:
             log("Pipe send %d bytes"%len(data))
-            self.wsend(data)
             self.s.send(data)
     def stop(self):
         self.running = False
@@ -86,12 +80,9 @@ class Pipe(threading.Thread, DummyMixIn):
         self.unqueue()
         while self.running:
             try:
-                data = self.s.recv(Pipe.BUFFER_SIZE)
-                log("Pipe received %s bytes"%len(data))
-                if not data:
+                if not self.recv():
                     log("Pipe disconnected")
                     break
-                self.recv(data)
             except socket.timeout as e:
                 log("***: %s"%str(e))
                 break
@@ -105,8 +96,6 @@ class Pipe(threading.Thread, DummyMixIn):
         self.s = None
         self.parent.disconnect(self)
 
-
-
 class Client(Pipe):
     def __init__(self, parent, secure, ip, port):
         Pipe.__init__(self, parent, secure)
@@ -114,20 +103,17 @@ class Client(Pipe):
     def create(self):
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         if self.secure:
-            self.unsecure = self.s
             self.s = ssl.wrap_socket(self.unsecure,
                                ca_certs="cert.pem",
                                cert_reqs=ssl.CERT_REQUIRED)
         self.s.connect((self.ip, int(self.port)))
         log("Client connected")
 
-class Server(Pipe, RecordMixIn):
-    def __init__(self, parent, secure, socket, fn):
+class Server(Pipe):
+    def __init__(self, parent, secure, socket):
         Pipe.__init__(self, parent, secure, socket)
-        RecordMixIn.__init__(self, fn)
     def create(self):
         if self.secure:
-            self.unsecure = self.s
             self.s = ssl.wrap_socket(self.unsecure,
                                server_side=True,
                                certfile="cert.pem",
@@ -135,8 +121,23 @@ class Server(Pipe, RecordMixIn):
                                ssl_version=ssl.PROTOCOL_SSLv23)
         log("Server connected")
 
+class DumpServer(Server, RecordMixIn):
+    def __init__(self, parent, secure, socket):
+        Server.__init__(self, parent, secure, socket)
+        RecordMixIn.__init__(self)
+        self.unsecure = self.s
+    def recv(self, data):
+        data = self.unsecure.recv(Pipe.BUFFER_SIZE)
+        log("Unsecured Pipe received %s bytes"%len(data))
+##        if data:
+##            self.other.send(data)
+        return data
+
+class KeyMngr:
+    pass
+
 class Listener:
-    def __init__(self, server_url, client_url, dump = None):
+    def __init__(self, server_url, client_url, Server_Class):
         self.secure, self.ip, self.port = server_url
         self.client_url = client_url
         self.dump = dump
@@ -159,7 +160,7 @@ class Listener:
                 log("Accepted connection from %s"%str(addr))
 
                 c = Client(self, *self.client_url)
-                s = Server(self, self.secure, socket, self.dump)
+                s = Server_Class(self, self.secure, socket)
 
                 self.children.append( c )
                 self.children.append( s )
@@ -185,10 +186,12 @@ if len(sys.argv) == 3:
     client = sys.argv[2]
     if len(sys.argv) == 4:
         dump = sys.argv[3]
+        Server_Class = DumpServer
+        RecordMixIn.fn = dump
     else:
-        dump = None
+        Server_Class = Server
 
-    ps = Listener(parse_url(server), parse_url(client), dump)
+    ps = Listener(parse_url(server), parse_url(client), Server_Class)
     ps.start()
 else:
     print("USAGE: [s]serverip:port [s]clientip:port [dump]")
