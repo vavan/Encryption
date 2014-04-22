@@ -112,7 +112,7 @@ class Client(Pipe):
             self.s = ssl.wrap_socket(self.unsecure,
                                ca_certs="cert.pem",
                                cert_reqs=ssl.CERT_REQUIRED)
-        self.s.connect((self.ip, self.port))
+        self.s.connect((self.ip, int(self.port)))
         log("Client connected")
 
 class Server(Pipe, RecordMixIn):
@@ -136,7 +136,7 @@ class Listener:
         self.children = []
     def create(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        s.bind((self.ip, self.port))
+        s.bind((self.ip, int(self.port)))
         s.listen(1)
         return s
     def stop(self):
