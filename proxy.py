@@ -156,7 +156,7 @@ class Listener:
 
                 self.children.append( c )
                 self.children.append( s )
-                c.set_pipe(s)
+                c.join_pipe(s)
                 c.start()
                 s.start()
             except KeyboardInterrupt:
