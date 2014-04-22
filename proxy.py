@@ -87,16 +87,13 @@ class Pipe(threading.Thread, DummyMixIn):
                     break
                 self.recv(data)
             except socket.timeout as e:
-                print("***:", e)
+                log("***:", e)
                 break
             except socket.error as e:
-                print("***:", e)
+                log("***:", e)
                 break
-            except KeyboardInterrupt:
-                self.other.running = False
-                self.running = False
-                print("EXIT")
-                break
+        log("Pipe closed")
+        self.other.stop()
         self.s.close()
         self.s = None
         self.parent.disconnect(self)
@@ -129,6 +126,7 @@ class Server(Pipe, RecordMixIn):
                                certfile="cert.pem",
                                keyfile="cert.pem",
                                ssl_version=ssl.PROTOCOL_SSLv23)
+        log("Server connected")
 
 class Listener:
     def __init__(self, server_url, client_url, dump = None):
