@@ -29,9 +29,9 @@ class RecordMixIn:
                 out += ':%02X'%i
         return out
     def wsend(self, data):
-        logging.debug(">>>%s"%nice(data))
+        logging.debug(">>>%s"%self.nice(data))
     def wrecv(self, data):
-        logging.debug("<<<%s"%nice(data))
+        logging.debug("<<<%s"%self.nice(data))
 
 
 
