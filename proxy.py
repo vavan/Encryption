@@ -103,7 +103,7 @@ class Client(Pipe):
     def create(self):
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         if self.secure:
-            self.s = ssl.wrap_socket(self.unsecure,
+            self.s = ssl.wrap_socket(self.s,
                                ca_certs="cert.pem",
                                cert_reqs=ssl.CERT_REQUIRED)
         self.s.connect((self.ip, int(self.port)))
@@ -114,7 +114,7 @@ class Server(Pipe):
         Pipe.__init__(self, parent, secure, socket)
     def create(self):
         if self.secure:
-            self.s = ssl.wrap_socket(self.unsecure,
+            self.s = ssl.wrap_socket(self.s,
                                server_side=True,
                                certfile="cert.pem",
                                keyfile="cert.pem",
