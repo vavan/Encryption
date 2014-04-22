@@ -17,23 +17,12 @@ def log(msg):
     logging.error(msg)
 
 class RecordMixIn:
-    fn = None
     def __init__(self):
         self.unsecure = None
-        self.fn = fn
-        if self.fn:
-            self.f = open(fn, 'wb+')
-    def __del__(self):
-        if self.fn:
-            self.f.close()
     def wsend(self, data):
-        if self.fn:
-            self.f.write("\r\n-->>--\r\n")
-            self.f.write(data)
+        logging.debug(">>", data)
     def wrecv(self, data):
-        if self.fn:
-            self.f.write("\r\n--<<--\r\n")
-            self.f.write(data)
+        logging.debug("<<", data)
 
 
 
@@ -129,6 +118,7 @@ class DumpServer(Server, RecordMixIn):
     def recv(self):
         data = self.unsecure.recv(Pipe.BUFFER_SIZE)
         log("Unsecured Pipe received %s bytes"%len(data))
+        self.wrecv(data)
 ##        if data:
 ##            self.other.send(data)
         return data
@@ -185,9 +175,7 @@ if len(sys.argv) >= 3:
     server = sys.argv[1]
     client = sys.argv[2]
     if len(sys.argv) == 4:
-        dump = sys.argv[3]
         Server_Class = DumpServer
-        RecordMixIn.fn = dump
     else:
         Server_Class = Server
 
