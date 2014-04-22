@@ -4,11 +4,16 @@ import socket
 import sys
 import threading, time
 import ssl
+import logging
 
-debug = 0
+logging.basicConfig(level=logging.DEBUG,
+                        format='%(asctime)s %(message)s',
+                        filename='~/Encryption/sec.log',
+                        filemode='a'
+                        )
+
 def log(msg):
-    if debug:
-        print(msg)
+    logging.error(msg)
 
 
 class DummyMixIn:
@@ -164,6 +169,7 @@ class Listener:
         listen.close()
         self.stop()
         print("EXIT")
+        time.sleep(1)
 
 
 def parse_url(url):
