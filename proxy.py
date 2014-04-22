@@ -140,7 +140,7 @@ class Listener:
     def __init__(self, server_url, client_url, Server_Class):
         self.secure, self.ip, self.port = server_url
         self.client_url = client_url
-        self.dump = dump
+        self.Server_Class = Server_Class
         self.children = []
     def create(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -160,7 +160,7 @@ class Listener:
                 log("Accepted connection from %s"%str(addr))
 
                 c = Client(self, *self.client_url)
-                s = Server_Class(self, self.secure, socket)
+                s = self.Server_Class(self, self.secure, socket)
 
                 self.children.append( c )
                 self.children.append( s )
