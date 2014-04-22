@@ -90,6 +90,7 @@ class Pipe(threading.Thread, DummyMixIn):
                 log("Pipe received %s bytes"%len(data))
                 if not data:
                     log("Pipe disconnected")
+                    self.stop()
                     break
                 self.recv(data)
             except socket.timeout as e:
