@@ -159,18 +159,18 @@ class Listener:
                 socket, addr = listen.accept()
                 log("Accepted connection from %s"%str(addr))
 
-                c = Client(self, *self.client_url)
                 s = self.Server_Class(self, self.secure, socket)
-
-                self.children.append( c )
                 self.children.append( s )
-                c.join_pipe(s)
-                c.start()
                 s.start()
+                if not isinstance(s, RecordMixIn):
+                    c = Client(self, *self.client_url)
+                    self.children.append( c )
+                    c.join_pipe(s)
+                    c.start()
             except KeyboardInterrupt:
                 break
-        listen.close()
         self.stop()
+        listen.close()
         print("EXIT")
         time.sleep(1)
 
