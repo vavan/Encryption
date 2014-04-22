@@ -8,7 +8,7 @@ import logging
 
 logging.basicConfig(level=logging.DEBUG,
                         format='%(asctime)s %(message)s',
-                        filename='~/Encryption/sec.log',
+                        filename='sec.log',
                         filemode='a'
                         )
 
