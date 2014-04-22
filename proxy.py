@@ -52,7 +52,7 @@ class Pipe(threading.Thread):
     def join_pipe(self, other):
         self.other = other
         other.other = self
-    def recv(self, data):
+    def recv(self):
         data = self.s.recv(Pipe.BUFFER_SIZE)
         log("Pipe received %s bytes"%len(data))
         if data:
@@ -126,7 +126,7 @@ class DumpServer(Server, RecordMixIn):
         Server.__init__(self, parent, secure, socket)
         RecordMixIn.__init__(self)
         self.unsecure = self.s
-    def recv(self, data):
+    def recv(self):
         data = self.unsecure.recv(Pipe.BUFFER_SIZE)
         log("Unsecured Pipe received %s bytes"%len(data))
 ##        if data:
@@ -181,7 +181,7 @@ def parse_url(url):
     else:
         return [False,] + url.split(':')
 
-if len(sys.argv) == 3:
+if len(sys.argv) >= 3:
     server = sys.argv[1]
     client = sys.argv[2]
     if len(sys.argv) == 4:
