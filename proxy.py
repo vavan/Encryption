@@ -5,7 +5,7 @@ import sys
 import threading, time
 import ssl
 
-debug = 0
+debug = 1
 def log(msg):
     if debug:
         print(msg)
