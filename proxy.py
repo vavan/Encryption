@@ -80,7 +80,7 @@ class Pipe(threading.Thread, DummyMixIn):
         self.unqueue()
         while self.running:
             try:
-                data = self.s.recv(Base.BUFFER_SIZE)
+                data = self.s.recv(Pipe.BUFFER_SIZE)
                 log("Pipe received %s bytes"%len(data))
                 if not data:
                     log("Pipe disconnected")
