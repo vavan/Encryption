@@ -181,7 +181,7 @@ def parse_url(url):
     else:
         return [False,] + url.split(':')
 
-if len(sys.argv) == 3:
+if len(sys.argv) >= 3:
     server = sys.argv[1]
     client = sys.argv[2]
     if len(sys.argv) == 4:
