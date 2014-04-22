@@ -12,6 +12,7 @@ logging.basicConfig(level=logging.DEBUG,
                         filemode='a'
                         )
 
+
 def log(msg):
     logging.error(msg)
 
