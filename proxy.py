@@ -8,142 +8,162 @@ import ssl
 debug = 0
 def log(msg):
     if debug:
-        print msg
+        print(msg)
 
-class Base:
-    BUFFER_SIZE = 10000
-    def __init__(self, secure = None, ip = None, port = 0):
-        self.secure = secure
-        self.ip = ip
-        self.port = int(port)        
-        self.running = False
-        self.debug = False
-    def set_pipe(self, other):
-        self.other = other
-        other.other = self
-    def recv(self, data):
-        self.other.send(data)
 
-class Record(Base):
+class DummyMixIn:
     def __init__(self, fn):
-        Base.__init__(self)
-        self.fn = fn
-        self.f = open(fn, 'wb+')
-    def __del__(self):
-        self.f.close()
-    def send(self, data):
-        self.f.write(data)
-    def start(self):
+        self.unsecure = None
+    def wsend(self, data):
+        pass
+    def wrecv(self, data):
         pass
 
-class Client(Base, threading.Thread):
-    def __init__(self, secure, ip, port):
-        Base.__init__(self, secure, ip, port)
-        threading.Thread.__init__(self)
+class RecordMixIn:
+    def __init__(self, fn):
+        self.unsecure = None
+        self.fn = fn
+        if self.fn:
+            self.f = open(fn, 'wb+')
+    def __del__(self):
+        if self.fn:
+            self.f.close()
+    def wsend(self, data):
+        if self.fn:
+            self.f.write("\r\n-->>--\r\n")
+            self.f.write(data)
+    def wrecv(self, data):
+        if self.fn:
+            self.f.write("\r\n--<<--\r\n")
+            self.f.write(data)
+
+
+
+class Pipe(threading.Thread, DummyMixIn):
+    BUFFER_SIZE = 10000
+    def __init__(self, parent, secure, socket = None):
+        self.parent = parent
+        self.secure = secure
+        self.s = socket
         self.queue = []
-        self.s = None
+        self.running = False
     def __del__(self):
         if self.s != None:
             self.s.close()
+    def join_pipe(self, other):
+        self.other = other
+        other.other = self
+    def recv(self, data):
+        self.wrecv(data)
+        self.other.send(data)
     def unqueue(self):
         for i in self.queue:
-            log("Client un-queued %d bytes"%len(i))
+            log("Pipe un-queued %d bytes"%len(i))
             self.s.send(i)
-        self.queue = []   
-    def send(self, data):   
+        self.queue = []
+    def send(self, data):
         if self.running == False:
-            log("Client queued %d bytes"%len(data))       
+            log("Pipe queued %d bytes"%len(data))
             self.queue.append(data)
         else:
-            log("Client send %d bytes"%len(data))
+            log("Pipe send %d bytes"%len(data))
+            self.wsend(data)
             self.s.send(data)
+    def stop(self):
+        self.running = False
+    def create(self):
+        pass
     def run(self):
-        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        if self.secure:
-            self.s = ssl.wrap_socket(s,
-                               ca_certs="cert.pem",
-                               cert_reqs=ssl.CERT_REQUIRED)
-        else:
-            self.s = s
-        self.s.connect((self.ip, self.port))
-        log("Client connected")
+        self.create()
         self.running = True
         self.unqueue()
         while self.running:
             try:
                 data = self.s.recv(Base.BUFFER_SIZE)
-                log("Client received %s bytes"%len(data))
+                log("Pipe received %s bytes"%len(data))
                 if not data:
+                    log("Pipe disconnected")
                     break
                 self.recv(data)
             except socket.timeout as e:
-                print("***Client:", e)
+                print("***:", e)
                 break
             except socket.error as e:
-                print("***Client:", e)
+                print("***:", e)
                 break
             except KeyboardInterrupt:
                 self.other.running = False
                 self.running = False
-                print "CEXIT"
+                print("EXIT")
                 break
+        self.s.close()
+        self.s = None
+        self.parent.disconnect(self)
 
 
-class Server(Base):
-    def __init__(self, secure, ip, port, client):
-        Base.__init__(self, secure, ip, port)
-        self.client = client
-    def send(self, data):
-        log("Server send %d bytes"%len(data))
-        self.conn.send(data)
-    def start(self):
+
+class Client(Pipe):
+    def __init__(self, parent, secure, ip, port):
+        Pipe.__init__(self, parent, secure)
+        self.ip, self.port = (ip, port)
+    def create(self):
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.s.bind((self.ip, self.port))
-        self.s.listen(1)
-        self.running = True
-        while self.running:
+        if self.secure:
+            self.s = ssl.wrap_socket(self.unsecure,
+                               ca_certs="cert.pem",
+                               cert_reqs=ssl.CERT_REQUIRED)
+        self.s.connect((self.ip, self.port))
+        log("Client connected")
+
+class Server(Pipe, RecordMixIn):
+    def __init__(self, parent, secure, socket, fn):
+        Pipe.__init__(self, parent, secure, socket)
+        RecordMixIn.__init__(self, fn)
+    def create(self):
+        if self.secure:
+            self.unsecure = self.s
+            self.s = ssl.wrap_socket(self.unsecure,
+                               server_side=True,
+                               certfile="cert.pem",
+                               keyfile="cert.pem",
+                               ssl_version=ssl.PROTOCOL_SSLv23)
+
+class Listener:
+    def __init__(self, server_url, client_url, dump = None):
+        self.secure, self.ip, self.port = server_url
+        self.client_url = client_url
+        self.dump = dump
+        self.children = []
+    def create(self):
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.bind((self.ip, self.port))
+        s.listen(1)
+        return s
+    def stop(self):
+        for i in self.children:
+            i.stop()
+    def disconnect(self, child):
+        self.children.remove( child )
+    def start(self):
+        listen = self.create()
+        while 1:
             try:
-                conn, addr = self.s.accept()
-                if self.secure:
-                    self.conn = ssl.wrap_socket(conn,
-                                           server_side=True,
-                                           certfile="cert.pem",
-                                           keyfile="cert.pem",
-                                           ssl_version=ssl.PROTOCOL_SSLv23)
-                else:
-                    self.conn = conn
-                
+                socket, addr = listen.accept()
+                log("Accepted connection from %s"%str(addr))
+
+                c = Client(self, *client_url)
+                s = Server(self, self.secure, socket, self.dump)
+
+                self.children.append( c )
+                self.children.append( s )
+                c.set_pipe(s)
+                c.start()
+                s.start()
             except KeyboardInterrupt:
-                self.s.close()
-                self.running = False
-                self.client.running = False
-                print "SEXIT"
                 break
-            self.client.start()
-            self.client.set_pipe(self)
-            log("Server accepted connection form %s"%str(addr))
-            while 1:
-                try:
-                    data = self.conn.recv(Base.BUFFER_SIZE)
-                    log("Server received: %d bytes"%len(data))
-                    if not data:
-                        self.client.running = False
-                        break
-                    self.recv(data)
-                except socket.timeout as e:
-                    print("Server", e)
-                    break
-                except socket.error as e:
-                    print("Server", e)
-                    break
-                except KeyboardInterrupt:
-                    self.s.close()
-                    self.other.running = False
-                    self.running = False
-                    print "SEXIT"
-                    break
-            self.conn.close()
-            time.sleep(1)
+        listen.close()
+        self.stop()
+        print("EXIT")
 
 
 def parse_url(url):
@@ -155,15 +175,15 @@ def parse_url(url):
 if len(sys.argv) == 3:
     server = sys.argv[1]
     client = sys.argv[2]
-    if client.find(':') != -1:
-        c = Client(*parse_url(client))
+    if len(sys.argv) == 4:
+        dump = sys.argv[3]
     else:
-        c = Record(client)
+        dump = None
 
-    ps = Server(*parse_url(server), client=c)
+    ps = Listener(parse_url(server), parse_url(client), dump)
     ps.start()
 else:
-    print "USAGE: Sip Sport Cip Cport"
-    print "OR USAGE: Sip Sport store_to_file"
+    print("USAGE: [s]serverip:port [s]clientip:port [dump]")
+
 
 
