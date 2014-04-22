@@ -151,7 +151,7 @@ class Listener:
                 socket, addr = listen.accept()
                 log("Accepted connection from %s"%str(addr))
 
-                c = Client(self, *client_url)
+                c = Client(self, *self.client_url)
                 s = Server(self, self.secure, socket, self.dump)
 
                 self.children.append( c )
