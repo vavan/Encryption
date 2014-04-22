@@ -42,6 +42,7 @@ class RecordMixIn:
 class Pipe(threading.Thread, DummyMixIn):
     BUFFER_SIZE = 10000
     def __init__(self, parent, secure, socket = None):
+        threading.Thread.__init__(self)
         self.parent = parent
         self.secure = secure
         self.s = socket
