@@ -24,14 +24,14 @@ class RecordMixIn:
         for c in data:
             i = ord(c)
             if i < 127:
-                out += '%02s:'%c
+                out += ':%02s'%c
             else:
-                out += '%02X:'%i
+                out += ':%02X'%i
         return out
     def wsend(self, data):
-        logging.debug(">>", nice(data))
+        logging.debug(">>>%s"%nice(data))
     def wrecv(self, data):
-        logging.debug("<<", nice(data))
+        logging.debug("<<<%s"%nice(data))
 
 
 
