@@ -81,7 +81,7 @@ class Pipe(Connection):
             log("Pipe send %d bytes"%len(data))
             self.s.send(data)
     def init(self):
-        super.init(self)
+        Connection.init(self)
         self.unqueue()
 
 class Client(Pipe):
@@ -97,7 +97,7 @@ class Server(Pipe):
     def __init__(self, parent, socket):
         Pipe.__init__(self, parent, socket)
     def init(self):
-        super.init(self)
+        Pipe.init(self)
         try:
             self.s = ssl.wrap_socket(self.s,
                            server_side=True,
@@ -107,7 +107,7 @@ class Server(Pipe):
             log("Server connected")
         except:
             log("SSL handshake failed")
-            KeyMngr.instance.forgetorget(self.s.getpeername())
+            KeyMngr.instance.forget(KeyMngr.name(self.s.getpeername()))
 
 
 
@@ -118,10 +118,10 @@ class KeyServer(Connection):
     BY = "Heroyam Slava!"
 
     def __init__(self, parent, socket):
-        super.__init__(parent, socket)
+        Connection.__init__(self, parent, socket)
         self.state = KeyServer.WAIT_HI
         self.public_key = None
-        self.key_builder = KeyBuilder()
+        self.key_builder = KeyBuilder(KeyMngr.name(self.s.getpeername()))
         self.cipher_file = ''
     def encode(self, key, data):
         return self.key_builder.encode(key, data)
@@ -143,7 +143,7 @@ class KeyServer(Connection):
             return True
         else:
             if self.is_ack_valid(data):
-                KeyMngr.instance.remember(self.s.getpeername(), self.cipher_file)
+                KeyMngr.instance.remember(KeyMngr.name(self.s.getpeername()), self.cipher_file)
                 log("Key session done")
             else:
                 log("Key session fail!")
@@ -172,6 +172,9 @@ class KeyMngr:
     @staticmethod
     def create():
         KeyMngr.instance = KeyMngr()
+    @staticmethod
+    def name(addr):
+        return addr[0]+'_'+str(addr[1])
     def __init__(self):
         self.map = {}
         #TODO bring up the map from file structure
@@ -233,9 +236,9 @@ def parse_url(url):
 if len(sys.argv) >= 3:
     server = sys.argv[1]
     client = sys.argv[2]
-    key_mngr = KeyMngr()
+    KeyMngr.create()
 
-    ps = Listener(parse_url(server), parse_url(client), key_mngr)
+    ps = Listener(parse_url(server), parse_url(client))
     ps.start()
 else:
     print("USAGE: serverip:port clientip:port")
