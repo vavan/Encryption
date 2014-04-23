@@ -7,6 +7,7 @@ import time
 import ssl
 import logging
 import struct
+from key import KeyBuilder
 
 logging.basicConfig(level=logging.DEBUG,
                         format='%(asctime)s %(message)s',
@@ -98,76 +99,97 @@ class Server(Pipe):
         Pipe.__init__(self, parent, socket)
     def init(self):
         super.init(self)
-        self.s = ssl.wrap_socket(self.s,
+        try:
+            self.s = ssl.wrap_socket(self.s,
                            server_side=True,
                            certfile="cert.pem",
                            keyfile="cert.pem",
                            ssl_version=ssl.PROTOCOL_SSLv23)
-        log("Server connected")
+            log("Server connected")
+        except:
+            log("SSL handshake failed")
+            KeyMngr.instance.forgetorget(self.s.getpeername())
+
 
 
 class KeyServer(Connection):
-    INIT = 0
-    PUBLIC = 1
-    CIPHER = 2
+    WAIT_HI = 0
+    WAIT_BY = 1
     HI = "Slava Ukraini!"
     BY = "Heroyam Slava!"
 
     def __init__(self, parent, socket):
-        super.__init__(self, parent, socket)
-        self.state = KeyServer.INIT
+        super.__init__(parent, socket)
+        self.state = KeyServer.WAIT_HI
         self.public_key = None
-        self.hello = ''
+        self.key_builder = KeyBuilder()
+        self.cipher_file = ''
+    def encode(self, key, data):
+        return self.key_builder.encode(key, data)
+    def create_cipher(self, key, data):
+        cipher, self.cipher_file = self.key_builder.generate_cipher()
+        return KeyServer.HI + self.serialize_size(len(cipher)) + cipher
     def recv(self):
         data = self._recv()
         log("KeyServer received %s bytes"%len(data))
-
-        if(self.state == KeyServer.INIT):
+        if(self.state == KeyServer.WAIT_HI):
             self.public_key = self.parse_hello(data)
-            if self.public_key:
-                self.state = KeyServer.PUBLIC
-            return True
-        elif (self.state == KeyServer.PUBLIC):
+            if not self.public_key:
+                log("Brocken HI, close connection")
+                return False
             cipher = self.create_cipher()
             encoded = self.encode(cipher, self.public_key)
             self.s.send(encoded)
-            self.state = KeyServer.CIPHER
+            self.state = KeyServer.WAIT_BY
             return True
         else:
             if self.is_ack_valid(data):
+                KeyMngr.instance.remember(self.s.getpeername(), self.cipher_file)
                 log("Key session done")
             else:
                 log("Key session fail!")
             return False
+    def parse_size(self, data):
+        return (ord(data[0])<<8) | ord(data[1])
+    def serialize_size(self, size):
+        return chr(size>>8)+chr(size&0xFF)
     def parse_hello(self, data):
-        self.hello += data
-        if len(data) > len(self.HI + 2):
-            if self.hello.startswith(self.HI):
-                public_key_length = struct.unpack('H', data[len(self.HI):len(self.HI)+2])
-                if len(data) > len(self.HI) + 2 + public_key_length:
-                    public_key = data[len(self.HI) + 2:]
+        SIZE_FIELD = 2
+        if len(data) >= len(self.HI) + SIZE_FIELD:
+            if data.startswith(self.HI):
+                size_field = data[len(self.HI):len(self.HI)+SIZE_FIELD]
+                public_key_length = self.parse_size(size_field)
+                if len(data) == len(self.HI) + SIZE_FIELD + public_key_length:
+                    public_key = self.hello[len(self.HI) + SIZE_FIELD:]
                     return public_key
         return None
-    def encode(self, data, key):
-        pass
     def is_ack_valid(self, data):
         return data == self.BY
 
 
-
 class KeyMngr:
+    instance = None
+
+    @staticmethod
+    def create():
+        KeyMngr.instance = KeyMngr()
     def __init__(self):
-        pass
+        self.map = {}
+        #TODO bring up the map from file structure
     def is_known(self, addr):
-        pass
+        return self.map.has_key(addr)
+    def remember(self, addr, key_file):
+        self.map[addr] = key_file
+    def forget(self, addr):
+        del self.map[addr]
+
 
 
 class Listener:
-    def __init__(self, server_url, client_url, key_mngr):
+    def __init__(self, server_url, client_url):
         self.ip, self.port = server_url
         self.client_url = client_url
         self.children = []
-        self.key_mngr = key_mngr
     def create(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.bind((self.ip, int(self.port)))
@@ -185,7 +207,7 @@ class Listener:
                 socket, addr = listen.accept()
                 log("Accepted connection from %s"%str(addr))
 
-                if self.key_mngr.is_known(addr):
+                if KeyMngr.instance.is_known(addr):
                     s = Server(self, socket)
                     self.children.append( s )
                     s.start()
