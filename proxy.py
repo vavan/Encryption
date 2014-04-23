@@ -56,7 +56,6 @@ class Connection(threading.Thread):
 
 
 class Pipe(Connection):
-
     def __init__(self, parent, socket = None):
         Connection.__init__(self, parent, socket)
         self.queue = []
