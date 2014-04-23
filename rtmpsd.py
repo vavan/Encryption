@@ -2,9 +2,12 @@
 
 import socket
 import sys
-import threading, time
+import threading
+import time
 import ssl
 import logging
+import struct
+from key import KeyBuilder
 
 logging.basicConfig(level=logging.DEBUG,
                         format='%(asctime)s %(message)s',
@@ -16,35 +19,51 @@ logging.basicConfig(level=logging.DEBUG,
 def log(msg):
     logging.error(msg)
 
-class RecordMixIn:
-    def __init__(self):
-        self.unsecure = None
-    def nice(self, data):
-        return  ":".join("{:02x}".format(ord(c)) for c in data)
-    def wsend(self, data):
-        logging.debug(">>>%s"%nice(data))
-    def wrecv(self, data):
-        logging.debug("<<<%s"%nice(data))
-
-
-
-class Pipe(threading.Thread):
-    BUFFER_SIZE = 10000
-    def __init__(self, parent, secure, socket = None):
+class Connection(threading.Thread):
+    BUFFER_SIZE = 16384
+    def __init__(self, parent, socket = None):
         threading.Thread.__init__(self)
         self.parent = parent
-        self.secure = secure
         self.s = socket
-        self.queue = []
         self.running = False
     def __del__(self):
         if self.s != None:
             self.s.close()
+    def _recv(self):
+        return self.s.recv(Pipe.BUFFER_SIZE)
+    def stop(self):
+        self.running = False
+    def init(self):
+        self.running = True
+    def run(self):
+        self.init()
+        while self.running:
+            try:
+                if not self.recv():
+                    log("Disconnected")
+                    break
+            except socket.timeout as e:
+                log("***: %s"%str(e))
+                break
+            except socket.error as e:
+                log("***: %s"%str(e))
+                break
+        log("Closed")
+        self.stop()
+        self.s.close()
+        self.s = None
+        self.parent.disconnect(self)
+
+
+class Pipe(Connection):
+    def __init__(self, parent, socket = None):
+        Connection.__init__(self, parent, socket)
+        self.queue = []
     def join_pipe(self, other):
         self.other = other
         other.other = self
     def recv(self):
-        data = self.s.recv(Pipe.BUFFER_SIZE)
+        data = self._recv()
         log("Pipe received %s bytes"%len(data))
         if data:
             self.other.send(data)
@@ -61,94 +80,114 @@ class Pipe(threading.Thread):
         else:
             log("Pipe send %d bytes"%len(data))
             self.s.send(data)
-    def stop(self):
-        self.running = False
-    def create(self):
-        pass
-    def run(self):
-        self.create()
-        self.running = True
+    def init(self):
+        super.init(self)
         self.unqueue()
-        while self.running:
-            try:
-                if not self.recv():
-                    log("Pipe disconnected")
-                    break
-            except socket.timeout as e:
-                log("***: %s"%str(e))
-                break
-            except socket.error as e:
-                log("***: %s"%str(e))
-                break
-        log("Pipe closed")
-        self.stop()
-        self.other.stop()
-        self.s.close()
-        self.s = None
-        self.parent.disconnect(self)
 
 class Client(Pipe):
-    def __init__(self, parent, secure, ip, port):
-        Pipe.__init__(self, parent, secure)
+    def __init__(self, parent, ip, port):
+        Pipe.__init__(self, parent)
         self.ip, self.port = (ip, port)
-    def create(self):
+    def init(self):
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        if self.secure:
-            self.s = ssl.wrap_socket(self.s,
-                               ca_certs="cert.pem",
-                               cert_reqs=ssl.CERT_REQUIRED)
         self.s.connect((self.ip, int(self.port)))
         log("Client connected")
 
-class Socket2(socket.socket):
-    def __init__(self, other):
-        fd = dup(other.fileno())
-        socket.socket.__init__(self, other.family, other.type, other.proto, fileno=fd)
-        self.settimeout(other.gettimeout())
-    def recv(self, buf, flags = 0):
-        log("!!!!!!!!!!!!!")
-        return super.recv(buf, flags)
-
 class Server(Pipe):
-    def __init__(self, parent, secure, socket):
-        Pipe.__init__(self, parent, secure, socket)
-    def create(self):
-        if self.secure:
-            z = Socket2(self.s)
-            self.s = ssl.wrap_socket(z,
-                               server_side=True,
-                               certfile="cert.pem",
-                               keyfile="cert.pem",
-                               ssl_version=ssl.PROTOCOL_SSLv23)
-        log("Server connected")
+    def __init__(self, parent, socket):
+        Pipe.__init__(self, parent, socket)
+    def init(self):
+        super.init(self)
+        try:
+            self.s = ssl.wrap_socket(self.s,
+                           server_side=True,
+                           certfile="cert.pem",
+                           keyfile="cert.pem",
+                           ssl_version=ssl.PROTOCOL_SSLv23)
+            log("Server connected")
+        except:
+            log("SSL handshake failed")
+            KeyMngr.instance.forgetorget(self.s.getpeername())
 
-class DumpServer(Server, RecordMixIn):
-    def __init__(self, parent, secure, socket):
-        Server.__init__(self, parent, secure, socket)
-        RecordMixIn.__init__(self)
-        self.unsecure = self.s
+
+
+class KeyServer(Connection):
+    WAIT_HI = 0
+    WAIT_BY = 1
+    HI = "Slava Ukraini!"
+    BY = "Heroyam Slava!"
+
+    def __init__(self, parent, socket):
+        super.__init__(parent, socket)
+        self.state = KeyServer.WAIT_HI
+        self.public_key = None
+        self.key_builder = KeyBuilder()
+        self.cipher_file = ''
+    def encode(self, key, data):
+        return self.key_builder.encode(key, data)
+    def create_cipher(self, key, data):
+        cipher, self.cipher_file = self.key_builder.generate_cipher()
+        return KeyServer.HI + self.serialize_size(len(cipher)) + cipher
     def recv(self):
-        data = self.unsecure.recv(Pipe.BUFFER_SIZE)
-        log("Unsecured Pipe received %s bytes"%len(data))
-        self.wrecv(data)
-##        if data:
-##            self.other.send(data)
-        return data
+        data = self._recv()
+        log("KeyServer received %s bytes"%len(data))
+        if(self.state == KeyServer.WAIT_HI):
+            self.public_key = self.parse_hello(data)
+            if not self.public_key:
+                log("Brocken HI, close connection")
+                return False
+            cipher = self.create_cipher()
+            encoded = self.encode(cipher, self.public_key)
+            self.s.send(encoded)
+            self.state = KeyServer.WAIT_BY
+            return True
+        else:
+            if self.is_ack_valid(data):
+                KeyMngr.instance.remember(self.s.getpeername(), self.cipher_file)
+                log("Key session done")
+            else:
+                log("Key session fail!")
+            return False
+    def parse_size(self, data):
+        return (ord(data[0])<<8) | ord(data[1])
+    def serialize_size(self, size):
+        return chr(size>>8)+chr(size&0xFF)
+    def parse_hello(self, data):
+        SIZE_FIELD = 2
+        if len(data) >= len(self.HI) + SIZE_FIELD:
+            if data.startswith(self.HI):
+                size_field = data[len(self.HI):len(self.HI)+SIZE_FIELD]
+                public_key_length = self.parse_size(size_field)
+                if len(data) == len(self.HI) + SIZE_FIELD + public_key_length:
+                    public_key = self.hello[len(self.HI) + SIZE_FIELD:]
+                    return public_key
+        return None
+    def is_ack_valid(self, data):
+        return data == self.BY
 
-class Key:
-    def __init__(self, addr):
-        pass
-    def get_cert(self):
-        pass
-    def get_cert(self):
-        pass
+
+class KeyMngr:
+    instance = None
+
+    @staticmethod
+    def create():
+        KeyMngr.instance = KeyMngr()
+    def __init__(self):
+        self.map = {}
+        #TODO bring up the map from file structure
+    def is_known(self, addr):
+        return self.map.has_key(addr)
+    def remember(self, addr, key_file):
+        self.map[addr] = key_file
+    def forget(self, addr):
+        del self.map[addr]
+
 
 
 class Listener:
-    def __init__(self, server_url, client_url, Server_Class):
-        self.secure, self.ip, self.port = server_url
+    def __init__(self, server_url, client_url):
+        self.ip, self.port = server_url
         self.client_url = client_url
-        self.Server_Class = Server_Class
         self.children = []
     def create(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -167,15 +206,19 @@ class Listener:
                 socket, addr = listen.accept()
                 log("Accepted connection from %s"%str(addr))
 
+                if KeyMngr.instance.is_known(addr):
+                    s = Server(self, socket)
+                    self.children.append( s )
+                    s.start()
 
-                s = self.Server_Class(self, self.secure, socket)
-                self.children.append( s )
-                s.start()
-                if not isinstance(s, RecordMixIn):
                     c = Client(self, *self.client_url)
                     self.children.append( c )
                     c.join_pipe(s)
                     c.start()
+                else:
+                    s = KeyServer(self, socket)
+                    self.children.append( s )
+                    s.start()
             except KeyboardInterrupt:
                 break
         self.stop()
@@ -185,23 +228,17 @@ class Listener:
 
 
 def parse_url(url):
-    if url.startswith('s'):
-        return [True,] + url[1:].split(':')
-    else:
-        return [False,] + url.split(':')
+    return url.split(':')
 
 if len(sys.argv) >= 3:
     server = sys.argv[1]
     client = sys.argv[2]
-    if len(sys.argv) == 4:
-        Server_Class = DumpServer
-    else:
-        Server_Class = Server
+    key_mngr = KeyMngr()
 
-    ps = Listener(parse_url(server), parse_url(client), Server_Class)
+    ps = Listener(parse_url(server), parse_url(client), key_mngr)
     ps.start()
 else:
-    print("USAGE: [s]serverip:port [s]clientip:port [dump]")
+    print("USAGE: serverip:port clientip:port")
 
 
 
