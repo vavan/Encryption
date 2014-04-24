@@ -7,13 +7,8 @@ import time
 import ssl
 import logging
 import struct
-from key import KeyBuilder
+from key import KeyBuilder, Secret
 
-logging.basicConfig(level=logging.DEBUG,
-                        format='%(asctime)s %(message)s',
-                        filename='sec.log',
-                        filemode='a'
-                        )
 
 
 def log(msg):
@@ -84,6 +79,7 @@ class Pipe(Connection):
         Connection.init(self)
         self.unqueue()
 
+
 class Client(Pipe):
     def __init__(self, parent, ip, port):
         Pipe.__init__(self, parent)
@@ -114,8 +110,6 @@ class Server(Pipe):
 class KeyServer(Connection):
     WAIT_HI = 0
     WAIT_BY = 1
-    HI = "Slava Ukraini!"
-    BY = "Heroyam Slava!"
 
     def __init__(self, parent, socket):
         Connection.__init__(self, parent, socket)
@@ -127,7 +121,8 @@ class KeyServer(Connection):
         return self.key_builder.encode(key, data)
     def create_cipher(self, key, data):
         cipher, self.cipher_file = self.key_builder.generate_cipher()
-        return KeyServer.HI + self.serialize_size(len(cipher)) + cipher
+        #return Secret.HI + self.serialize_size(len(cipher)) + cipher
+        return cipher
     def recv(self):
         data = self._recv()
         log("KeyServer received %s bytes"%len(data))
@@ -150,20 +145,18 @@ class KeyServer(Connection):
             return False
     def parse_size(self, data):
         return (ord(data[0])<<8) | ord(data[1])
-    def serialize_size(self, size):
-        return chr(size>>8)+chr(size&0xFF)
     def parse_hello(self, data):
         SIZE_FIELD = 2
-        if len(data) >= len(self.HI) + SIZE_FIELD:
-            if data.startswith(self.HI):
-                size_field = data[len(self.HI):len(self.HI)+SIZE_FIELD]
+        if len(data) >= len(Secret.HI) + SIZE_FIELD:
+            if data.startswith(Secret.HI):
+                size_field = data[len(Secret.HI):len(Secret.HI)+SIZE_FIELD]
                 public_key_length = self.parse_size(size_field)
-                if len(data) == len(self.HI) + SIZE_FIELD + public_key_length:
-                    public_key = self.hello[len(self.HI) + SIZE_FIELD:]
+                if len(data) == len(Secret.HI) + SIZE_FIELD + public_key_length:
+                    public_key = self.hello[len(Secret.HI) + SIZE_FIELD:]
                     return public_key
         return None
     def is_ack_valid(self, data):
-        return data == self.BY
+        return data == Secret.BY
 
 
 class KeyMngr:
@@ -230,15 +223,17 @@ class Listener:
         time.sleep(1)
 
 
-def parse_url(url):
-    return url.split(':')
-
 if len(sys.argv) >= 3:
+    logging.basicConfig( level=logging.DEBUG,
+                                format='%(asctime)s %(message)s',
+                                filename='ser_sec.log',
+                                filemode='a' )
+
     server = sys.argv[1]
     client = sys.argv[2]
     KeyMngr.create()
 
-    ps = Listener(parse_url(server), parse_url(client))
+    ps = Listener(server.split(':'), client.split(':'))
     ps.start()
 else:
     print("USAGE: serverip:port clientip:port")

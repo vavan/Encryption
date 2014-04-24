@@ -1,61 +1,56 @@
-#!/usr/bin/python
-import os
+from subprocess import Popen
+
+
+class Secret:
+    HI = "Slava Ukraini!"
+    BY = "Heroyam Slava!"
 
 
 class KeyBuilder:
-    GENERATE_CERT = 'openssl genrsa -out %(private)s 1024'
-    GENERATE_PRIVATE = 'openssl genrsa -out %(private)s 1024'
-    GENERATE_PUBLIC = 'openssl rsa -in %(private)s -out %(public)s -outform PEM -pubout'
-    ENCODE = 'openssl rsautl -encrypt -inkey %(public)s -pubin -in %(infile)s -out %(outfile)s'
-    DECODE = 'openssl rsautl -decrypt -inkey %(private)s -in %(infile)s -out %(outfile)s'
+    GENERATE_CERT = 'openssl genrsa -out %(secret)s 1024'
+    GENERATE_PRIVATE = 'openssl genrsa 1024'
+    GENERATE_PUBLIC = 'openssl rsa -outform PEM -pubout'
+    ENCODE = 'openssl rsautl -encrypt -inkey %(public)s -pubin'
+    DECODE = 'openssl rsautl -decrypt -inkey %(private)s'
     def __init__(self, name):
         self.name = name
-        print ">>>>>>>>>", name
-    def cleanup(self):
-        #delete all keys excpet final CERT
-        pass
-    def __execute(self, cmd):
+        self.private = None
+    def __execute(self, cmd, indata = ''):
         print(cmd)
-        os.system(cmd)
+        p = Popen(cmd.split(), stdin=PIPE, stdout=PIPE, close_fds=True)
+        if indata:
+            p.stdin.write(indata)
+        return p.stdout.read()
     def generate_cipher(self):
-        cmd = KeyBuilder.GENERATE_CERT%{'private': self.name+'_main.pem'}
+        secret_file = self.name+'_main.pem'
+        cmd = key.GENERATE_CERT%{'secret': secret_file}
         self.__execute(cmd)
-        cipher = open(self.name+'_main.pem').read()
-        return (cipher, self.name+'_main.pem')
+        cipher = open(secret_file).read()
+        return (cipher, secret_file)
     def generate_private(self):
-        cmd = KeyBuilder.GENERATE_PRIVATE%{'private': self.name+'_pri.pem'}
-        self.__execute(cmd)
+        cmd = key.GENERATE_PRIVATE
+        self.private = self.__execute(cmd)
     def generate_public(self):
-        cmd = KeyBuilder.GENERATE_PUBLIC%{'private': self.name+'_pri.pem', 'public': self.name+'_pub.pem'}
-        self.__execute(cmd)
-        return open(self.name+'_pub.pem').read()
+        cmd = key.GENERATE_PUBLIC
+        return self.__execute(cmd, self.private)
     def encode(self, key = None, data = None):
-        if key:
-            f = open(self.name+'_pub.pem', 'w')
-            f.write(key)
-            f.close()
-        if data:
-            f = open(self.name+'.in', 'w')
-            f.write(data)
-            f.close()
-        cmd = KeyBuilder.ENCODE%{'public': self.name+'_pub.pem', 'infile': self.name+'.in', 'outfile': self.name+'.out'}
-        self.__execute(cmd)
-        if data:
-            return open(self.name+'.out').read()
-    def decode(self):
-        cmd = KeyBuilder.DECODE%{'private': self.name+'_pri.pem', 'infile': self.name+'.out', 'outfile': self.name+'.in2'}
-        self.__execute(cmd)
-        
-        
-if __name__ == "__main__":
-    kb = KeyBuilder('vova')
-    kb.generate_private()
-    kb.generate_public()
-    kb.encode(data = 'HEllo dude')
-    kb.decode()
-    
-    
-    
-    
-    
+        keyfile = self.name+'_pub.pem'
+        f = open(key, 'w')
+        f.write(key)
+        f.close()
+        cmd = key.ENCODE%{'public': keyfile}
+        encoded = self.__execute(cmd, data)
+        os.unlink(keyfile)
+        return encoded
+    def decode(self, data):
+        keyfile = self.name+'_pri.pem'
+        f = open(key, 'w')
+        f.write(key)
+        f.close()
+        cmd = key.DECODE%{'private': key}
+        decoced = self.__execute(cmd, data)
+        os.unlink(keyfile)
+        return decoded
+
+
 
