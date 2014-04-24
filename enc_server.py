@@ -119,7 +119,7 @@ class KeyServer(Connection):
         self.cipher_file = ''
     def encode(self, key, data):
         return self.key_builder.encode(key, data)
-    def create_cipher(self, key, data):
+    def create_cipher(self):
         cipher, self.cipher_file = self.key_builder.generate_cipher()
         #return Secret.HI + self.serialize_size(len(cipher)) + cipher
         return cipher
@@ -128,11 +128,13 @@ class KeyServer(Connection):
         log("KeyServer received %s bytes"%len(data))
         if(self.state == KeyServer.WAIT_HI):
             self.public_key = self.parse_hello(data)
+            print ">>>>", self.public_key
             if not self.public_key:
                 log("Brocken HI, close connection")
                 return False
             cipher = self.create_cipher()
-            encoded = self.encode(cipher, self.public_key)
+            encoded = self.encode(self.public_key, cipher)
+            print "1>>>", len(encoded), encoded
             self.s.send(encoded)
             self.state = KeyServer.WAIT_BY
             return True
@@ -152,7 +154,7 @@ class KeyServer(Connection):
                 size_field = data[len(Secret.HI):len(Secret.HI)+SIZE_FIELD]
                 public_key_length = self.parse_size(size_field)
                 if len(data) == len(Secret.HI) + SIZE_FIELD + public_key_length:
-                    public_key = self.hello[len(Secret.HI) + SIZE_FIELD:]
+                    public_key = data[len(Secret.HI) + SIZE_FIELD:]
                     return public_key
         return None
     def is_ack_valid(self, data):

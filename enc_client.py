@@ -1,4 +1,8 @@
+#!/usr/bin/python
+
+import sys
 import logging
+import socket
 from key import KeyBuilder, Secret
 
 
@@ -22,7 +26,8 @@ class KeyClient:
         data = self.create_hi()
         self.s.send(data)
 
-        data = self.s.recv(BUFFER_SIZE)
+        data = self.s.recv(887)
+        print "2>>>", len(data), data
         if not data:
             logging.error('Dropped')
             return
@@ -38,6 +43,7 @@ class KeyClient:
     def create_hi(self):
         data = Secret.HI
         public = self.key_builder.generate_public()
+        print ">>>>", public
         data += self.serialize_size(len(public))
         data += public
         return data
@@ -58,6 +64,6 @@ if len(sys.argv) >= 2:
                             filemode='a')
 
     server = sys.argv[1]
-    KeyClient().run(server.split(':'))
+    KeyClient(*server.split(':')).run()
 else:
     print("USAGE: serverip:port")
