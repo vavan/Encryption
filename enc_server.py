@@ -119,7 +119,7 @@ class KeyServer(Connection):
         self.cipher_file = ''
     def encode(self, key, data):
         return self.key_builder.encode(key, data)
-    def create_cipher(self, key, data):
+    def create_cipher(self):
         cipher, self.cipher_file = self.key_builder.generate_cipher()
         #return Secret.HI + self.serialize_size(len(cipher)) + cipher
         return cipher
@@ -128,12 +128,17 @@ class KeyServer(Connection):
         log("KeyServer received %s bytes"%len(data))
         if(self.state == KeyServer.WAIT_HI):
             self.public_key = self.parse_hello(data)
+            log("Public key: %s"%self.public_key)
             if not self.public_key:
                 log("Brocken HI, close connection")
                 return False
             cipher = self.create_cipher()
             encoded = self.encode(cipher, self.public_key)
+            log("Gonna send, bytes: %d"%len(encoded))
+
             self.s.send(encoded)
+
+            log("Sent")
             self.state = KeyServer.WAIT_BY
             return True
         else:
@@ -144,15 +149,17 @@ class KeyServer(Connection):
                 log("Key session fail!")
             return False
     def parse_size(self, data):
-        return (ord(data[0])<<8) | ord(data[1])
+        return ((data[0]<<8) | (data[1]))
     def parse_hello(self, data):
+        hi = bytes(Secret.HI, 'ASCII')
+        hi_len = len(hi)
         SIZE_FIELD = 2
-        if len(data) >= len(Secret.HI) + SIZE_FIELD:
-            if data.startswith(Secret.HI):
-                size_field = data[len(Secret.HI):len(Secret.HI)+SIZE_FIELD]
+        if len(data) >= len(hi) + SIZE_FIELD:
+            if data.startswith(hi):
+                size_field = data[hi_len:hi_len+SIZE_FIELD]
                 public_key_length = self.parse_size(size_field)
-                if len(data) == len(Secret.HI) + SIZE_FIELD + public_key_length:
-                    public_key = self.hello[len(Secret.HI) + SIZE_FIELD:]
+                if len(data) == hi_len + SIZE_FIELD + public_key_length:
+                    public_key = data[hi_len + SIZE_FIELD:]
                     return public_key
         return None
     def is_ack_valid(self, data):
@@ -172,7 +179,7 @@ class KeyMngr:
         self.map = {}
         #TODO bring up the map from file structure
     def is_known(self, addr):
-        return self.map.has_key(addr)
+        return addr in self.map
     def remember(self, addr, key_file):
         self.map[addr] = key_file
     def forget(self, addr):
@@ -221,6 +228,8 @@ class Listener:
         listen.close()
         print("EXIT")
         time.sleep(1)
+
+sys.argv = '1 0.0.0.0:8080 1'.split()
 
 
 if len(sys.argv) >= 3:

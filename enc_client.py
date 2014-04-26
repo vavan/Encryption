@@ -1,4 +1,7 @@
+import sys
 import logging
+import socket
+
 from key import KeyBuilder, Secret
 
 
@@ -22,7 +25,7 @@ class KeyClient:
         data = self.create_hi()
         self.s.send(data)
 
-        data = self.s.recv(BUFFER_SIZE)
+        data = self.s.recv(KeyClient.BUFFER_SIZE)
         if not data:
             logging.error('Dropped')
             return
@@ -34,9 +37,9 @@ class KeyClient:
             logging.error('No secret!')
         self.s.close()
     def serialize_size(self, size):
-        return chr(size>>8)+chr(size&0xFF)
+        return bytes((size>>8, size&0xFF))
     def create_hi(self):
-        data = Secret.HI
+        data = bytearray(Secret.HI, 'ASCII')
         public = self.key_builder.generate_public()
         data += self.serialize_size(len(public))
         data += public
@@ -48,7 +51,7 @@ class KeyClient:
         f.write(cipher)
         f.close()
 
-
+sys.argv = '1 127.0.0.1:8080'.split()
 
 
 if len(sys.argv) >= 2:
@@ -58,6 +61,6 @@ if len(sys.argv) >= 2:
                             filemode='a')
 
     server = sys.argv[1]
-    KeyClient().run(server.split(':'))
+    KeyClient(*server.split(':')).run()
 else:
     print("USAGE: serverip:port")
