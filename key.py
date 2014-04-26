@@ -28,8 +28,7 @@ class KeyBuilder:
         logging.debug("Execute: %s"%cmd)
         p = Popen(cmd, shell = True, stdin=PIPE, stdout=PIPE)
         if indata:
-            #p.stdin.write(indata)
-            pass #TODO
+            p.stdin.write(indata)
         return p.stdout.read()
     def generate_cipher(self):
         secret_file = self.name+'_main.pem'
