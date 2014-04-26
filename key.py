@@ -9,17 +9,17 @@ class Secret:
 
 
 class KeyBuilder:
-##    GENERATE_CERT = 'openssl genrsa -out %(secret)s 1024'
-##    GENERATE_PRIVATE = 'openssl genrsa 1024'
-##    GENERATE_PUBLIC = 'openssl rsa -outform PEM -pubout'
-##    ENCODE = 'openssl rsautl -encrypt -inkey %(public)s -pubin'
-##    DECODE = 'openssl rsautl -decrypt -inkey %(private)s'
+    GENERATE_CERT = 'openssl genrsa 1024'
+    GENERATE_PRIVATE = 'openssl genrsa 4096'
+    GENERATE_PUBLIC = 'openssl rsa -outform PEM -pubout'
+    ENCODE = 'openssl rsautl -encrypt -inkey %(public)s -pubin'
+    DECODE = 'openssl rsautl -decrypt -inkey %(private)s'
 
-    GENERATE_CERT = 'echo [secret] > %(secret)s'
-    GENERATE_PRIVATE = 'echo [private]'
-    GENERATE_PUBLIC = 'echo [public]'
-    ENCODE = 'echo [encode]  %(public)s'
-    DECODE = 'echo [decode]  %(private)s'
+##    GENERATE_CERT = 'echo [secret] > %(secret)s'
+##    GENERATE_PRIVATE = 'echo [private]'
+##    GENERATE_PUBLIC = 'echo [public]'
+##    ENCODE = 'echo [encode]  %(public)s'
+##    DECODE = 'echo [decode]  %(private)s'
 
     def __init__(self, name):
         self.name = name
