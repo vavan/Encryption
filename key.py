@@ -9,7 +9,7 @@ class Secret:
 
 
 class KeyBuilder:
-    GENERATE_CERT = 'openssl genrsa 1024'
+    GENERATE_CERT = 'openssl genrsa -out %(secret)s 1024'
     GENERATE_PRIVATE = 'openssl genrsa 4096'
     GENERATE_PUBLIC = 'openssl rsa -outform PEM -pubout'
     ENCODE = 'openssl rsautl -encrypt -inkey %(public)s -pubin'
