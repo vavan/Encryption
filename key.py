@@ -40,6 +40,7 @@ class KeyBuilder:
     def generate_private(self):
         cmd = KeyBuilder.GENERATE_PRIVATE
         self.private = self.__execute(cmd)
+        logging.debug("Private: %s"%self.private)
     def generate_public(self):
         cmd = KeyBuilder.GENERATE_PUBLIC
         return self.__execute(cmd, self.private)
@@ -57,7 +58,7 @@ class KeyBuilder:
         keyfile = self.name+'_pri.pem'
         f = open(keyfile, 'w')
 
-        f.write(data)
+        f.write(self.private)
         f.close()
         cmd = KeyBuilder.DECODE%{'private': keyfile}
         decoded = self.__execute(cmd, data)
