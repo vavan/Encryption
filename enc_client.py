@@ -52,8 +52,6 @@ class KeyClient:
         f.write(cipher)
         f.close()
 
-sys.argv = '1 127.0.0.1:8080'.split()
-
 
 if len(sys.argv) >= 2:
     logging.basicConfig(level=logging.DEBUG,

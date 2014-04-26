@@ -15,12 +15,6 @@ class KeyBuilder:
     ENCODE = 'openssl rsautl -encrypt -inkey %(public)s -pubin'
     DECODE = 'openssl rsautl -decrypt -inkey %(private)s'
 
-##    GENERATE_CERT = 'echo [secret] > %(secret)s'
-##    GENERATE_PRIVATE = 'echo [private]'
-##    GENERATE_PUBLIC = 'echo [public]'
-##    ENCODE = 'echo [encode]  %(public)s'
-##    DECODE = 'echo [decode]  %(private)s'
-
     def __init__(self, name):
         self.name = name
         self.private = None
