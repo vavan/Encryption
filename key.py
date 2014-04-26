@@ -9,7 +9,7 @@ class Secret:
 
 
 class KeyBuilder:
-    GENERATE_CERT = 'openssl genrsa 1024'
+    GENERATE_CERT = 'openssl genrsa -out %(secret)s 1024'
     GENERATE_PRIVATE = 'openssl genrsa 4096'
     GENERATE_PUBLIC = 'openssl rsa -outform PEM -pubout'
     ENCODE = 'openssl rsautl -encrypt -inkey %(public)s -pubin'
@@ -28,8 +28,7 @@ class KeyBuilder:
         logging.debug("Execute: %s"%cmd)
         p = Popen(cmd, shell = True, stdin=PIPE, stdout=PIPE)
         if indata:
-            #p.stdin.write(indata)
-            pass #TODO
+            p.stdin.write(indata)
         return p.stdout.read()
     def generate_cipher(self):
         secret_file = self.name+'_main.pem'
