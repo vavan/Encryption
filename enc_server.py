@@ -97,7 +97,7 @@ class Server(Pipe):
         try:
             self.s = ssl.wrap_socket(self.s,
                            server_side=True,
-                           certfile="cert.pem",
+                           #certfile="cert.pem",
                            keyfile="cert.pem",
                            ssl_version=ssl.PROTOCOL_SSLv23)
             log("Server connected")
@@ -231,8 +231,6 @@ class Listener:
         listen.close()
         print("EXIT")
         time.sleep(1)
-
-sys.argv = '1 0.0.0.0:8080 1'.split()
 
 
 if len(sys.argv) >= 3:
