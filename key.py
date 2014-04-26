@@ -1,3 +1,4 @@
+import os
 import logging
 from subprocess import Popen, PIPE
 
@@ -14,11 +15,11 @@ class KeyBuilder:
 ##    ENCODE = 'openssl rsautl -encrypt -inkey %(public)s -pubin'
 ##    DECODE = 'openssl rsautl -decrypt -inkey %(private)s'
 
-    GENERATE_CERT = 'arp /? > %(secret)s'
-    GENERATE_PRIVATE = 'arp /?'
-    GENERATE_PUBLIC = 'arp /?'
-    ENCODE = 'arp /?  %(public)s'
-    DECODE = 'arp /?  %(private)s'
+    GENERATE_CERT = 'echo [secret] > %(secret)s'
+    GENERATE_PRIVATE = 'echo [private]'
+    GENERATE_PUBLIC = 'echo [public]'
+    ENCODE = 'echo [encode]  %(public)s'
+    DECODE = 'echo [decode]  %(private)s'
 
     def __init__(self, name):
         self.name = name
@@ -55,7 +56,8 @@ class KeyBuilder:
     def decode(self, data):
         keyfile = self.name+'_pri.pem'
         f = open(keyfile, 'w')
-        f.write('123')#data)
+
+        f.write(data)
         f.close()
         cmd = KeyBuilder.DECODE%{'private': keyfile}
         decoded = self.__execute(cmd, data)

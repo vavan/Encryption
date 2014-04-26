@@ -133,7 +133,8 @@ class KeyServer(Connection):
                 log("Brocken HI, close connection")
                 return False
             cipher = self.create_cipher()
-            encoded = self.encode(cipher, self.public_key)
+
+            encoded = self.encode(self.public_key, cipher)
             log("Gonna send, bytes: %d"%len(encoded))
 
             self.s.send(encoded)
@@ -149,17 +150,19 @@ class KeyServer(Connection):
                 log("Key session fail!")
             return False
     def parse_size(self, data):
-        return ((data[0]<<8) | (data[1]))
+        return ((ord(data[0])<<8) | (ord(data[1])))
     def parse_hello(self, data):
-        hi = bytes(Secret.HI, 'ASCII')
+        hi = Secret.HI
         hi_len = len(hi)
         SIZE_FIELD = 2
         if len(data) >= len(hi) + SIZE_FIELD:
             if data.startswith(hi):
                 size_field = data[hi_len:hi_len+SIZE_FIELD]
                 public_key_length = self.parse_size(size_field)
+
                 if len(data) == hi_len + SIZE_FIELD + public_key_length:
                     public_key = data[hi_len + SIZE_FIELD:]
+
                     return public_key
         return None
     def is_ack_valid(self, data):

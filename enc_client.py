@@ -1,7 +1,8 @@
+#!/usr/bin/python
+
 import sys
 import logging
 import socket
-
 from key import KeyBuilder, Secret
 
 
@@ -13,7 +14,7 @@ class KeyClient:
 
     def __init__(self, ip, port):
         self.ip, self.port = (ip, port)
-        self.key_builder = KeyBuilder('')
+        self.key_builder = KeyBuilder('temp')
         self.key_builder.generate_private()
     def init(self):
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -37,9 +38,9 @@ class KeyClient:
             logging.error('No secret!')
         self.s.close()
     def serialize_size(self, size):
-        return bytes((size>>8, size&0xFF))
+        return chr(size>>8) + chr(size&0xFF)
     def create_hi(self):
-        data = bytearray(Secret.HI, 'ASCII')
+        data = Secret.HI
         public = self.key_builder.generate_public()
         data += self.serialize_size(len(public))
         data += public
@@ -47,7 +48,7 @@ class KeyClient:
     def parse_cipher(self, data):
         return self.key_builder.decode(data)
     def save(self, cipher):
-        f = open('cert.pem')
+        f = open('cert.pem', 'wb')
         f.write(cipher)
         f.close()
 
