@@ -90,15 +90,16 @@ class Client(Pipe):
         log("Client connected")
 
 class Server(Pipe):
-    def __init__(self, parent, socket):
+    def __init__(self, parent, socket, secret):
         Pipe.__init__(self, parent, socket)
+        self.secret = secret
     def init(self):
         Pipe.init(self)
         try:
             self.s = ssl.wrap_socket(self.s,
                            server_side=True,
                            #certfile="cert.pem",
-                           keyfile="cert.pem",
+                           keyfile=self.secret,
                            ssl_version=ssl.PROTOCOL_SSLv23)
             log("Server connected")
         except:
@@ -177,16 +178,20 @@ class KeyMngr:
         KeyMngr.instance = KeyMngr()
     @staticmethod
     def name(addr):
-        return addr[0]+'_'+str(addr[1])
+        if type(addr) == list:
+            return addr[0]+'_'+str(addr[1])
+        else:
+            return addr
     def __init__(self):
         self.map = {}
-        #TODO bring up the map from file structure
     def is_known(self, addr):
-        return addr in self.map
+        return self.name(addr) in self.map
     def remember(self, addr, key_file):
-        self.map[addr] = key_file
+        self.map[self.name(addr)] = key_file
     def forget(self, addr):
-        del self.map[addr]
+        del self.map[self.name(addr)]
+    def get(self, addr):
+        self.map[self.name(addr)]
 
 
 
@@ -213,7 +218,7 @@ class Listener:
                 log("Accepted connection from %s"%str(addr))
 
                 if KeyMngr.instance.is_known(addr):
-                    s = Server(self, socket)
+                    s = Server(self, socket, KeyMngr.instance.get(addr))
                     self.children.append( s )
                     s.start()
 

@@ -21,6 +21,7 @@ class KeyClient:
         self.s.connect((self.ip, int(self.port)))
         logging.debug("Client connected")
     def run(self):
+        status = 0
         self.init()
 
         data = self.create_hi()
@@ -29,14 +30,18 @@ class KeyClient:
         data = self.s.recv(KeyClient.BUFFER_SIZE)
         if not data:
             logging.error('Dropped')
-            return
+            status = 1
+            return status
         cipher = self.parse_cipher(data)
         if cipher:
             self.save(cipher)
             self.s.send(Secret.BY)
         else:
             logging.error('No secret!')
+            status = 2
+
         self.s.close()
+        return status
     def serialize_size(self, size):
         return chr(size>>8) + chr(size&0xFF)
     def create_hi(self):
@@ -60,6 +65,6 @@ if len(sys.argv) >= 2:
                             filemode='a')
 
     server = sys.argv[1]
-    KeyClient(*server.split(':')).run()
+    exit(KeyClient(*server.split(':')).run())
 else:
     print("USAGE: serverip:port")
