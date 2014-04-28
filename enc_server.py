@@ -178,15 +178,17 @@ class KeyMngr:
         KeyMngr.instance = KeyMngr()
     @staticmethod
     def name(addr):
-        if type(addr) == list:
+        if type(addr) == tuple:
             return addr[0]+'_'+str(addr[1])
         else:
             return addr
     def __init__(self):
         self.map = {}
     def is_known(self, addr):
+        logging.debug('Is known: %s {%s}'%(self.name(addr), self.map))
         return self.name(addr) in self.map
     def remember(self, addr, key_file):
+        logging.debug('Remembder [%s]=%s'%(self.name(addr), key_file))
         self.map[self.name(addr)] = key_file
     def forget(self, addr):
         del self.map[self.name(addr)]
