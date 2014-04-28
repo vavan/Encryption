@@ -182,8 +182,10 @@ class KeyMngr:
     def __init__(self):
         self.map = {}
     def is_known(self, addr):
+        logging.debug('Is known: %s {%s}'%(self.name(addr), self.map))
         return self.name(addr) in self.map
     def remember(self, addr, key_file):
+        logging.debug('Remembder [%s]=%s'%(self.name(addr), key_file))
         self.map[self.name(addr)] = key_file
     def forget(self, addr):
         del self.map[self.name(addr)]
