@@ -116,7 +116,7 @@ class KeyServer(Connection):
         Connection.__init__(self, parent, socket)
         self.state = KeyServer.WAIT_HI
         self.public_key = None
-        self.key_builder = KeyBuilder(self.s.getpeername())
+        self.key_builder = KeyBuilder(KeyMngr.name(self.s.getpeername()))
         self.cipher_file = ''
     def encode(self, key, data):
         return self.key_builder.encode(key, data)
