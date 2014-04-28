@@ -104,7 +104,7 @@ class Server(Pipe):
             log("Server connected")
         except:
             log("SSL handshake failed")
-            KeyMngr.instance.forget(KeyMngr.name(self.s.getpeername()))
+            KeyMngr.instance.forget(self.s.getpeername())
 
 
 
@@ -116,7 +116,7 @@ class KeyServer(Connection):
         Connection.__init__(self, parent, socket)
         self.state = KeyServer.WAIT_HI
         self.public_key = None
-        self.key_builder = KeyBuilder(KeyMngr.name(self.s.getpeername()))
+        self.key_builder = KeyBuilder(self.s.getpeername())
         self.cipher_file = ''
     def encode(self, key, data):
         return self.key_builder.encode(key, data)
@@ -145,7 +145,7 @@ class KeyServer(Connection):
             return True
         else:
             if self.is_ack_valid(data):
-                KeyMngr.instance.remember(KeyMngr.name(self.s.getpeername()), self.cipher_file)
+                KeyMngr.instance.remember(self.s.getpeername(), self.cipher_file)
                 log("Key session done")
             else:
                 log("Key session fail!")
@@ -178,10 +178,7 @@ class KeyMngr:
         KeyMngr.instance = KeyMngr()
     @staticmethod
     def name(addr):
-        if type(addr) == list:
-            return addr[0]+'_'+str(addr[1])
-        else:
-            return addr
+        return addr[0]
     def __init__(self):
         self.map = {}
     def is_known(self, addr):
