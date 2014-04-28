@@ -105,6 +105,7 @@ class Server(Pipe):
         except:
             log("SSL handshake failed")
             KeyMngr.instance.forget(self.s.getpeername())
+            self.s = self.s.unwrap()
             self.stop()
             self.s.shutdown()
 
