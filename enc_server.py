@@ -95,16 +95,19 @@ class Server(Pipe):
         self.secret = secret
     def init(self):
         Pipe.init(self)
+        self.s = ssl.wrap_socket(self.s,
+                       server_side=True,
+                       #certfile="cert.pem",
+                       keyfile=self.secret,
+                       do_handshake_on_connect=False,
+                       ssl_version=ssl.PROTOCOL_SSLv23)
         try:
-            self.s = ssl.wrap_socket(self.s,
-                           server_side=True,
-                           #certfile="cert.pem",
-                           keyfile=self.secret,
-                           ssl_version=ssl.PROTOCOL_SSLv23)
+            self.s.do_handshake()
             log("Server connected")
         except:
             log("SSL handshake failed")
             KeyMngr.instance.forget(self.s.getpeername())
+            self.s = self.s.unwrap()
             self.stop()
             self.s.shutdown()
 
