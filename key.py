@@ -32,7 +32,7 @@ class KeyBuilder:
         cmd = KeyBuilder.GENERATE_CERT%{'secret': self.name}
         self.__execute(cmd)
         cipher = open(self.name+'.pem', 'rb').read()
-        return (cipher, self.name+'.pem')
+        return (cipher, self.name)
     def generate_private(self):
         cmd = KeyBuilder.GENERATE_PRIVATE
         self.private = self.__execute(cmd)
