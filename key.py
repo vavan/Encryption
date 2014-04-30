@@ -31,7 +31,7 @@ class KeyBuilder:
         self.__execute(cmd)
         cmd = KeyBuilder.GENERATE_CERT%{'secret': self.name}
         self.__execute(cmd)
-        cipher = open(self.name+'.pem').read()
+        cipher = open(self.name+'.pem', 'rb').read()
         return (cipher, self.name+'.pem')
     def generate_private(self):
         cmd = KeyBuilder.GENERATE_PRIVATE
@@ -43,7 +43,7 @@ class KeyBuilder:
     def encode(self, key = None, data = None):
         logging.debug("Encoding")
         keyfile = self.name+'_pub.pem'
-        f = open(keyfile, 'w')
+        f = open(keyfile, 'wb')
         f.write(key)
         f.close()
         cmd = KeyBuilder.ENCODE%{'public': keyfile}
@@ -52,7 +52,7 @@ class KeyBuilder:
         return encoded
     def decode(self, data):
         keyfile = self.name+'_pri.pem'
-        f = open(keyfile, 'w')
+        f = open(keyfile, 'wb')
 
         f.write(self.private)
         f.close()
