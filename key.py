@@ -9,7 +9,8 @@ class Secret:
 
 
 class KeyBuilder:
-    GENERATE_CERT = 'openssl genrsa -out %(secret)s 512'
+    GENERATE_KEY = 'openssl genrsa -out %(secret)s.pem 512'
+    GENERATE_CERT = 'openssl x509 -req -days 365 -in server.csr -signkey %(secret)s.pem -out %(secret)s.crt'
     GENERATE_PRIVATE = 'openssl genrsa 4096'
     GENERATE_PUBLIC = 'openssl rsa -outform PEM -pubout'
     ENCODE = 'openssl rsautl -encrypt -inkey %(public)s -pubin'
@@ -26,8 +27,9 @@ class KeyBuilder:
             p.stdin.close()
         return p.stdout.read()
     def generate_cipher(self):
-        secret_file = self.name+'_main.pem'
-        cmd = KeyBuilder.GENERATE_CERT%{'secret': secret_file}
+        cmd = KeyBuilder.GENERATE_KEY%{'secret': self.name}
+        self.__execute(cmd)
+        cmd = KeyBuilder.GENERATE_CERT%{'secret': self.name}
         self.__execute(cmd)
         cipher = open(secret_file).read()
         return (cipher, secret_file)

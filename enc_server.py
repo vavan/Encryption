@@ -97,8 +97,8 @@ class Server(Pipe):
         Pipe.init(self)
         self.s = ssl.wrap_socket(self.s,
                        server_side=True,
-                       #certfile="cert.pem",
-                       keyfile=self.secret,
+                       certfile=self.secret+".srt",
+                       keyfile=self.secret+".pem",
                        do_handshake_on_connect=False,
                        ssl_version=ssl.PROTOCOL_SSLv23)
         try:
