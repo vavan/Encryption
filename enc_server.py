@@ -229,7 +229,7 @@ class Listener:
                 log("Accepted connection from %s"%str(addr))
 
                 #####
-                KeyMngr.instance.remember(addr, 'server')
+#                KeyMngr.instance.remember(addr, 'server2')
 
 
                 if KeyMngr.instance.is_known(addr):
