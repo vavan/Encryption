@@ -100,7 +100,7 @@ class Server(Pipe):
         logging.debug('wrap socket key: %s'%self.secret)
         self.s = ssl.wrap_socket(self.s,
                        server_side=True,
-                       certfile=self.secret+".srt",
+                       certfile=self.secret+".crt",
                        keyfile=self.secret+".pem",
                        do_handshake_on_connect=False,
                        ssl_version=ssl.PROTOCOL_SSLv23)
@@ -227,7 +227,7 @@ class Listener:
                 log("Accepted connection from %s"%str(addr))
 
                 #####
-                KeyMngr.instance.remember(addr)
+                KeyMngr.instance.remember(addr, 'server')
 
 
                 if KeyMngr.instance.is_known(addr):
