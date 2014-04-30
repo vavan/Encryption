@@ -32,6 +32,7 @@ class Connection(threading.Thread):
         self.running = True
     def run(self):
         self.init()
+        logging.debug("Start %s"%self)
         while self.running:
             try:
                 if not self.recv():
@@ -43,7 +44,7 @@ class Connection(threading.Thread):
             except socket.error as e:
                 log("***: %s"%str(e))
                 break
-        log("Closed")
+        log("Closed %s"%self)
         self.stop()
         self.s.close()
         self.s = None
@@ -85,6 +86,7 @@ class Client(Pipe):
         Pipe.__init__(self, parent)
         self.ip, self.port = (ip, port)
     def init(self):
+        Pipe.init(self)
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.connect((self.ip, int(self.port)))
         log("Client connected")
@@ -95,21 +97,22 @@ class Server(Pipe):
         self.secret = secret
     def init(self):
         Pipe.init(self)
+        logging.debug('wrap socket key: %s'%self.secret)
         self.s = ssl.wrap_socket(self.s,
                        server_side=True,
-                       #certfile="cert.pem",
+                       certfile='cert.pem',
                        keyfile=self.secret,
                        do_handshake_on_connect=False,
                        ssl_version=ssl.PROTOCOL_SSLv23)
         try:
             self.s.do_handshake()
             log("Server connected")
-        except:
-            log("SSL handshake failed")
+        except ssl.SSLError, e:
+            log("SSL handshake failed: %s"%str(e))
             KeyMngr.instance.forget(self.s.getpeername())
-            self.s = self.s.unwrap()
+            #self.s = self.s.unwrap()
             self.stop()
-            self.s.shutdown()
+            self.s.shutdown(socket.SHUT_RDWR)
 
 
 
@@ -193,9 +196,11 @@ class KeyMngr:
         logging.debug('Remembder [%s]=%s'%(self.name(addr), key_file))
         self.map[self.name(addr)] = key_file
     def forget(self, addr):
-        del self.map[self.name(addr)]
+        addr = self.name(addr)
+        if addr in self.map:
+            del self.map[self.name(addr)]
     def get(self, addr):
-        self.map[self.name(addr)]
+        return self.map[self.name(addr)]
 
 
 
@@ -221,8 +226,8 @@ class Listener:
                 socket, addr = listen.accept()
                 log("Accepted connection from %s"%str(addr))
 
-                if KeyMngr.instance.is_known(addr):
-                    s = Server(self, socket, KeyMngr.instance.get(addr))
+                if 1: #KeyMngr.instance.is_known(addr):
+                    s = Server(self, socket, 'key.pem') #KeyMngr.instance.get(addr))
                     self.children.append( s )
                     s.start()
 
