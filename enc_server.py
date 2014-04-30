@@ -97,11 +97,13 @@ class Server(Pipe):
         self.secret = secret
     def init(self):
         Pipe.init(self)
-        logging.debug('wrap socket key: %s'%self.secret)
+        cert = self.secret + '.crt'
+        key = self.secret + '.pem'
+        logging.debug('wrap socket key: %s %s'%(cert, key))
         self.s = ssl.wrap_socket(self.s,
                        server_side=True,
-                       certfile=self.secret+".crt",
-                       keyfile=self.secret+".pem",
+                       certfile=cert,
+                       keyfile=key,
                        do_handshake_on_connect=False,
                        ssl_version=ssl.PROTOCOL_SSLv23)
         try:
