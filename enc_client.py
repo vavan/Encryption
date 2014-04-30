@@ -53,7 +53,7 @@ class KeyClient:
     def parse_cipher(self, data):
         return self.key_builder.decode(data)
     def save(self, cipher):
-        f = open('cert.pem', 'wb')
+        f = open('key.pem', 'wb')
         f.write(cipher)
         f.close()
 
