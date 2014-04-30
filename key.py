@@ -31,8 +31,8 @@ class KeyBuilder:
         self.__execute(cmd)
         cmd = KeyBuilder.GENERATE_CERT%{'secret': self.name}
         self.__execute(cmd)
-        cipher = open(secret_file).read()
-        return (cipher, secret_file)
+        cipher = open(self.name+'.pem').read()
+        return (cipher, self.name+'.pem')
     def generate_private(self):
         cmd = KeyBuilder.GENERATE_PRIVATE
         self.private = self.__execute(cmd)

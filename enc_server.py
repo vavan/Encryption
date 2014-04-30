@@ -226,8 +226,8 @@ class Listener:
                 socket, addr = listen.accept()
                 log("Accepted connection from %s"%str(addr))
 
-                if 1: #KeyMngr.instance.is_known(addr):
-                    s = Server(self, socket, 'key.pem') #KeyMngr.instance.get(addr))
+                if KeyMngr.instance.is_known(addr):
+                    s = Server(self, socket, KeyMngr.instance.get(addr))
                     self.children.append( s )
                     s.start()
 
