@@ -226,6 +226,10 @@ class Listener:
                 socket, addr = listen.accept()
                 log("Accepted connection from %s"%str(addr))
 
+                #####
+                KeyMngr.instance.remember(addr)
+
+
                 if KeyMngr.instance.is_known(addr):
                     s = Server(self, socket, KeyMngr.instance.get(addr))
                     self.children.append( s )
