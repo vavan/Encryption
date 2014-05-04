@@ -11,29 +11,9 @@
 
 using namespace std;
 
-void test_connection()
-{
-	Socket s = Socket();
-	s.connect("127.0.0.1", 8080);
-	char hi[] = "Slava Ukraini!";
-	cout << "Sent: " << s.send(hi, strlen(hi)) << endl;
-
-}
-
-void test_security()
-{
-	Security sec = Security();
-	sec.build();
-
-	char msg[] = "TEST ENCODING2";
-	int len = sec.encrypt(msg, strlen(msg)+1);
-	sec.decrypt(sec.encrypted, len);
-
-	sec._free();
-}
-
 
 const char hi[] = "Slava Ukraini!";
+
 
 char* create_hi(char *out, char* pub_key)
 {
@@ -57,7 +37,6 @@ int main(void) {
 
 	Socket s = Socket();
 	s.connect("127.0.0.1", 8080);
-//	cout << "Sent: " << s.send(hi, strlen(hi)) << endl;
 
 	int hi_size = strlen(hi) + 2 + strlen(sec.pub_key);
 	char* hi_msg = (char*)malloc(hi_size);
@@ -65,7 +44,6 @@ int main(void) {
 	cout << "Pub:" << sec.pub_key << endl;
 
 	create_hi(hi_msg, sec.pub_key);
-//	cout << endl << "***" << hi_msg << endl;
 	int sent = s.send(hi_msg, hi_size-1);
 
 	cout << "Sent: " << sent << endl;

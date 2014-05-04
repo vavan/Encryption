@@ -10,13 +10,17 @@
 #include <netdb.h>
 #include <unistd.h>
 #include <sys/socket.h>
+#include <fcntl.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 
+#include <list>
 using namespace std;
 
 class Socket
 {
-	int s;
 public:
+	int s;
 		Socket(int s = -1) {
 			if (s == -1) {
 				this->s = socket(AF_INET, SOCK_STREAM, 0);
@@ -72,8 +76,65 @@ public:
 		size_t send(char* buf, size_t size) {
 			return ::send(s, buf, size, 0);
 		}
-		size_t recv(char* buf, size_t size) {
+		size_t recv(char* buf, const size_t size) {
 			return ::recv(s, buf, size, 0);
+		}
+		void nonblock() {
+			int rc = fcntl(s, F_SETFL, fcntl(s, F_GETFL, 0) | O_NONBLOCK);
+			if (rc < 0)
+			{
+				perror("nonblock");
+			}
 		}
 };
 
+class Pipe: public Socket {
+	Pipe* other;
+	static const size_t size = 8192;
+	char buffer[size];
+public:
+	void join(Pipe* other) {
+		this->other = other;
+	}
+	void recv() {
+		int recved = 0;//this->recv((char*)buffer, size);
+		this->other->queue(buffer, recved);
+	}
+	void queue(char* buffer, int size){
+		//TODO
+	}
+	void unqueue(){
+		//TODO
+	}
+};
+
+class PipeList {
+	list<int> l;
+	list<Pipe> pipes;
+	fd_set rfds;
+public:
+	int build() {
+		int max = 0;
+		FD_ZERO(&rfds);
+		for (list<Pipe>::iterator i = pipes.begin(); i != pipes.end(); i++) {
+			int s = (*i).s;
+			FD_SET(s, &rfds);
+			if (s > max) max = s;
+		}
+		return max+1;
+	}
+	void add(Pipe& pipe) {
+
+	}
+	void wait() {
+		int max = this->build();
+		int retval = select(max, &rfds, NULL, NULL, NULL);
+		if (retval == -1)
+			perror("select()");
+		else if (retval)
+			if FD_ISSET(0, &rfds) {
+
+			}
+	}
+
+};
