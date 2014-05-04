@@ -1,1 +1,7 @@
-/.project
+.project
+.cproject
+.settings
+bin/
+objs/
+*~
+*.pyc

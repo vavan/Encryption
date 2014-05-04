@@ -17,37 +17,37 @@
 
 #define KEY_LENGTH  4096
 #define PUB_EXP     3
-#define PRINT_KEYS
-#define WRITE_TO_FILE
+//#define PRINT_KEYS
 
 
 class Security
 {
-
 public:
+
+	char   *pri_key;           // Private key
+    char   *pub_key;           // Public key
+    char   *err;               // Buffer for any error messages
+    char   *encrypted = NULL;    // Encrypted message
+    char   *decrypted = NULL;    // Decrypted message
+    RSA    *keypair;
+    BIO    *pri;
+    BIO    *pub;
+
 	void build() {
 	    size_t pri_len;            // Length of private key
 	    size_t pub_len;            // Length of public key
-	    char   *pri_key;           // Private key
-	    char   *pub_key;           // Public key
-	    char   msg[KEY_LENGTH/8];  // Message to encrypt
-	    char   *encrypt = NULL;    // Encrypted message
-	    char   *decrypt = NULL;    // Decrypted message
-	    char   *err;               // Buffer for any error messages
-	    FILE   *out = NULL;
-
 
 	    // Generate key pair
 	    printf("Generating RSA (%d bits) keypair...", KEY_LENGTH);
 	    fflush(stdout);
-	    RSA *keypair = RSA_generate_key(KEY_LENGTH, PUB_EXP, NULL, NULL);
+	    keypair = RSA_generate_key(KEY_LENGTH, PUB_EXP, NULL, NULL);
 
 	    // To get the C-string PEM form:
-	    BIO *pri = BIO_new(BIO_s_mem());
-	    BIO *pub = BIO_new(BIO_s_mem());
+	    pri = BIO_new(BIO_s_mem());
+	    pub = BIO_new(BIO_s_mem());
 
 	    PEM_write_bio_RSAPrivateKey(pri, keypair, NULL, NULL, 0, NULL, NULL);
-	    PEM_write_bio_RSAPublicKey(pub, keypair);
+	    PEM_write_bio_RSA_PUBKEY(pub, keypair);
 
 	    pri_len = BIO_pending(pri);
 	    pub_len = BIO_pending(pub);
@@ -65,62 +65,46 @@ public:
 	        printf("\n%s\n%s\n", pri_key, pub_key);
 	    #endif
 	    printf("done.\n");
+	}
 
-	    // Get the message to encrypt
-	    printf("Message to encrypt: ");
-	    fgets(msg, KEY_LENGTH-1, stdin);
-	    msg[strlen(msg)-1] = '\0';
-
+	int encrypt(char *msg, int size) {
 	    // Encrypt the message
-	    encrypt = (char *)malloc(RSA_size(keypair));
+	    encrypted = (char *)malloc(RSA_size(keypair));
 	    int encrypt_len;
 	    err = (char *)malloc(130);
-	    if((encrypt_len = RSA_public_encrypt(strlen(msg)+1, (unsigned char*)msg, (unsigned char*)encrypt,
+	    if((encrypt_len = RSA_public_encrypt(size, (unsigned char*)msg, (unsigned char*)encrypted,
 	                                         keypair, RSA_PKCS1_OAEP_PADDING)) == -1) {
 	        ERR_load_crypto_strings();
 	        ERR_error_string(ERR_get_error(), err);
 	        fprintf(stderr, "Error encrypting message: %s\n", err);
-	        goto free_stuff;
+//	        goto free_stuff;
 	    }
+	    return encrypt_len;
+	}
 
-	    #ifdef WRITE_TO_FILE
-	    // Write the encrypted message to a file
-	        fopen("out.bin", "w");
-	        fwrite(encrypt, sizeof(*encrypt),  RSA_size(keypair), out);
-	        fclose(out);
-	        printf("Encrypted message written to file.\n");
-	        free(encrypt);
-	        encrypt = NULL;
-
-	        // Read it back
-	        printf("Reading back encrypted message and attempting decryption...\n");
-	        encrypt = (char *)malloc(RSA_size(keypair));
-	        out = fopen("out.bin", "r");
-	        fread(encrypt, sizeof(*encrypt), RSA_size(keypair), out);
-	        fclose(out);
-	    #endif
-
+	void decrypt(char *encrypt, int encrypt_len) {
 	    // Decrypt it
-	    decrypt = (char *)malloc(encrypt_len);
-	    if(RSA_private_decrypt(encrypt_len, (unsigned char*)encrypt, (unsigned char*)decrypt,
+	    decrypted = (char *)malloc(encrypt_len);
+	    if(RSA_private_decrypt(encrypt_len, (unsigned char*)encrypt, (unsigned char*)decrypted,
 	                           keypair, RSA_PKCS1_OAEP_PADDING) == -1) {
 	        ERR_load_crypto_strings();
 	        ERR_error_string(ERR_get_error(), err);
 	        fprintf(stderr, "Error decrypting message: %s\n", err);
-	        goto free_stuff;
+	        //goto free_stuff;
 	    }
-	    printf("Decrypted message: %s\n", decrypt);
+	    printf("Decrypted message: %s\n", decrypted);
+	}
 
-	    free_stuff:
+	void _free() {
+//	    free_stuff:
 	    RSA_free(keypair);
 	    BIO_free_all(pub);
 	    BIO_free_all(pri);
 	    free(pri_key);
 	    free(pub_key);
-	    free(encrypt);
-	    free(decrypt);
+	    free(encrypted);
+	    free(decrypted);
 	    free(err);
-
 	}
 };
 
