@@ -23,6 +23,9 @@
 class Security
 {
 public:
+	~Security() {
+		_free();
+	}
 
 	char   *pri_key;           // Private key
     char   *pub_key;           // Public key

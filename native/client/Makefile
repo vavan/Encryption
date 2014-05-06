@@ -4,7 +4,11 @@
 APP = ssl-key-client
 
 CPP_FILES := \
-    main.cpp 
+    main.cpp \
+    connection.cpp \
+    config.cpp \
+    proxy.cpp
+     
 
 #-Wextra 
 CFLAGS := -Wall -ggdb -I./include -I./objs
