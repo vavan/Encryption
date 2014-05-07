@@ -10,12 +10,18 @@ Point::Point(Worker* parent, Socket* socket): parent(parent), socket(socket) {
 }
 Point::~Point() {
 	this->parent->remove(this);
-	delete this->socket;
+	if (this->socket) delete this->socket;
 }
 
 Buffer& Point::recv() {
-	int recved = this->socket->recv(&buffer[0], buffer.size());
-	buffer.resize(recved);
+	char b[4096];
+	int recved = this->socket->recv(b, 4096);
+	if (recved > 0) {
+		buffer.assign(b, b+recved);
+	} else if (recved < 0) {
+		LOG.debugStream() << "ERROR!!!";
+		//TODO handle error!!!
+	}
 	return buffer;
 }
 
@@ -23,10 +29,9 @@ void Point::send(Buffer& msg) {
 	queue.push(msg);
 }
 
-void Point::do_send() {
+void Point::on_send() {
 	if (!queue.empty()) {
 		Buffer buffer = queue.pop();
-
 		this->socket->send(&buffer[0], buffer.size());
 	}
 };
@@ -64,10 +69,15 @@ void Worker::run() {
 		while( i != points.end() ) {
 			int fd = (*i)->get_fd();
 			if FD_ISSET(fd, &recv_fds) {
-				(*i)->do_recv();
+				Buffer& data = (*i)->recv();
+				if (data.size() > 0) {
+					(*i)->on_recv(data);
+				} else {
+					(*i)->on_close();
+				}
 			}
 			if FD_ISSET(fd, &send_fds) {
-				(*i)->do_send();
+				(*i)->on_send();
 			}
 			if ((*i)->is_closed()) {
 				Point* p = (*i);

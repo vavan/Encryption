@@ -9,8 +9,22 @@
 #define CONFIG_H_
 
 #include <string>
-#include "socket.h"
+#include <log4cpp/Category.hh>
+#include "addr.h"
 
+/*
+ * Logging system
+ */
+//Access to the log
+#define LOG log4cpp::Category::getRoot()
+
+
+//Initialization of the log
+void init_log(std::string log_file_name);
+
+/*
+ * Major configuration class
+ */
 class Config {
 	static Config* instance;
 public:
@@ -22,7 +36,7 @@ public:
 		Config::instance = new Config();
 	}
 	static void done() {
-		free(Config::instance);
+		delete Config::instance;
 	}
 	static Config& get() {
 		return *Config::instance;

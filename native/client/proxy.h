@@ -22,12 +22,13 @@ private:
 	bool closing;
 public:
 	Pipe(Worker* parent, Socket* socket): Point(parent, socket) {
+		other = NULL;
 		closing = false;
 	};
 	void join(Pipe* other);
-	void do_recv();
-	void do_send();
-	void close();
+	virtual void on_recv(Buffer& buffer);
+	virtual void on_send();
+	virtual void on_close();
 };
 
 class ServerPipe : public Pipe {

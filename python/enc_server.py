@@ -14,7 +14,7 @@ from subprocess import Popen, PIPE, STDOUT
 
 class Secret:
     HI = "Slava Ukraini!"
-    BY = "Heroyam Slava!"
+    BY = "Geroyam Slava!"
 
 
 class KeyBuilder:
@@ -57,7 +57,7 @@ class KeyBuilder:
         f.close()
         cmd = KeyBuilder.ENCODE%{'public': keyfile}
         encoded = self.__execute(cmd, data)
-        logging.debug("Encoded: %s %s"%(data, encoded))
+        #logging.debug("Encoded: %s %s"%(data, encoded))
 
         #os.unlink(keyfile)
         return encoded
@@ -107,10 +107,10 @@ class Connection(threading.Thread):
                 log("***: %s"%str(e))
                 break
         log("Closed %s"%self)
-        self.stop()
-        self.s.close()
-        self.s = None
         self.parent.disconnect(self)
+        if self.s != None:
+            self.s.close()
+            self.s = None
 
 
 class Pipe(Connection):
@@ -173,7 +173,6 @@ class Server(Pipe):
             log("Server connected")
         except ssl.SSLError, e:
             log("SSL handshake failed: %s"%str(e))
-            KeyMngr.instance.forget(self.s.getpeername())
             #self.s = self.s.unwrap()
             self.stop()
             self.s.shutdown(socket.SHUT_RDWR)
@@ -188,8 +187,12 @@ class KeyServer(Connection):
         Connection.__init__(self, parent, socket)
         self.state = KeyServer.WAIT_HI
         self.public_key = None
-        self.key_builder = KeyBuilder(KeyMngr.name(self.s.getpeername()))
+        self.key_builder = KeyBuilder(self.build_name())
         self.cipher_file = ''
+    def build_name(self):
+        name = self.s.getpeername()
+        name = name[0]+'_'+str(name[1])
+        return name
     def encode(self, key, data):
         return self.key_builder.encode(key, data)
     def create_cipher(self):
@@ -217,8 +220,8 @@ class KeyServer(Connection):
             return True
         else:
             if self.is_ack_valid(data):
-                KeyMngr.instance.remember(self.s.getpeername(), self.cipher_file)
                 log("Key session done")
+                self.switch_to_proxy()
             else:
                 log("Key session fail!")
             return False
@@ -235,37 +238,26 @@ class KeyServer(Connection):
 
                 if len(data) == hi_len + SIZE_FIELD + public_key_length:
                     public_key = data[hi_len + SIZE_FIELD:]
+                    log("Hello parsed. Total=%s, key size=%s"%(len(data), public_key_length))  
 
                     return public_key
         return None
     def is_ack_valid(self, data):
         return data == Secret.BY
+    def release_socket(self):
+        s = self.s
+        self.s = None
+        return s
+    def switch_to_proxy(self):
+        s = Server(self.parent, self.release_socket(), self.cipher_file)
+        self.parent.children.append( s )
+        s.start()
 
-
-class KeyMngr:
-    instance = None
-
-    @staticmethod
-    def create():
-        KeyMngr.instance = KeyMngr()
-    @staticmethod
-    def name(addr):
-        return addr[0]
-    def __init__(self):
-        self.map = {}
-    def is_known(self, addr):
-        logging.debug('Is known: %s {%s}'%(self.name(addr), self.map))
-        return self.name(addr) in self.map
-    def remember(self, addr, key_file):
-        logging.debug('Remembder [%s]=%s'%(self.name(addr), key_file))
-        self.map[self.name(addr)] = key_file
-    def forget(self, addr):
-        addr = self.name(addr)
-        if addr in self.map:
-            del self.map[self.name(addr)]
-    def get(self, addr):
-        return self.map[self.name(addr)]
-
+        c = Client(self.parent, *self.parent.client_url)
+        self.parent.children.append( c )
+        c.join_pipe(s)
+        c.start()
+        self.stop()
 
 
 class Listener:
@@ -289,24 +281,10 @@ class Listener:
             try:
                 socket, addr = listen.accept()
                 log("Accepted connection from %s"%str(addr))
-
-                #####
-#                KeyMngr.instance.remember(addr, 'server2')
-
-
-                if KeyMngr.instance.is_known(addr):
-                    s = Server(self, socket, KeyMngr.instance.get(addr))
-                    self.children.append( s )
-                    s.start()
-
-                    c = Client(self, *self.client_url)
-                    self.children.append( c )
-                    c.join_pipe(s)
-                    c.start()
-                else:
-                    s = KeyServer(self, socket)
-                    self.children.append( s )
-                    s.start()
+                
+                s = KeyServer(self, socket)
+                self.children.append( s )
+                s.start()
             except KeyboardInterrupt:
                 break
         self.stop()
@@ -323,7 +301,6 @@ if len(sys.argv) >= 3:
 
     server = sys.argv[1]
     client = sys.argv[2]
-    KeyMngr.create()
 
     ps = Listener(server.split(':'), client.split(':'))
     ps.start()

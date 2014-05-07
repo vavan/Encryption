@@ -17,7 +17,7 @@
 
 #define KEY_LENGTH  4096
 #define PUB_EXP     3
-//#define PRINT_KEYS
+#define PRINT_KEYS
 
 
 class Security
@@ -37,12 +37,14 @@ public:
     BIO    *pub;
 
 	void build() {
+		err = (char*)malloc(512);
+
 	    size_t pri_len;            // Length of private key
 	    size_t pub_len;            // Length of public key
 
 	    // Generate key pair
-	    printf("Generating RSA (%d bits) keypair...", KEY_LENGTH);
-	    fflush(stdout);
+//	    printf("Generating RSA (%d bits) keypair...", KEY_LENGTH);
+//	    fflush(stdout);
 	    keypair = RSA_generate_key(KEY_LENGTH, PUB_EXP, NULL, NULL);
 
 	    // To get the C-string PEM form:
@@ -65,9 +67,14 @@ public:
 	    pub_key[pub_len] = '\0';
 
 	    #ifdef PRINT_KEYS
-	        printf("\n%s\n%s\n", pri_key, pub_key);
+	        //printf("\n%s\n%s\n", pri_key, pub_key);
+			ofstream out("pri.pem");
+			out << pri_key;
+			ofstream out1("pub.pem");
+			out1 << pub_key;
+
 	    #endif
-	    printf("done.\n");
+//	    printf("done.\n");
 	}
 
 	int encrypt(char *msg, int size) {
@@ -85,17 +92,18 @@ public:
 	    return encrypt_len;
 	}
 
-	void decrypt(char *encrypt, int encrypt_len) {
+	char* decrypt(char *encrypt, int encrypt_len) {
 	    // Decrypt it
 	    decrypted = (char *)malloc(encrypt_len);
 	    if(RSA_private_decrypt(encrypt_len, (unsigned char*)encrypt, (unsigned char*)decrypted,
-	                           keypair, RSA_PKCS1_OAEP_PADDING) == -1) {
+	                           keypair, RSA_PKCS1_PADDING) == -1) {
 	        ERR_load_crypto_strings();
 	        ERR_error_string(ERR_get_error(), err);
 	        fprintf(stderr, "Error decrypting message: %s\n", err);
 	        //goto free_stuff;
 	    }
-	    printf("Decrypted message: %s\n", decrypted);
+//	    printf("Decrypted message: %s\n", decrypted);
+	    return decrypted;
 	}
 
 	void _free() {

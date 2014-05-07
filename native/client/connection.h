@@ -50,6 +50,9 @@ protected:
 	bool closed;
 	static const int BUFFER_SIZE = 4096;
 
+	virtual Buffer& recv();
+	virtual void send(Buffer& msg);
+
 public:
 	Point(Worker* parent, Socket* socket);
 	virtual ~Point();
@@ -59,13 +62,17 @@ public:
 	bool is_closed() {
 		return closed;
 	}
+	Socket* relese_socket() {
+		Socket* released = this->socket;
+		this->socket = NULL;
+		return released;
+	}
 	virtual void init() {};
-	virtual void is_done() {};
-	virtual void do_recv() {};
-	virtual void do_send();
+	virtual void on_recv(Buffer& data) {};
+	virtual void on_send();
+	virtual void on_close() {};
 
-	virtual Buffer& recv();
-	virtual void send(Buffer& msg);
+
 	friend Worker;
 };
 

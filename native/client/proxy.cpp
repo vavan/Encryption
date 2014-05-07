@@ -24,30 +24,29 @@ void Pipe::join(Pipe* other) {
 	this->other = other;
 	this->other->other = this;
 }
-void Pipe::do_recv() {
+void Pipe::on_recv(Buffer& buffer) {
 	if (!this->closing) {
-		Buffer& buffer = Point::recv();
-		if (buffer.size() > 0) {
-			this->other->send(buffer);
-		} else {
-			this->closing = true;
-			this->other->closing = true;
-		}
+		this->other->send(buffer);
 	}
 }
-void Pipe::do_send() {
-	if (!this->queue.empty()) {
-		Point::do_send();
-	} else {
-		if (this->closing) {
-			this->closed = true;
-			this->other->closed = true;
-		}
+void Pipe::on_close() {
+	this->closing = true;
+	this->other->closing = true;
+	if (queue.empty()) {
+		this->closed = true;
+		this->other->closed = true;
+	}
+}
+void Pipe::on_send() {
+	Point::on_send();
+	if (this->closing) {
+		this->closed = true;
+		this->other->closed = true;
 	}
 }
 
 void ServerPipe::init() {
-	//do nothing
+//	this-->socket->listen();
 }
 
 void ClientPipe::init() {

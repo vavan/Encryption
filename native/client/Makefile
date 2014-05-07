@@ -7,12 +7,13 @@ CPP_FILES := \
     main.cpp \
     connection.cpp \
     config.cpp \
-    proxy.cpp
+    proxy.cpp \
+    socket.cpp
      
 
 #-Wextra 
 CFLAGS := -Wall -ggdb -I./include -I./objs
-LDFLAGS := -ggdb -lcrypto
+LDFLAGS := -ggdb -lcrypto -llog4cpp
 OBJS := objs
 BIN := bin
 OBJ_FILES := $(addprefix $(OBJS)/,$(CPP_FILES:.cpp=.o))
