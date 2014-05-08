@@ -31,10 +31,10 @@ void Pipe::on_recv(Buffer& buffer) {
 }
 void Pipe::on_close() {
 	this->closing = true;
-	this->other->closing = true;
+	if (this->other) this->other->closing = true;
 	if (queue.empty()) {
 		this->closed = true;
-		this->other->closed = true;
+		if (this->other) this->other->closed = true;
 	}
 }
 void Pipe::on_send() {

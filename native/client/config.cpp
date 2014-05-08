@@ -18,18 +18,17 @@ Config* Config::instance = NULL;
 
 void init_log(std::string log_file)
 {
-	log4cpp::Appender *appender1 = new log4cpp::OstreamAppender("console", &std::cout);
-	appender1->setLayout(new log4cpp::BasicLayout());
+	log4cpp::Appender *appender = new log4cpp::OstreamAppender("console", &std::cout);
+	appender->setLayout(new log4cpp::BasicLayout());
 
 //	log4cpp::Appender *appender = new log4cpp::FileAppender("default", log_file);
-//	log4cpp::PatternLayout* layout = new log4cpp::PatternLayout();
-//	std::stringstream spid; spid << getpid();
-//	layout->setConversionPattern("[%p] %m%n");
-//	appender->setLayout(layout);
+	log4cpp::PatternLayout* layout = new log4cpp::PatternLayout();
+	layout->setConversionPattern("%d %m%n");
+	appender->setLayout(layout);
 
 	log4cpp::Category& root = log4cpp::Category::getRoot();
 //	root.removeAllAppenders();
 	root.setPriority(log4cpp::Priority::DEBUG);
-	root.addAppender(appender1);
+	root.addAppender(appender);
 }
 

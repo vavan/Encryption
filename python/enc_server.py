@@ -117,6 +117,7 @@ class Pipe(Connection):
     def __init__(self, parent, socket = None):
         Connection.__init__(self, parent, socket)
         self.queue = []
+        self.other = None
     def join_pipe(self, other):
         self.other = other
         other.other = self
@@ -136,8 +137,9 @@ class Pipe(Connection):
             log("Pipe queued %d bytes"%len(data))
             self.queue.append(data)
         else:
-            log("Pipe send %d bytes"%len(data))
-            self.s.send(data)
+            if self.s:
+                log("Pipe send %d bytes"%len(data))
+                self.s.send(data)
     def init(self):
         Connection.init(self)
         self.unqueue()

@@ -9,8 +9,10 @@ Point::Point(Worker* parent, Socket* socket): parent(parent), socket(socket) {
 	this->buffer.reserve(Point::BUFFER_SIZE);
 }
 Point::~Point() {
+	LOG.debugStream() << "~Point>";
 	this->parent->remove(this);
 	if (this->socket) delete this->socket;
+	LOG.debugStream() << "~Point<";
 }
 
 Buffer& Point::recv() {
