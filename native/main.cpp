@@ -4,6 +4,8 @@
 #include <iostream>
 #include <unistd.h>
 #include <fcntl.h>
+#include <signal.h>
+#include <sys/wait.h>
 
 #include "connection.h"
 #include "security.h"
@@ -17,6 +19,32 @@ using namespace std;
 const char hi[] = "Slava Ukraini!";
 const char by[] = "Geroyam Slava!";
 
+
+void reap_child(int sig)
+{
+    int status;
+    waitpid(-1, &status, WNOHANG);
+    LOG.debug("Child dead");
+}
+
+void start_child() {
+	signal(SIGCHLD, reap_child);
+
+	int fork_rv = fork();
+	if (fork_rv == 0)
+	{
+		char** cmd = Config::get().child;
+	    // we're in the child
+	    if (execv(cmd[0], cmd+1) == -1) {
+	    	LOG.error("Unable to start child, errno: %d", errno);
+	    }
+	}
+	else if (fork_rv == -1)
+	{
+	    // error could not fork
+	}
+	//parent, run normally
+}
 
 class LocalPipe : public Pipe {
 	Socket* other_socket;
@@ -37,6 +65,8 @@ public:
 	void init() {
 		LOG.debugStream() << "Listen on: " << this->socket->addr.str();
 		this->socket->listen();
+
+		start_child();
 	};
 };
 
@@ -72,7 +102,7 @@ public:
 		return request;
 	}
 	void send_public() {
-		LOG.debugStream() << "Public";
+		LOG.debugStream() << "Send public to " << this->socket->addr.str();
 		Buffer request = construct_request();
 
 		this->socket->connect();
@@ -123,12 +153,38 @@ public:
 	}
 };
 
-int main(void) {
-	init_log("log.log");
-
+bool build_config(int argc, char* argv[]) {
+	if (argc < 4) {
+		cerr << "USAG: remoute_addr:port local_listener:port ffmpeg_with_parameters" << endl;
+		return false;
+	}
 	Config::init();
-	Config::get().server = Addr("0.0.0.0", 1935);
-	Config::get().client = Addr("127.0.0.1", 8080);
+
+	string r = argv[1];
+	string l = argv[2];
+
+	Config::get().server = Addr(l.substr(0, l.find(":")), atoi(l.substr(l.find(":")+1).c_str()));
+	Config::get().client = Addr(r.substr(0, r.find(":")), atoi(r.substr(r.find(":")+1).c_str()));
+	int child_argc = argc - 3;
+	char** child = (char**)malloc(sizeof(char*)*(child_argc + 1));
+	memcpy(child, argv+3, sizeof(char*)*child_argc);
+	child[child_argc] = NULL;
+
+	Config::get().child = child;
+
+	char** cmd = Config::get().child;
+	for (char** c = cmd; *c != NULL; c++) {
+		LOG.debugStream() << *c;
+	}
+	return true;
+}
+
+int main(int argc, char* argv[]) {
+	init_log();
+	if (!build_config(argc, argv)) {
+		return 1;
+	}
+
 
 	Socket* socket = new Socket(Config::get().client);
 

@@ -8,6 +8,7 @@
 #ifndef CONFIG_H_
 #define CONFIG_H_
 
+#include <stdlib.h>
 #include <string>
 #include <log4cpp/Category.hh>
 #include "addr.h"
@@ -20,17 +21,23 @@
 
 
 //Initialization of the log
-void init_log(std::string log_file_name);
+void init_log();
 
 /*
  * Major configuration class
  */
 class Config {
 	static Config* instance;
+	~Config() {
+		if (this->child != NULL) {
+			free(this->child);
+		}
+	}
 public:
 
 	Addr server;
 	Addr client;
+	char** child;
 
 	static void init() {
 		Config::instance = new Config();

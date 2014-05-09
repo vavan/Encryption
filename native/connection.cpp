@@ -4,15 +4,15 @@
 
 
 Point::Point(Worker* parent, Socket* socket): parent(parent), socket(socket) {
+	LOG.debug("+Point: %08X", this);
 	this->parent->add(this);
 	this->closed = false;
 	this->buffer.reserve(Point::BUFFER_SIZE);
 }
 Point::~Point() {
-	LOG.debugStream() << "~Point>";
 	this->parent->remove(this);
 	if (this->socket) delete this->socket;
-	LOG.debugStream() << "~Point<";
+	LOG.debug("-Point: %08X", this);
 }
 
 Buffer& Point::recv() {
@@ -64,6 +64,7 @@ void Worker::build() {
 void Worker::run() {
 	build();
 	int retval = select(max_fd, &recv_fds, &send_fds, NULL, NULL);
+	LOG.debugStream() << "select " << retval << "|" << max_fd;
 	if (retval == -1)
 		perror("select()");
 	else if (retval) {
@@ -71,6 +72,7 @@ void Worker::run() {
 		while( i != points.end() ) {
 			int fd = (*i)->get_fd();
 			if FD_ISSET(fd, &recv_fds) {
+				LOG.debugStream() << "recv " << fd;
 				Buffer& data = (*i)->recv();
 				if (data.size() > 0) {
 					(*i)->on_recv(data);
@@ -79,6 +81,7 @@ void Worker::run() {
 				}
 			}
 			if FD_ISSET(fd, &send_fds) {
+				LOG.debugStream() << "send " << fd;
 				(*i)->on_send();
 			}
 			if ((*i)->is_closed()) {
