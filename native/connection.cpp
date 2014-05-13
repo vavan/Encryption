@@ -4,7 +4,7 @@
 
 
 Point::Point(Worker* parent, Socket* socket): parent(parent), socket(socket) {
-	LOG.debug("+Point: %08X", this);
+	LOG << "+Point: " << this;
 	this->parent->add(this);
 	this->closed = false;
 	this->buffer.reserve(Point::BUFFER_SIZE);
@@ -12,7 +12,7 @@ Point::Point(Worker* parent, Socket* socket): parent(parent), socket(socket) {
 Point::~Point() {
 	this->parent->remove(this);
 	if (this->socket) delete this->socket;
-	LOG.debug("-Point: %08X", this);
+	LOG << "-Point: %08X" << this;
 }
 
 Buffer& Point::recv() {
@@ -21,7 +21,7 @@ Buffer& Point::recv() {
 	if (recved > 0) {
 		buffer.assign(b, b+recved);
 	} else if (recved < 0) {
-		LOG.debugStream() << "ERROR!!!";
+		LOG << "Recv ERROR. Drop connection";
 		//TODO handle error!!!
 	}
 	return buffer;
@@ -64,7 +64,7 @@ void Worker::build() {
 void Worker::run() {
 	build();
 	int retval = select(max_fd, &recv_fds, &send_fds, NULL, NULL);
-	LOG.debugStream() << "select " << retval << "|" << max_fd;
+	LOG << "#select " << retval << "|" << max_fd;
 	if (retval == -1)
 		perror("select()");
 	else if (retval) {
@@ -72,7 +72,7 @@ void Worker::run() {
 		while( i != points.end() ) {
 			int fd = (*i)->get_fd();
 			if FD_ISSET(fd, &recv_fds) {
-				LOG.debugStream() << "recv " << fd;
+				LOG << "#recv " << fd;
 				Buffer& data = (*i)->recv();
 				if (data.size() > 0) {
 					(*i)->on_recv(data);
@@ -81,7 +81,7 @@ void Worker::run() {
 				}
 			}
 			if FD_ISSET(fd, &send_fds) {
-				LOG.debugStream() << "send " << fd;
+				LOG << "#send " << fd;
 				(*i)->on_send();
 			}
 			if ((*i)->is_closed()) {

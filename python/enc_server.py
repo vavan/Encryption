@@ -12,10 +12,6 @@ import struct
 from subprocess import Popen, PIPE, STDOUT
 
 
-class Secret:
-    HI = "Slava Ukraini!"
-    BY = "Geroyam Slava!"
-
 
 class KeyBuilder:
     GENERATE_KEY = 'openssl genrsa -out %(secret)s.pem 512'
@@ -204,48 +200,18 @@ class KeyServer(Connection):
     def recv(self):
         data = self._recv()
         log("KeyServer received %s bytes"%len(data))
-        if(self.state == KeyServer.WAIT_HI):
-            self.public_key = self.parse_hello(data)
-            log("Public key: %s"%self.public_key)
-            if not self.public_key:
-                log("Brocken HI, close connection")
-                return False
-            cipher = self.create_cipher()
+        self.public_key = data
+        log("Public key: %s"%self.public_key)
 
-            encoded = self.encode(self.public_key, cipher)
-            log("Gonna send, bytes: %d"%len(encoded))
+        cipher = self.create_cipher()
 
-            self.s.send(encoded)
+        encoded = self.encode(self.public_key, cipher)
+        log("Gonna send, bytes: %d"%len(encoded))
 
-            log("Sent")
-            self.state = KeyServer.WAIT_BY
-            return True
-        else:
-            if self.is_ack_valid(data):
-                log("Key session done")
-                self.switch_to_proxy()
-            else:
-                log("Key session fail!")
-            return False
-    def parse_size(self, data):
-        return ((ord(data[0])<<8) | (ord(data[1])))
-    def parse_hello(self, data):
-        hi = Secret.HI
-        hi_len = len(hi)
-        SIZE_FIELD = 2
-        if len(data) >= len(hi) + SIZE_FIELD:
-            if data.startswith(hi):
-                size_field = data[hi_len:hi_len+SIZE_FIELD]
-                public_key_length = self.parse_size(size_field)
-
-                if len(data) == hi_len + SIZE_FIELD + public_key_length:
-                    public_key = data[hi_len + SIZE_FIELD:]
-                    log("Hello parsed. Total=%s, key size=%s"%(len(data), public_key_length))  
-
-                    return public_key
-        return None
-    def is_ack_valid(self, data):
-        return data == Secret.BY
+        self.s.send(encoded)
+        log("Key session done")
+        self.switch_to_proxy()
+        return True
     def release_socket(self):
         s = self.s
         self.s = None

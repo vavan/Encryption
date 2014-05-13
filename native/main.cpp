@@ -16,15 +16,15 @@
 using namespace std;
 
 
-const char hi[] = "Slava Ukraini!";
-const char by[] = "Geroyam Slava!";
+//const char hi[] = "Slava Ukraini!";
+//const char by[] = "Geroyam Slava!";
 
 
 void reap_child(int sig)
 {
     int status;
     waitpid(-1, &status, WNOHANG);
-    LOG.debug("Child dead");
+    LOG << "Child died";
 }
 
 void start_child() {
@@ -36,7 +36,7 @@ void start_child() {
 		char** cmd = Config::get().child;
 	    // we're in the child
 	    if (execv(cmd[0], cmd+1) == -1) {
-	    	LOG.error("Unable to start child, errno: %d", errno);
+	    	LOG << "Unable to start child, errno: " << errno;
 	    }
 	}
 	else if (fork_rv == -1)
@@ -50,7 +50,7 @@ class LocalPipe : public Pipe {
 	Socket* other_socket;
 protected:
 	Buffer& recv() {
-		LOG.debugStream() << "accept local";
+		LOG << "Accept local";
 		Socket* accepted = this->socket->accept();
 		Pipe* sp = new Pipe(this->parent, accepted);
 		Pipe* cp = new Pipe(this->parent, this->other_socket);
@@ -63,7 +63,7 @@ protected:
 public:
 	LocalPipe(Worker* parent, Socket* socket, Socket* other_socket): Pipe(parent, socket), other_socket(other_socket) {};
 	void init() {
-		LOG.debugStream() << "Listen on: " << this->socket->addr.str();
+		LOG << "Listen on: " << this->socket->addr.str();
 		this->socket->listen();
 
 		start_child();
@@ -80,43 +80,45 @@ public:
 		done = false;
 	};
 
-	char* create_hi(char *out, char* pub_key)
-	{
-		strcpy(out, hi);
-		int i = strlen(hi);
-
-		int size = strlen(pub_key)-1;
-		out[i++] = (char)(size>>8);
-		out[i++] = (char)(size & 0xFF);
-
-		strcpy(out+i, pub_key);
-		return out;
-	}
+//	char* create_hi(char *out, char* pub_key)
+//	{
+//		strcpy(out, hi);
+//		int i = strlen(hi);
+//
+//		int size = strlen(pub_key)-1;
+//		out[i++] = (char)(size>>8);
+//		out[i++] = (char)(size & 0xFF);
+//
+//		strcpy(out+i, pub_key);
+//		return out;
+//	}
 	Buffer construct_request() {
-		int hi_size = strlen(hi) + 2 + strlen(sec.pub_key);
-		char* hi_msg = (char*)malloc(hi_size);
-		create_hi(hi_msg, sec.pub_key);
+//		int hi_size = strlen(hi) + 2 + strlen(sec.pub_key);
+//		char* hi_msg = (char*)malloc(hi_size);
+//		create_hi(hi_msg, sec.pub_key);
+		char* msg = sec.pub_key;
+		int len = strlen(sec.pub_key);
 		Buffer request;
 		request.reserve(Point::BUFFER_SIZE);
-		request.assign(hi_msg, hi_msg + hi_size - 1);
+		request.assign(msg, msg + len - 1);
 		return request;
 	}
 	void send_public() {
-		LOG.debugStream() << "Send public to " << this->socket->addr.str();
+		LOG << "Send public to " << this->socket->addr.str();
 		Buffer request = construct_request();
 
 		this->socket->connect();
 		this->send(request);
 	}
 	void send_ack() {
-		LOG.debugStream() << "Send Ack";
+		LOG << "Send Ack";
 		Buffer ack;
 		ack.assign(by, by + strlen(by));
 		this->send(ack);
 //		done = true;
 	}
 	void recv_private(Buffer& replay) {
-		LOG.debugStream() << "recv private size: " << replay.size();
+		LOG << "Receive private size: " << replay.size();
 		int s = replay.size();
 		char* b = (char*)malloc(s);
 		memcpy(b, &replay[0], s);
@@ -131,7 +133,7 @@ public:
 		done = true;
 	}
 	void start_proxy() {
-		LOG.debugStream() << "Start proxy";
+		LOG << "Start proxy";
 		LocalPipe* sp = new LocalPipe(this->parent, new Socket(Config::get().server), this->relese_socket());
 		sp->init();
 	}
@@ -172,10 +174,6 @@ bool build_config(int argc, char* argv[]) {
 
 	Config::get().child = child;
 
-	char** cmd = Config::get().child;
-	for (char** c = cmd; *c != NULL; c++) {
-		LOG.debugStream() << *c;
-	}
 	return true;
 }
 
@@ -184,7 +182,6 @@ int main(int argc, char* argv[]) {
 	if (!build_config(argc, argv)) {
 		return 1;
 	}
-
 
 	Socket* socket = new Socket(Config::get().client);
 
@@ -196,7 +193,7 @@ int main(int argc, char* argv[]) {
 		w.run();
 	}
 
-	LOG.debugStream() << "Exit";
+	LOG << "Exit";
 	Config::done();
     return 0;
 }

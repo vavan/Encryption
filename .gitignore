@@ -5,3 +5,6 @@ bin/
 objs/
 *~
 *.pyc
+*.pem
+*.log
+*.crt

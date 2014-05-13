@@ -23,6 +23,10 @@
 class Security
 {
 public:
+	Security() {
+	    encrypted = NULL;    // Encrypted message
+	    decrypted = NULL;    // Decrypted message
+	}
 	~Security() {
 		_free();
 	}
@@ -30,8 +34,8 @@ public:
 	char   *pri_key;           // Private key
     char   *pub_key;           // Public key
     char   *err;               // Buffer for any error messages
-    char   *encrypted = NULL;    // Encrypted message
-    char   *decrypted = NULL;    // Decrypted message
+    char   *encrypted;    // Encrypted message
+    char   *decrypted;    // Decrypted message
     RSA    *keypair;
     BIO    *pri;
     BIO    *pub;

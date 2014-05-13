@@ -10,15 +10,22 @@
 
 #include <stdlib.h>
 #include <string>
-#include <log4cpp/Category.hh>
 #include "addr.h"
+#ifdef LOG4CPP
+#include <log4cpp/Category.hh>
+#else
+#include <iostream>
+#endif
 
 /*
  * Logging system
  */
 //Access to the log
-#define LOG log4cpp::Category::getRoot()
-
+#ifdef LOG4CPP
+#define LOG log4cpp::Category::getRoot().debugStream()
+#else
+#define LOG std::cerr << std::endl
+#endif
 
 //Initialization of the log
 void init_log();

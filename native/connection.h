@@ -73,7 +73,7 @@ public:
 	virtual void on_close() {};
 
 
-	friend Worker;
+	friend class Worker;
 };
 
 

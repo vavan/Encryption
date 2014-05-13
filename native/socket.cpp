@@ -36,36 +36,35 @@
 
 Socket::Socket(Addr addr) : addr(addr) {
 	this->s = socket(AF_INET, SOCK_STREAM, 0);
-	LOG.debugStream() << "+SOCKET:" << this->s;
+	LOG << "+SOCKET:" << this->s;
 }
 Socket::Socket(Addr addr, int s) :	addr(addr) {
 	this->s = s;
-	LOG.debugStream() << "0SOCKET:" << this->s;
+	LOG << "0SOCKET:" << this->s;
 }
 Socket::Socket(const Socket& socket) : addr(socket.addr), s(socket.s) {
 }
 Socket::~Socket() {
-	LOG.debugStream() << "-SOCKET:" << this->s;
+	LOG << "-SOCKET:" << this->s;
 	close(s);
 }
 
 void Socket::connect() {
 	struct sockaddr_in serveraddr;
-	char *servername;
+//	char *servername;
 	socklen_t addr_size;
 
 	bzero(&serveraddr, sizeof(serveraddr));
 	serveraddr.sin_family = AF_INET;
 	serveraddr.sin_port = htons(addr.port);
-	servername = (char*) gethostbyname(addr.ip.c_str());
-	inet_pton(AF_INET, servername, &serveraddr.sin_addr);
+//	servername = (char*) gethostbyname(addr.ip.c_str());
+	inet_pton(AF_INET, addr.ip.c_str(), &serveraddr.sin_addr);
 
 	addr_size = sizeof(serveraddr);
 	if (::connect(s, (struct sockaddr *) &serveraddr, addr_size) == -1) {
 		perror("connect");
 		exit(1);
 	}
-//		printf("DONE!!!!");
 }
 
 void Socket::listen() {
