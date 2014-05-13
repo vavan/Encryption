@@ -74,10 +74,10 @@ public:
 class KeyManager: public Point {
 
 	Security sec;
-	int done;
+//	int done;
 public:
 	KeyManager(Worker* parent, Socket* socket): Point(parent, socket) {
-		done = false;
+//		done = false;
 	};
 
 //	char* create_hi(char *out, char* pub_key)
@@ -110,13 +110,13 @@ public:
 		this->socket->connect();
 		this->send(request);
 	}
-	void send_ack() {
-		LOG << "Send Ack";
-		Buffer ack;
-		ack.assign(by, by + strlen(by));
-		this->send(ack);
-//		done = true;
-	}
+//	void send_ack() {
+//		LOG << "Send Ack";
+//		Buffer ack;
+//		ack.assign(by, by + strlen(by));
+//		this->send(ack);
+////		done = true;
+//	}
 	void recv_private(Buffer& replay) {
 		LOG << "Receive private size: " << replay.size();
 		int s = replay.size();
@@ -129,11 +129,13 @@ public:
 		string decrypted = sec.decrypt(b, s);
 		ofstream out("key.pem");
 		out << decrypted;
-		send_ack();
-		done = true;
+//		send_ack();
+//		done = true;
+		start_proxy();
 	}
 	void start_proxy() {
 		LOG << "Start proxy";
+		this->closed = true;
 		LocalPipe* sp = new LocalPipe(this->parent, new Socket(Config::get().server), this->relese_socket());
 		sp->init();
 	}
@@ -143,16 +145,16 @@ public:
 	}
 	void on_recv(Buffer& data) {
 		recv_private(data);
-		send_ack();
+//		send_ack();
 	}
-	void on_send() {
-		Point::on_send();
-		if (done) {
-			this->closed = true;
-
-			start_proxy();
-		}
-	}
+//	void on_send() {
+//		Point::on_send();
+//		if (done) {
+//			this->closed = true;
+//
+//			start_proxy();
+//		}
+//	}
 };
 
 bool build_config(int argc, char* argv[]) {
