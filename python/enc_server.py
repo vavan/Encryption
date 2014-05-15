@@ -85,9 +85,12 @@ class Connection(threading.Thread):
     def _recv(self):
         return self.s.recv(Pipe.BUFFER_SIZE)
     def stop(self):
+        log("Stopped %s"%self)
         self.running = False
     def init(self):
         self.running = True
+    def on_close(self):
+        pass
     def run(self):
         self.init()
         logging.debug("Start %s"%self)
@@ -95,6 +98,7 @@ class Connection(threading.Thread):
             try:
                 if not self.recv():
                     log("Disconnected")
+                    self.on_close()
                     break
             except socket.timeout as e:
                 log("***: %s"%str(e))
@@ -139,6 +143,8 @@ class Pipe(Connection):
     def init(self):
         Connection.init(self)
         self.unqueue()
+    def on_close(self):
+        self.other.stop()
 
 
 class Client(Pipe):
