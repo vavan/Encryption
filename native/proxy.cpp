@@ -30,7 +30,7 @@ void Pipe::on_recv(Buffer& buffer) {
 	}
 }
 void Pipe::on_close() {
-	LOG << "Pipe::on_close: %08X" << this;
+	LOG << "Pipe::on_close: " << this;
 	this->closing = true;
 	if (this->other) this->other->closing = true;
 	if (queue.empty()) {
@@ -42,7 +42,7 @@ void Pipe::on_close() {
 void Pipe::on_send() {
 	Point::on_send();
 	if (this->closing) {
-		LOG << "Pipe::on_send, closing: %08X" << this;
+		LOG << "Pipe::on_send, closing: " << this;
 		this->closed = true;
 		this->other->closed = true;
 	}

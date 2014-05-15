@@ -16,20 +16,8 @@
 using namespace std;
 
 
-//const char hi[] = "Slava Ukraini!";
-//const char by[] = "Geroyam Slava!";
-
-
-void reap_child(int sig)
-{
-    int status;
-    waitpid(-1, &status, WNOHANG);
-    LOG << "Child died";
-}
 
 void start_child() {
-	signal(SIGCHLD, reap_child);
-
 	int fork_rv = fork();
 	if (fork_rv == 0)
 	{
@@ -41,7 +29,7 @@ void start_child() {
 	}
 	else if (fork_rv == -1)
 	{
-	    // error could not fork
+	    LOG << "***ERROR: could not fork, returns: " << fork_rv;
 	}
 	//parent, run normally
 }

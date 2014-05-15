@@ -5,8 +5,8 @@
  *      Author: vova
  */
 
-#ifndef PROXY22_H_
-#define PROXY22_H_
+#ifndef CONNECTION_H_
+#define CONNECTION_H_
 
 #include <iostream>
 #include <string>
@@ -90,4 +90,4 @@ public:
 	bool empty();
 };
 
-#endif /* PROXY22_H_ */
+#endif /* CONNECTION_H_ */

@@ -20,9 +20,11 @@ Buffer& Point::recv() {
 	int recved = this->socket->recv(b, 4096);
 	if (recved > 0) {
 		buffer.assign(b, b+recved);
-	} else if (recved < 0) {
-		LOG << "Recv ERROR. Drop connection";
-		//TODO handle error!!!
+	} else {
+		buffer.resize(0);
+		if (recved < 0) {
+			LOG << "Recv ERROR. Drop connection";
+		}
 	}
 	return buffer;
 }
@@ -55,10 +57,8 @@ void Worker::build() {
 		int fd = (*i)->get_fd();
 		if (!(*i)->queue.empty()) {
 			FD_SET(fd, &send_fds);
-			LOG << "Send on: " << fd;
 		}
 		FD_SET(fd, &recv_fds);
-		LOG << "Read on: " << fd;
 		if (fd > max_fd) max_fd = fd;
 	}
 	max_fd++;
@@ -66,7 +66,6 @@ void Worker::build() {
 void Worker::run() {
 	build();
 	int retval = select(max_fd, &recv_fds, &send_fds, NULL, NULL);
-	LOG << "#select " << retval << "|" << max_fd;
 	if (retval == -1)
 		perror("select()");
 	else if (retval) {
@@ -74,7 +73,6 @@ void Worker::run() {
 		while( i != points.end() ) {
 			int fd = (*i)->get_fd();
 			if FD_ISSET(fd, &recv_fds) {
-				LOG << "#recv " << fd;
 				Buffer& data = (*i)->recv();
 				if (data.size() > 0) {
 					(*i)->on_recv(data);
@@ -83,7 +81,6 @@ void Worker::run() {
 				}
 			}
 			if FD_ISSET(fd, &send_fds) {
-				LOG << "#send " << fd;
 				(*i)->on_send();
 			}
 			if ((*i)->is_closed()) {
