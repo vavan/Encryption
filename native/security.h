@@ -100,7 +100,7 @@ public:
 	    // Decrypt it
 	    decrypted = (char *)malloc(encrypt_len);
 	    if(RSA_private_decrypt(encrypt_len, (unsigned char*)encrypt, (unsigned char*)decrypted,
-	                           keypair, RSA_PKCS1_PADDING) == -1) {
+	                           keypair, RSA_PKCS1_OAEP_PADDING) == -1) {
 	        ERR_load_crypto_strings();
 	        ERR_error_string(ERR_get_error(), err);
 	        fprintf(stderr, "Error decrypting message: %s\n", err);

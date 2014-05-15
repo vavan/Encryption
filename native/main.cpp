@@ -74,28 +74,10 @@ public:
 class KeyManager: public Point {
 
 	Security sec;
-//	int done;
 public:
 	KeyManager(Worker* parent, Socket* socket): Point(parent, socket) {
-//		done = false;
-	};
-
-//	char* create_hi(char *out, char* pub_key)
-//	{
-//		strcpy(out, hi);
-//		int i = strlen(hi);
-//
-//		int size = strlen(pub_key)-1;
-//		out[i++] = (char)(size>>8);
-//		out[i++] = (char)(size & 0xFF);
-//
-//		strcpy(out+i, pub_key);
-//		return out;
-//	}
+	}
 	Buffer construct_request() {
-//		int hi_size = strlen(hi) + 2 + strlen(sec.pub_key);
-//		char* hi_msg = (char*)malloc(hi_size);
-//		create_hi(hi_msg, sec.pub_key);
 		char* msg = sec.pub_key;
 		int len = strlen(sec.pub_key);
 		Buffer request;
@@ -110,13 +92,6 @@ public:
 		this->socket->connect();
 		this->send(request);
 	}
-//	void send_ack() {
-//		LOG << "Send Ack";
-//		Buffer ack;
-//		ack.assign(by, by + strlen(by));
-//		this->send(ack);
-////		done = true;
-//	}
 	void recv_private(Buffer& replay) {
 		LOG << "Receive private size: " << replay.size();
 		int s = replay.size();
@@ -129,8 +104,7 @@ public:
 		string decrypted = sec.decrypt(b, s);
 		ofstream out("key.pem");
 		out << decrypted;
-//		send_ack();
-//		done = true;
+
 		start_proxy();
 	}
 	void start_proxy() {
@@ -145,16 +119,7 @@ public:
 	}
 	void on_recv(Buffer& data) {
 		recv_private(data);
-//		send_ack();
 	}
-//	void on_send() {
-//		Point::on_send();
-//		if (done) {
-//			this->closed = true;
-//
-//			start_proxy();
-//		}
-//	}
 };
 
 bool build_config(int argc, char* argv[]) {

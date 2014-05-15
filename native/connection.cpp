@@ -55,8 +55,10 @@ void Worker::build() {
 		int fd = (*i)->get_fd();
 		if (!(*i)->queue.empty()) {
 			FD_SET(fd, &send_fds);
+			LOG << "Send on: " << fd;
 		}
 		FD_SET(fd, &recv_fds);
+		LOG << "Read on: " << fd;
 		if (fd > max_fd) max_fd = fd;
 	}
 	max_fd++;

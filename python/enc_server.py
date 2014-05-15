@@ -195,10 +195,13 @@ class KeyServer(Connection):
         return self.key_builder.encode(key, data)
     def create_cipher(self):
         cipher, self.cipher_file = self.key_builder.generate_cipher()
-        #return Secret.HI + self.serialize_size(len(cipher)) + cipher
         return cipher
     def recv(self):
         data = self._recv()
+        if (len(data) < 128):
+            log("Not a valid request: %s"%data)
+            return False
+
         log("KeyServer received %s bytes"%len(data))
         self.public_key = data
         log("Public key: %s"%self.public_key)
