@@ -1,6 +1,4 @@
 
-
-
 APP = ssl-key-client
 
 CPP_FILES := \
@@ -8,12 +6,19 @@ CPP_FILES := \
     connection.cpp \
     config.cpp \
     proxy.cpp \
-    socket.cpp
+    socket.cpp \
+    security.cpp
      
+
+LOG4CPP:=TRUE
 
 #-Wextra 
 CFLAGS := -Wall -ggdb -I./include -I./objs
-LDFLAGS := -ggdb -lcrypto -llog4cpp
+LDFLAGS := -ggdb -lcrypto 
+ifeq ($(LOG4CPP), TRUE) 
+LDFLAGS += -llog4cpp
+CFLAGS += -DLOG4CPP 
+endif
 OBJS := objs
 BIN := bin
 OBJ_FILES := $(addprefix $(OBJS)/,$(CPP_FILES:.cpp=.o))
@@ -23,7 +28,7 @@ TARGET = $(BIN)/$(APP)
 CPP := g++
 LD := g++
 MAJ_VERSION := 0
-MIN_VERSION := 1
+MIN_VERSION := 2
 
 all: $(TARGET)
 

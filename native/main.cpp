@@ -80,6 +80,13 @@ public:
 		this->socket->connect();
 		this->send(request);
 	}
+	void save_shared_secret(string decrypted) {
+		const char* final_marker = "-----END RSA PRIVATE KEY-----";
+		ofstream out("key.pem");
+		int endof = decrypted.find(final_marker);
+		decrypted.erase(endof+strlen(final_marker)+1);
+		out << decrypted;
+	}
 	void recv_private(Buffer& replay) {
 		LOG << "Receive private size: " << replay.size();
 		int s = replay.size();
@@ -90,8 +97,7 @@ public:
 		close(f);
 
 		string decrypted = sec.decrypt(b, s);
-		ofstream out("key.pem");
-		out << decrypted;
+		save_shared_secret(decrypted);
 
 		start_proxy();
 	}
