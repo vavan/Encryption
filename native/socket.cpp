@@ -51,13 +51,11 @@ Socket::~Socket() {
 
 void Socket::connect() {
 	struct sockaddr_in serveraddr;
-//	char *servername;
 	socklen_t addr_size;
 
 	bzero(&serveraddr, sizeof(serveraddr));
 	serveraddr.sin_family = AF_INET;
 	serveraddr.sin_port = htons(addr.port);
-//	servername = (char*) gethostbyname(addr.ip.c_str());
 	inet_pton(AF_INET, addr.ip.c_str(), &serveraddr.sin_addr);
 
 	addr_size = sizeof(serveraddr);

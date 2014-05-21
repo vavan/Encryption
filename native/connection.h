@@ -15,7 +15,9 @@
 #include <list>
 #include <deque>
 #include <vector>
+#include <exception>
 #include "socket.h"
+#include "config.h"
 
 using namespace std;
 
@@ -25,33 +27,70 @@ typedef vector<char> Buffer;
 
 
 class Queue {
-public:
-	void push(Buffer& msg) {
-		queue.push_back(msg);
+	int front;
+	int back;
+	int inc(int index) {
+		if  (index < ENTRIES-1) {
+			index++;
+		} else {
+			index = 0;
+		}
+		return index;
 	}
-	Buffer pop() {
-		Buffer b = queue.front();
-		queue.pop_front();
+public:
+	static const int ENTRIES = 50;
+	static const int DEPTH = 4096;
+	Queue() {
+		front = 0;
+		back = 0;
+		for(int i = 0; i < ENTRIES; i++) {
+			Buffer* b = new Buffer(DEPTH);
+//			b.reserve(DEPTH);
+			queue.push_back(b);
+		}
+	}
+	~Queue() {
+		for(int i = 0; i < ENTRIES; i++) {
+			Buffer* b = queue.back();
+			delete b;
+			queue.pop_back();
+		}
+	}
+	Buffer* push() {
+		Buffer* b = queue[front];
+		front = inc(front);
+		LOG << "<" << front;
+		if (front == back) {
+			LOG << "Proxy buffer overflow. Stop";
+			//throw "Proxy buffer overflow. Stop";
+		}
+		return b;
+	}
+	Buffer* pop() {
+		Buffer* b = queue[back];
+		back = inc(back);
+		LOG << ">" << back;
 		return b;
 	}
 	bool empty() {
-		return queue.empty();
+		return front == back;
 	}
 private:
-	deque<Buffer> queue;
+	vector<Buffer*> queue;
 };
 
 class Point {
 protected:
 	Worker* parent;
 	Socket* socket;
-	Buffer buffer;
-	Queue queue;
+//	Buffer buffer;
+	Queue send_queue;
+	Buffer recv_buffer;
 	bool closed;
-	static const int BUFFER_SIZE = 4096;
+//	static const int BUFFER_SIZE = 4096;
 
-	virtual Buffer& recv();
-	virtual void send(Buffer& msg);
+	virtual Buffer* recv();
+	virtual void send(Buffer* msg);
 
 public:
 	Point(Worker* parent, Socket* socket);
@@ -68,7 +107,7 @@ public:
 		return released;
 	}
 	virtual void init() {};
-	virtual void on_recv(Buffer& data) {};
+	virtual void on_recv(Buffer* data) {};
 	virtual void on_send();
 	virtual void on_close() {};
 

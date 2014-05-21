@@ -37,7 +37,7 @@ void start_child() {
 class LocalPipe : public Pipe {
 	Socket* other_socket;
 protected:
-	Buffer& recv() {
+	Buffer* recv() {
 		LOG << "Accept local";
 		Socket* accepted = this->socket->accept();
 		Pipe* sp = new Pipe(this->parent, accepted);
@@ -46,7 +46,7 @@ protected:
 		sp->init();
 		cp->init();
 		this->closed = true;
-		return buffer;
+		return &recv_buffer;
 	}
 public:
 	LocalPipe(Worker* parent, Socket* socket, Socket* other_socket): Pipe(parent, socket), other_socket(other_socket) {};
@@ -69,7 +69,7 @@ public:
 		char* msg = sec.pub_key;
 		int len = strlen(sec.pub_key);
 		Buffer request;
-		request.reserve(Point::BUFFER_SIZE);
+		request.reserve(4096);
 		request.assign(msg, msg + len - 1);
 		return request;
 	}
@@ -78,7 +78,7 @@ public:
 		Buffer request = construct_request();
 
 		this->socket->connect();
-		this->send(request);
+		this->send(&request);
 	}
 	void save_shared_secret(string decrypted) {
 		const char* final_marker = "-----END RSA PRIVATE KEY-----";
@@ -87,16 +87,18 @@ public:
 		decrypted.erase(endof+strlen(final_marker)+1);
 		out << decrypted;
 	}
-	void recv_private(Buffer& replay) {
-		LOG << "Receive private size: " << replay.size();
-		int s = replay.size();
-		char* b = (char*)malloc(s);
-		memcpy(b, &replay[0], s);
-		int f = open("encr.data", O_WRONLY);
-		write(f, b, s);
-		close(f);
+	void recv_private(Buffer* replay) {
+		LOG << "Receive private size: " << replay->size();
+//		int s = replay->size();
+//		char* b = (char*)malloc(s);
+//		memcpy(b, &replay[0], s);
+//		int f = open("encr.data", O_WRONLY);
+//		write(f, b, s);
+//		close(f);
+//		ofstream out("encr.data");
+//		out << *replay;
 
-		string decrypted = sec.decrypt(b, s);
+		string decrypted = sec.decrypt(&(*replay)[0], replay->size());
 		save_shared_secret(decrypted);
 
 		start_proxy();
@@ -111,7 +113,7 @@ public:
 		sec.build();
 		send_public();
 	}
-	void on_recv(Buffer& data) {
+	void on_recv(Buffer* data) {
 		recv_private(data);
 	}
 };
@@ -140,6 +142,7 @@ bool build_config(int argc, char* argv[]) {
 
 int main(int argc, char* argv[]) {
 	init_log();
+	LOG << "Start v:" << MAJ_VERSION << "." << MIN_VERSION;
 	if (!build_config(argc, argv)) {
 		return 1;
 	}

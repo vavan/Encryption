@@ -10,6 +10,8 @@
 
 #include "connection.h"
 
+
+
 class Listener : public Point {
 public:
 	void init();
@@ -20,13 +22,16 @@ class Pipe: public Point {
 private:
 	Pipe* other;
 	bool closing;
+
+	virtual Buffer* recv();
+
 public:
 	Pipe(Worker* parent, Socket* socket): Point(parent, socket) {
 		other = NULL;
 		closing = false;
 	};
 	void join(Pipe* other);
-	virtual void on_recv(Buffer& buffer);
+	virtual void on_recv(Buffer* buffer);
 	virtual void on_send();
 	virtual void on_close();
 };

@@ -7,36 +7,38 @@ Point::Point(Worker* parent, Socket* socket): parent(parent), socket(socket) {
 	LOG << "+Point: " << this;
 	this->parent->add(this);
 	this->closed = false;
-	this->buffer.reserve(Point::BUFFER_SIZE);
+	this->recv_buffer.reserve(Queue::DEPTH);
 }
 Point::~Point() {
 	this->parent->remove(this);
 	if (this->socket) delete this->socket;
-	LOG << "-Point: %08X" << this;
+	LOG << "-Point: " << this;
 }
 
-Buffer& Point::recv() {
-	char b[4096];
-	int recved = this->socket->recv(b, 4096);
-	if (recved > 0) {
-		buffer.assign(b, b+recved);
+Buffer* Point::recv() {
+//	static char b[4096];
+	recv_buffer.resize(Queue::DEPTH);
+	int recved = this->socket->recv(&recv_buffer[0], recv_buffer.size());
+	if (recved >= 0) {
+		recv_buffer.resize(recved);
 	} else {
-		buffer.resize(0);
-		if (recved < 0) {
-			LOG << "Recv ERROR. Drop connection";
-		}
+		recv_buffer.resize(0);
+		LOG << "Recv ERROR. Drop connection";
 	}
-	return buffer;
+	return &recv_buffer;
 }
 
-void Point::send(Buffer& msg) {
-	queue.push(msg);
+void Point::send(Buffer* msg) {
+	Buffer* buffer = send_queue.push();
+	LOG << "push: " << buffer;
+	buffer->assign(msg->begin(), msg->end());
 }
-
 void Point::on_send() {
-	if (!queue.empty()) {
-		Buffer buffer = queue.pop();
-		this->socket->send(&buffer[0], buffer.size());
+	if (!send_queue.empty()) {
+		Buffer* buffer = send_queue.pop();
+		LOG << "pop: " << buffer;
+//		LOG << "on send: " << (*buffer)[0] << &(*buffer)[0];
+		this->socket->send(&(*buffer)[0], buffer->size());
 	}
 };
 
@@ -55,7 +57,7 @@ void Worker::build() {
 	FD_ZERO(&recv_fds);
 	for (Points::iterator i = points.begin(); i != points.end(); i++) {
 		int fd = (*i)->get_fd();
-		if (!(*i)->queue.empty()) {
+		if (!(*i)->send_queue.empty()) {
 			FD_SET(fd, &send_fds);
 		}
 		FD_SET(fd, &recv_fds);
@@ -73,8 +75,8 @@ void Worker::run() {
 		while( i != points.end() ) {
 			int fd = (*i)->get_fd();
 			if FD_ISSET(fd, &recv_fds) {
-				Buffer& data = (*i)->recv();
-				if (data.size() > 0) {
+				Buffer* data = (*i)->recv();
+				if (data->size() > 0) {
 					(*i)->on_recv(data);
 				} else {
 					(*i)->on_close();

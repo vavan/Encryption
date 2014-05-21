@@ -13,7 +13,7 @@ CPP_FILES := \
 LOG4CPP:=TRUE
 
 #-Wextra 
-CFLAGS := -Wall -ggdb -I./include -I./objs
+CFLAGS := -Wall -O0 -ggdb -I./include -I./objs
 LDFLAGS := -ggdb -lcrypto 
 ifeq ($(LOG4CPP), TRUE) 
 LDFLAGS += -llog4cpp
@@ -28,7 +28,7 @@ TARGET = $(BIN)/$(APP)
 CPP := g++
 LD := g++
 MAJ_VERSION := 0
-MIN_VERSION := 2
+MIN_VERSION := 3
 
 all: $(TARGET)
 
@@ -61,11 +61,12 @@ $(TARGET): $(OBJ_FILES) | $(BIN)
 
 
 clean:
-	rm -rf $(BIN) $(OBJS)
+	rm -rf $(BIN) $(OBJS) *.pem *.tgz core
 
 
 install:
 	cp $(TARGET) /usr/bin/
 
-
+tar:
+	tar -czf $(APP).$(MAJ_VERSION).$(MIN_VERSION).tgz $(CPP_FILES) *.h Makefile 
 

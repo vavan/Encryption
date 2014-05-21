@@ -94,21 +94,13 @@ void Security::load_keypair() {
 	FILE* fpri = fopen(Security::pri_file, "rb");
 	FILE* fpub = fopen(Security::pub_file, "rb");
 
-	//keypair = RSA_new();
-	RSA * z;
+	RSA* z;
 	z = PEM_read_RSAPrivateKey(fpri, &keypair, NULL, NULL);
 	if (!z) {
 		ERR_load_crypto_strings();
 		ERR_error_string(ERR_get_error(), err);
 		LOG << "***SECURIY: " << err;
 	}
-	/*
-	keypair = PEM_read_RSA_PUBKEY(fpub, &keypair, NULL, NULL);
-	if (!keypair) {
-		ERR_load_crypto_strings();
-		ERR_error_string(ERR_get_error(), err);
-		LOG << "***SECURIY: " << err;
-	}*/
 	pri_key = NULL;
 
 	fseek(fpub, 0, SEEK_END);
@@ -116,7 +108,7 @@ void Security::load_keypair() {
 	fseek(fpub, 0, SEEK_SET);
 
 	pub_key = (char*)malloc(fsize + 1);
-	fread(pub_key, fsize, 1, fpub);
+	fsize = fread(pub_key, 1, fsize, fpub);
 	pub_key[fsize] = '\0';
 	fclose(fpub);
 	fclose(fpri);
