@@ -11,6 +11,9 @@ CPP_FILES := \
      
 
 LOG4CPP:=TRUE
+ifeq ($(CROSS), TRUE)
+PREFIX:=arm-none-linux-gnueabi-
+endif
 
 #-Wextra 
 CFLAGS := -Wall -O0 -ggdb -I./include -I./objs
@@ -25,8 +28,8 @@ OBJ_FILES := $(addprefix $(OBJS)/,$(CPP_FILES:.cpp=.o))
 MIN_VERSION = $(OBJS)/version.out
 DEPENDENCY = $(OBJS)/depend 
 TARGET = $(BIN)/$(APP)
-CPP := g++
-LD := g++
+CPP := $(PREFIX)g++
+LD := $(PREFIX)g++
 MAJ_VERSION := 0
 MIN_VERSION := 3
 
