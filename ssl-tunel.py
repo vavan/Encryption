@@ -34,21 +34,22 @@ class Pipe(threading.Thread):
         other.other = self
     def recv(self):
         data = self.s.recv(Pipe.BUFFER_SIZE)
-        log("Pipe received %s bytes"%len(data))
+        #log("Pipe received %s bytes"%len(data))
+        log("[[%s]]"%data)
         if data:
             self.other.send(data)
         return data
     def unqueue(self):
         for i in self.queue:
-            log("Pipe un-queued %d bytes"%len(i))
+            #log("Pipe un-queued %d bytes"%len(i))
             self.s.send(i)
         self.queue = []
     def send(self, data):
         if self.running == False:
-            log("Pipe queued %d bytes"%len(data))
+            #log("Pipe queued %d bytes"%len(data))
             self.queue.append(data)
         else:
-            log("Pipe send %d bytes"%len(data))
+            #log("Pipe send %d bytes"%len(data))
             self.s.send(data)
     def stop(self):
         self.running = False
@@ -130,11 +131,10 @@ class Listener:
                 s = self.Server_Class(self, self.secure, socket)
                 self.children.append( s )
                 s.start()
-                if not isinstance(s, RecordMixIn):
-                    c = Client(self, *self.client_url)
-                    self.children.append( c )
-                    c.join_pipe(s)
-                    c.start()
+                c = Client(self, *self.client_url)
+                self.children.append( c )
+                c.join_pipe(s)
+                c.start()
             except KeyboardInterrupt:
                 break
         self.stop()
