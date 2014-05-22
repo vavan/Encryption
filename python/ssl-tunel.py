@@ -8,7 +8,7 @@ import logging
 
 logging.basicConfig(level=logging.DEBUG,
                         format='%(asctime)s %(message)s',
-                        filename='sec.log',
+                        filename='ssl-tunel.log',
                         filemode='a'
                         )
 
@@ -35,7 +35,7 @@ class Pipe(threading.Thread):
     def recv(self):
         data = self.s.recv(Pipe.BUFFER_SIZE)
         #log("Pipe received %s bytes"%len(data))
-        log("[[%s]]"%data)
+        #log("[[%s]]"%data)
         if data:
             self.other.send(data)
         return data
@@ -106,10 +106,9 @@ class Server(Pipe):
 
 
 class Listener:
-    def __init__(self, server_url, client_url, Server_Class):
+    def __init__(self, server_url, client_url):
         self.secure, self.ip, self.port = server_url
         self.client_url = client_url
-        self.Server_Class = Server_Class
         self.children = []
     def create(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -128,9 +127,10 @@ class Listener:
                 socket, addr = listen.accept()
                 log("Accepted connection from %s"%str(addr))
 
-                s = self.Server_Class(self, self.secure, socket)
+                s = Server(self, self.secure, socket)
                 self.children.append( s )
                 s.start()
+
                 c = Client(self, *self.client_url)
                 self.children.append( c )
                 c.join_pipe(s)
@@ -153,10 +153,10 @@ if len(sys.argv) >= 3:
     server = sys.argv[1]
     client = sys.argv[2]
 
-    ps = Listener(parse_url(server), parse_url(client), Server)
+    ps = Listener(parse_url(server), parse_url(client))
     ps.start()
 else:
-    print("USAGE: [s]serverip:port [s]clientip:port [dump]")
+    print("USAGE: [s]serverip:port [s]clientip:port")
 
 
 

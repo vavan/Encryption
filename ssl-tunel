@@ -1,0 +1,49 @@
+#!/bin/sh
+
+### BEGIN INIT INFO
+# Provides:	  ssl-tunel
+# Required-Start:    $local_fs $remote_fs $network $syslog $named
+# Required-Stop:     $local_fs $remote_fs $network $syslog $named
+# Default-Start:     2 3 4 5
+# Default-Stop:      0 1 6
+# Short-Description: starts the ssl capability for RTMP/nginx server
+# Description:       starts ssl/RTMPS using start-stop-daemon
+### END INIT INFO
+
+#PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+WORKDIR=/usr/local/ssl-tunel/
+DAEMON=ssl-tunel.py
+
+
+set -e
+
+. /lib/lsb/init-functions
+
+
+case "$1" in
+	start)
+		cd $WORKDIR && ./bin/$DAEMON 0.0.0.0:8080 127.0.0.1:1935 &
+		;;
+
+	stop)
+		killall -9 $DAEMON
+		;;
+
+	restart)
+		$0 stop
+		sleep 1
+		$0 start
+		;;
+
+
+	status)
+		ps ax | grep $DAEMON | grep -v grep
+		;;
+
+	*)
+		echo "Usage: $NAME {start|stop|restart|status}" >&2
+		exit 1
+		;;
+esac
+
+exit 0
