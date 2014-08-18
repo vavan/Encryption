@@ -13,15 +13,16 @@ sudo chmod 0777 .
 #echo "Generate certificate request"
 #openssl req -new -nodes -out server.csr
 
-echo "Generate private key"
-openssl genrsa -out key.pem 2048
+#echo "Generate private key"
+#openssl genrsa -out key.pem 2048
 
-echo "Generate the certifucate"
-openssl x509 -req -days 365 -in server.csr -signkey key.pem -out cert.pem
+#echo "Generate the certifucate"
+#openssl x509 -req -days 365 -in server.csr -signkey key.pem -out cert.pem
 
 sudo chown root:root *
 sudo chmod 0400 *
 sudo chmod 0500 ssl-tunel.py
+sudo chmod 0500 ssl-tunel.sh
 
-update-rc.d ssl-tunel defaults
+sudo update-rc.d ssl-tunel defaults
 
