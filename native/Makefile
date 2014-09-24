@@ -1,14 +1,13 @@
 
-APP = ssl-key-client
+APP = key-client tunnel
 
 CPP_FILES := \
-    main.cpp \
     connection.cpp \
     config.cpp \
     proxy.cpp \
     socket.cpp \
     security.cpp
-     
+
 
 LOG4CPP:=TRUE
 ifeq ($(CROSS), TRUE)
@@ -25,9 +24,8 @@ endif
 OBJS := objs
 BIN := bin
 OBJ_FILES := $(addprefix $(OBJS)/,$(CPP_FILES:.cpp=.o))
-MIN_VERSION = $(OBJS)/version.out
 DEPENDENCY = $(OBJS)/depend 
-TARGET = $(BIN)/$(APP)
+TARGET = $(addprefix $(BIN)/,$(APP))
 CPP := $(PREFIX)g++
 LD := $(PREFIX)g++
 MAJ_VERSION := 0
@@ -55,12 +53,14 @@ ifneq ($(MAKECMDGOALS),install)
 endif
 endif
 
-$(OBJ_FILES): objs/%.o : %.cpp | $(DEPENDENCY)
+MAIN=$(addsuffix .o,$(addprefix $(OBJS)/,$(APP)))
+
+$(OBJ_FILES) $(MAIN): objs/%.o : %.cpp | $(DEPENDENCY)
 	$(CPP) $(CFLAGS) -DMIN_VERSION=$(MIN_VERSION) -DMAJ_VERSION=$(MAJ_VERSION) -c $< -o $@ 
 
-$(TARGET): $(OBJ_FILES) | $(BIN)
+$(TARGET): $(OBJ_FILES) $(MAIN) | $(BIN)
 	@echo Build version: $(MAJ_VERSION).$(MIN_VERSION)
-	$(LD) $(OBJ_FILES) -o $@ $(LDFLAGS) 
+	$(LD) $(OBJ_FILES) $(OBJS)/$(notdir $@).o -o $@ $(LDFLAGS) 
 
 
 clean:

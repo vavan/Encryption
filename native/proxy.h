@@ -14,6 +14,7 @@
 
 class Listener : public Point {
 public:
+	Listener(Worker* parent, Socket* socket): Point(parent, socket) {};
 	void init();
 	void do_recv();
 };

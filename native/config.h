@@ -35,16 +35,10 @@ void init_log();
  */
 class Config {
 	static Config* instance;
-	~Config() {
-		if (this->child != NULL) {
-			free(this->child);
-		}
-	}
 public:
 
 	Addr server;
 	Addr client;
-	char** child;
 
 	static void init() {
 		Config::instance = new Config();

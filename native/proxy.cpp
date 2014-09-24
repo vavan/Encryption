@@ -64,7 +64,7 @@ void Pipe::on_send() {
 }
 
 void ServerPipe::init() {
-//	this-->socket->listen();
+	this->socket->listen();
 }
 
 void ClientPipe::init() {
