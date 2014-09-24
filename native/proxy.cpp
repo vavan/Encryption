@@ -17,6 +17,8 @@ void Listener::do_recv() {
 	ServerPipe* sp = new ServerPipe(this->parent, accepted);
 	ClientPipe* cp = new ClientPipe(this->parent, new Socket(Config::get().client));
 	sp->join(cp);
+	sp->init();
+	cp->init();
 }
 
 Buffer* Pipe::recv() {
@@ -30,7 +32,7 @@ Buffer* Pipe::recv() {
 		proxy_buffer->resize(recved);
 	} else {
 		proxy_buffer->resize(0);
-		LOG << "Recv ERROR. Drop connection";
+		LOG << "ZZ Recv ERROR. Drop connection";
 	}
 	return proxy_buffer;
 }
@@ -64,7 +66,7 @@ void Pipe::on_send() {
 }
 
 void ServerPipe::init() {
-	this->socket->listen();
+//	this->socket->listen();
 }
 
 void ClientPipe::init() {

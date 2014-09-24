@@ -16,7 +16,7 @@ using namespace std;
 
 
 bool build_config(int argc, char* argv[]) {
-	if (argc < 4) {
+	if (argc != 3) {
 		cerr << "USAGE: remoute_addr:port local_listener:port" << endl;
 		return false;
 	}
@@ -38,7 +38,7 @@ int main(int argc, char* argv[]) {
 		return 1;
 	}
 
-	Socket* socket = new Socket(Config::get().client);
+	Socket* socket = new Socket(Config::get().server);
 
 	Worker w = Worker();
 	Listener* l = new Listener(&w, socket);

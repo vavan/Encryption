@@ -109,7 +109,7 @@ public:
 	virtual void init() {};
 	virtual void on_recv(Buffer* data) {};
 	virtual void on_send();
-	virtual void on_close() {};
+	virtual void on_close() {LOG << "wrong way";};
 
 
 	friend class Worker;
