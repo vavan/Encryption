@@ -76,11 +76,13 @@ void Worker::run() {
 			int fd = (*i)->get_fd();
 			if FD_ISSET(fd, &recv_fds) {
 				Buffer* data = (*i)->recv();
-				LOG << "01 GOT" << data->size();
-				if (data->size() > 0) {
-					(*i)->on_recv(data);
-				} else {
-					(*i)->on_close();
+				if (data != NULL) {
+					LOG << "01 GOT" << data->size();
+					if (data->size() > 0) {
+						(*i)->on_recv(data);
+					} else {
+						(*i)->on_close();
+					}
 				}
 			}
 			if FD_ISSET(fd, &send_fds) {

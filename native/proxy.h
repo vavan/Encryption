@@ -13,10 +13,11 @@
 
 
 class Listener : public Point {
+private:
+	virtual Buffer* recv();
 public:
 	Listener(Worker* parent, Socket* socket): Point(parent, socket) {};
 	void init();
-	void do_recv();
 };
 
 class Pipe: public Point {

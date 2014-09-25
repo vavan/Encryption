@@ -105,7 +105,7 @@ class ProxyTests(unittest.TestCase):
         self.assertEqual(request, response)
 
 
-    @unittest.skip("Not now")
+    #@unittest.skip("Not now")
     def test_simple_128(self):
         c = Client()
         request = 'Z'*128;
@@ -114,7 +114,7 @@ class ProxyTests(unittest.TestCase):
         c.close()
         self.assertEqual(request, response)
 
-    @unittest.skip("Not now")
+    #@unittest.skip("Not now")
     def test_repeat_128(self):
         cycles = 128
         c = Client()

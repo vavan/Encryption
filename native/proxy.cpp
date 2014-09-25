@@ -12,13 +12,15 @@
 void Listener::init() {
 	this->socket->listen();
 }
-void Listener::do_recv() {
+
+Buffer* Listener::recv() {
 	Socket* accepted = this->socket->accept();
 	ServerPipe* sp = new ServerPipe(this->parent, accepted);
 	ClientPipe* cp = new ClientPipe(this->parent, new Socket(Config::get().client));
 	sp->join(cp);
 	sp->init();
 	cp->init();
+	return NULL;
 }
 
 Buffer* Pipe::recv() {
