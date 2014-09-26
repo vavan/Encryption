@@ -5,74 +5,61 @@
  *      Author: vova
  */
 
+#include "normal_socket.h"
 #include "config.h"
 #include "connection.h"
 #include "proxy.h"
+
+
+Listener::Listener(Worker* parent, Socket* socket): WorkItem(parent, socket) {}
+
+bool Listener::is_sending() {
+	return false;
+}
 
 void Listener::init() {
 	this->socket->listen();
 }
 
-Buffer* Listener::recv() {
+void Listener::recv() {
 	Socket* accepted = this->socket->accept();
 	ServerPipe* sp = new ServerPipe(this->parent, accepted);
-	ClientPipe* cp = new ClientPipe(this->parent, new Socket(Config::get().client));
+	ClientPipe* cp = new ClientPipe(this->parent, new NormalSocket(Config::get().client));
 	sp->join(cp);
 	sp->init();
 	cp->init();
-	return NULL;
 }
 
-Buffer* Pipe::recv() {
-	Buffer* proxy_buffer = this->other->send_queue.push();
-	LOG << "proxy_buffer push: " << proxy_buffer;
+void Listener::send() {
+};
 
 
-	proxy_buffer->resize(Queue::DEPTH);
-	int recved = this->socket->recv(&(*proxy_buffer)[0], proxy_buffer->size());
-	if (recved >= 0) {
-		proxy_buffer->resize(recved);
-	} else {
-		proxy_buffer->resize(0);
-		LOG << "ZZ Recv ERROR. Drop connection";
-	}
-	return proxy_buffer;
+Buffer* Pipe::get_buffer() {
+	return this->other->send_queue.get_front();
 }
 
 void Pipe::join(Pipe* other) {
 	this->other = other;
 	this->other->other = this;
 }
+
 void Pipe::on_recv(Buffer* buffer) {
-//	if (!this->closing) {
-//		this->other->send(buffer);
-//	}
 }
+
 void Pipe::on_close() {
-	LOG << "Pipe::on_close: " << this;
 	this->closing = true;
-	if (this->other) this->other->closing = true;
+	if (this->other)
+		this->other->closing = true;
 	if (send_queue.empty()) {
-		LOG << "Pipe::closed: " << this;
 		this->closed = true;
 		if (this->other) this->other->closed = true;
 	}
 }
-void Pipe::on_send() {
-	Point::on_send();
+
+void Pipe::on_send(Buffer* buffer) {
 	if (this->closing) {
-		LOG << "Pipe::on_send, closing: " << this;
 		this->closed = true;
 		this->other->closed = true;
 	}
 }
-
-void ServerPipe::init() {
-//	this->socket->listen();
-}
-
-void ClientPipe::init() {
-	this->socket->connect();
-}
-
 

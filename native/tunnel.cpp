@@ -7,12 +7,16 @@
 #include <signal.h>
 #include <sys/wait.h>
 
-#include "connection.h"
+#include "worker.h"
+
 #include "config.h"
 #include "proxy.h"
+#include "normal_socket.h"
+#include "secure_socket.h"
 
 
 using namespace std;
+
 
 
 bool build_config(int argc, char* argv[]) {
@@ -31,24 +35,45 @@ bool build_config(int argc, char* argv[]) {
 	return true;
 }
 
+bool running;
+
+void terminationHandler(int sig)
+{
+	LOG.debugStream() << "MAIN. Got signal:" << sig;
+	running = false;
+}
+
 int main(int argc, char* argv[]) {
 	init_log();
-	LOG << "Start v:" << MAJ_VERSION << "." << MIN_VERSION;
+	LOG.noticeStream() << "Start tunnel. Version:" << MAJ_VERSION << "." << MIN_VERSION;
+
 	if (!build_config(argc, argv)) {
 		return 1;
 	}
-
-	Socket* socket = new Socket(Config::get().server);
+	signal(SIGTERM, terminationHandler);
 
 	Worker w = Worker();
-	Listener* l = new Listener(&w, socket);
-	l->init();
+//	Listener* listener = new Listener(&w, new NormalSocket(Config::get().server));
+//	listener->init();
 
-	while (!w.empty()) {
+	SecureSocket ss(Addr("127.0.0.1", 5689));
+//	ss.connect();
+
+	ClientPipe cp = ClientPipe(&w, &ss);
+	cp.init();
+
+	char data[] = "OK";
+//	ss.send(data, 2);
+	Buffer b; b.assign(data, data+2);
+	cp.push(&b);
+
+	running = true;
+	while (running) {
 		w.run();
 	}
 
-	LOG << "Exit";
+//	delete listener;
+	LOG.noticeStream() << "Exit";
 	Config::done();
     return 0;
 }

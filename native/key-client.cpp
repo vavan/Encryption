@@ -37,7 +37,8 @@ void start_child() {
 class LocalPipe : public Pipe {
 	Socket* other_socket;
 protected:
-	Buffer* recv() {
+	//Buffer* recv() {
+	void recv() {
 		LOG << "Accept local";
 		Socket* accepted = this->socket->accept();
 		Pipe* sp = new Pipe(this->parent, accepted);
@@ -46,7 +47,7 @@ protected:
 		sp->init();
 		cp->init();
 		this->closed = true;
-		return &recv_buffer;
+		//return &recv_buffer;
 	}
 public:
 	LocalPipe(Worker* parent, Socket* socket, Socket* other_socket): Pipe(parent, socket), other_socket(other_socket) {};

@@ -18,115 +18,30 @@
 #include <exception>
 #include "socket.h"
 #include "config.h"
-
-using namespace std;
-
-class Worker;
-
-typedef vector<char> Buffer;
+#include "queue.h"
+#include "worker.h"
 
 
-class Queue {
-	int front;
-	int back;
-	int inc(int index) {
-		if  (index < ENTRIES-1) {
-			index++;
-		} else {
-			index = 0;
-		}
-		return index;
-	}
-public:
-	static const int ENTRIES = 50;
-	static const int DEPTH = 4096;
-	Queue() {
-		front = 0;
-		back = 0;
-		for(int i = 0; i < ENTRIES; i++) {
-			Buffer* b = new Buffer(DEPTH);
-//			b.reserve(DEPTH);
-			queue.push_back(b);
-		}
-	}
-	~Queue() {
-		for(int i = 0; i < ENTRIES; i++) {
-			Buffer* b = queue.back();
-			delete b;
-			queue.pop_back();
-		}
-	}
-	Buffer* push() {
-		Buffer* b = queue[front];
-		front = inc(front);
-		LOG << "<" << front;
-		if (front == back) {
-			LOG << "Proxy buffer overflow. Stop";
-			//throw "Proxy buffer overflow. Stop";
-		}
-		return b;
-	}
-	Buffer* pop() {
-		Buffer* b = queue[back];
-		back = inc(back);
-		LOG << ">" << back;
-		return b;
-	}
-	bool empty() {
-		return front == back;
-	}
-private:
-	vector<Buffer*> queue;
-};
-
-class Point {
+class BufferedPoint: public WorkItem {
 protected:
-	Worker* parent;
-	Socket* socket;
-//	Buffer buffer;
 	Queue send_queue;
-	Buffer recv_buffer;
-	bool closed;
-//	static const int BUFFER_SIZE = 4096;
 
-	virtual Buffer* recv();
-	virtual void send(Buffer* msg);
-
+	virtual Buffer* get_buffer() = 0;
 public:
-	Point(Worker* parent, Socket* socket);
-	virtual ~Point();
-	int get_fd() {
-		return this->socket->s;
-	}
-	bool is_closed() {
-		return closed;
-	}
-	Socket* relese_socket() {
-		Socket* released = this->socket;
-		this->socket = NULL;
-		return released;
-	}
-	virtual void init() {};
-	virtual void on_recv(Buffer* data) {};
-	virtual void on_send();
-	virtual void on_close() {LOG << "wrong way";};
+	BufferedPoint(Worker* parent, Socket* socket) : WorkItem(parent, socket) {};
+	virtual void init();
+	virtual void recv();
+	virtual void send();
+	virtual bool is_sending();
 
+	virtual void push(Buffer* data);
 
-	friend class Worker;
+	virtual void on_recv(Buffer* msg) = 0;
+	virtual void on_send(Buffer* msg) = 0;
+	virtual void on_close() = 0;
 };
 
 
-class Worker {
-	typedef list<Point*> Points;
-	Points points;
-	fd_set recv_fds, send_fds;
-	int max_fd;
-public:
-	void build();
-	void add(Point* point);
-	void remove(Point* point);
-	void run();
-	bool empty();
-};
+
 
 #endif /* CONNECTION_H_ */

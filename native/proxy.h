@@ -11,43 +11,40 @@
 #include "connection.h"
 
 
-
-class Listener : public Point {
-private:
-	virtual Buffer* recv();
+class Listener : public WorkItem {
 public:
-	Listener(Worker* parent, Socket* socket): Point(parent, socket) {};
-	void init();
+	Listener(Worker* parent, Socket* socket);
+	virtual void init();
+	virtual void recv();
+	virtual void send();
+	virtual bool is_sending();
 };
 
-class Pipe: public Point {
+class Pipe: public BufferedPoint {
 private:
 	Pipe* other;
 	bool closing;
 
-	virtual Buffer* recv();
-
+	virtual Buffer* get_buffer();
 public:
-	Pipe(Worker* parent, Socket* socket): Point(parent, socket) {
-		other = NULL;
-		closing = false;
-	};
+	Pipe(Worker* parent, Socket* socket): BufferedPoint(parent, socket), other(NULL), closing(false) {};
 	void join(Pipe* other);
 	virtual void on_recv(Buffer* buffer);
-	virtual void on_send();
+	virtual void on_send(Buffer* buffer);
 	virtual void on_close();
 };
 
 class ServerPipe : public Pipe {
 public:
 	ServerPipe(Worker* parent, Socket* socket): Pipe(parent, socket) {};
-	void init();
 };
 
 class ClientPipe : public Pipe {
 public:
 	ClientPipe(Worker* parent, Socket* socket): Pipe(parent, socket) {};
-	void init();
+	void init() {
+		this->socket->connect();
+	}
 };
 
 

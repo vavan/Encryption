@@ -1,26 +1,25 @@
 
-APP = key-client tunnel
+APP = tunnel
 
 CPP_FILES := \
     connection.cpp \
     config.cpp \
     proxy.cpp \
     socket.cpp \
-    security.cpp
+    queue.cpp \
+    worker.cpp \
+    normal_socket.cpp \
+    secure_socket.cpp \
+    secure_impl.cpp
 
 
-LOG4CPP:=TRUE
 ifeq ($(CROSS), TRUE)
 PREFIX:=arm-none-linux-gnueabi-
 endif
 
 #-Wextra 
-CFLAGS := -Wall -O0 -ggdb -I./include -I./objs
-LDFLAGS := -ggdb -lcrypto 
-ifeq ($(LOG4CPP), TRUE) 
-LDFLAGS += -llog4cpp
-CFLAGS += -DLOG4CPP 
-endif
+CFLAGS := -Wall -O0 -ggdb -DLOG4CPP -I./include -I./objs
+LDFLAGS := -ggdb -lcrypto -lssl -llog4cpp 
 OBJS := objs
 BIN := bin
 OBJ_FILES := $(addprefix $(OBJS)/,$(CPP_FILES:.cpp=.o))
@@ -29,7 +28,7 @@ TARGET = $(addprefix $(BIN)/,$(APP))
 CPP := $(PREFIX)g++
 LD := $(PREFIX)g++
 MAJ_VERSION := 0
-MIN_VERSION := 3
+MIN_VERSION := 5
 
 all: $(TARGET)
 
