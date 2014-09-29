@@ -34,6 +34,7 @@ void BufferedPoint::send() {
 };
 
 bool BufferedPoint::is_sending() {
+	return true;
 	int sending = this->socket->is_sending();
 	if (sending > 0) {
 		return sending == 1;

@@ -57,6 +57,7 @@ void Pipe::on_close() {
 }
 
 void Pipe::on_send(Buffer* buffer) {
+	LOG.debugStream() << "Sent bytes:" << buffer->size();
 	if (this->closing) {
 		this->closed = true;
 		this->other->closed = true;
