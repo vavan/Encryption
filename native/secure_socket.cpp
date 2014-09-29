@@ -19,15 +19,15 @@ SecureSocket::SecureSocket(Addr addr) :
 	this->impl = new SecureImpl();
 	if (SSL_set_fd(this->impl->connection, this->s) == 0)
 		this->impl->checkErrors("SSL_set_fd");
-	is_connecting = false;
+	is_connected = false;
+	_is_sending = 0;
 }
 
 SecureSocket::SecureSocket(NormalSocket& socket) :
 		NormalSocket(socket) {
 	this->impl = new SecureImpl();
-	if (SSL_set_fd(this->impl->connection, this->s) == 0)
-		this->impl->checkErrors("SSL_set_fd");
-	is_connecting = false;
+	is_connected = false;
+	_is_sending = 0;
 }
 
 SecureSocket::~SecureSocket() {
@@ -66,8 +66,14 @@ bool SecureSocket::connect() {
 //	SSL_set_bio(this->impl->connection, this->impl->bio, this->impl->bio);
 
 	NormalSocket::connect();
+
+	if (SSL_set_fd(this->impl->connection, this->s) == 0) {
+		this->impl->checkErrors("SSL_set_fd");
+	}
 	SSL_set_connect_state(this->impl->connection);
-//	if (SSL_connect(this->impl->connection) <= 0) {
+
+
+	//	if (SSL_connect(this->impl->connection) <= 0) {
 //		int ret = ERR_get_error();
 //		if ((ret == SSL_ERROR_WANT_READ) || (ret == SSL_ERROR_WANT_WRITE)) {
 //			is_connecting = true;
@@ -77,47 +83,59 @@ bool SecureSocket::connect() {
 //			return false;
 //		}
 //	}
-	is_connecting = true;
+//	is_connecting = true;
 	return true;
+}
+
+int SecureSocket::is_sending() {
+	return _is_sending;
 }
 
 bool SecureSocket::connect2() {
 	int ret = 0;
 	if ((ret = SSL_connect(this->impl->connection)) <= 0) {
-		LOG.errorStream() << "SSL_connect=" << ret;
+		int ret2 = SSL_get_error(this->impl->connection, ret);
+		if (ret2 == SSL_ERROR_WANT_READ) {
+			_is_sending = 2;
+			return false;
+		} else if (ret2 == SSL_ERROR_WANT_WRITE) {
+			_is_sending = 1;
+			return false;
+		} else {
+			LOG.errorStream() << "SSL_connect=" << ret << " | " << ret2;
+			return false;
+		}
 //		int ret = ERR_get_error();
 //		if ((ret == SSL_ERROR_WANT_READ) || (ret == SSL_ERROR_WANT_WRITE)) {
 //			is_connecting = true;
 //			return true;
 //		} else {
-			this->impl->checkErrors("SSL_connect");
+			//this->impl->checkErrors("SSL_connect");
 //			return false;
 //		}
 	}
-	return false;
+	_is_sending = 0;
+	return true;
 }
 
 size_t SecureSocket::send(char* buf, size_t size) {
-	int result;
-	socklen_t result_len = sizeof(result);
-	if (getsockopt(this->s, SOL_SOCKET, SO_ERROR, &result, &result_len) < 0) {
-		LOG.errorStream() << "SOCKET. Cant getopt=" << result;
-	}
-	LOG.debugStream() << "SOCKET. getopt=" << result;
-
-	if (is_connecting) {
-		this->connect2();
-		this->connect2();
-		is_connecting = false;
-		return 1;
+	if (!is_connected) {
+		is_connected = this->connect2();
+//		this->connect2();
+//		is_connecting = false;
+		LOG.errorStream() << "SSL_connect ONSEND=" << is_connected;
+		return -1;
 	} else {
 		return SSL_write(this->impl->connection, buf, size);
 	}
 }
 
 size_t SecureSocket::recv(char* buf, const size_t size) {
-	if (is_connecting)
-		this->connect();
+	if (!is_connected) {
+		is_connected = this->connect2();
+		LOG.errorStream() << "SSL_connect ONRECV=" << is_connected;
+		return -1;
+	}
 	return SSL_read(this->impl->connection, buf, size);
 }
 

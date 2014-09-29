@@ -11,6 +11,15 @@
 
 SSL_CTX* SecureImpl::ctx = NULL;
 
+std::string SecureImpl::getError(int ret_code) {
+	char buf[1024];
+	int err = SSL_get_error(this->connection, ret_code);
+	ERR_error_string_n(err, buf, sizeof(buf));
+	std::string out = buf;
+	return buf;
+}
+
+
 void SecureImpl::checkErrors(const std::string& tag) {
 	int i;
 	LOG.errorStream() << tag << ':' << '\n';

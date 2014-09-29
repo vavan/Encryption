@@ -10,6 +10,7 @@ void BufferedPoint::recv() {
 	int recved = this->socket->recv(&(*buffer)[0], buffer->size());
 	if (recved > 0) {
 		buffer->resize(recved);
+		LOG.errorStream() << "SOCKET. recv bytes=" << recved;
 		this->on_recv(buffer);
 	} else if (recved == 0) {
 		this->on_close();
@@ -20,18 +21,25 @@ void BufferedPoint::recv() {
 
 void BufferedPoint::send() {
 	if (!send_queue.empty()) {
-		Buffer* buffer = send_queue.get_back();
+		Buffer* buffer = send_queue.try_back();
 		size_t size = buffer->size();
-		if (this->socket->send(&(*buffer)[0], size) != size) {
-			LOG.errorStream() << "BufferedPoint. Send error";
-		} else {
+		size_t sent = this->socket->send(&(*buffer)[0], size);
+		if (sent == size) {
+			send_queue.get_back();
 			this->on_send(buffer);
+		} else {
+			LOG.errorStream() << "BufferedPoint. Send error";
 		}
 	}
 };
 
 bool BufferedPoint::is_sending() {
-	return !this->send_queue.empty();
+	int sending = this->socket->is_sending();
+	if (sending > 0) {
+		return sending == 1;
+	} else {
+		return !this->send_queue.empty();
+	}
 }
 
 void BufferedPoint::push(Buffer* msg) {

@@ -116,12 +116,6 @@ void NormalSocket::nonblock() {
 }
 
 size_t NormalSocket::send(char* buf, size_t size) {
-	int result;
-	socklen_t result_len = sizeof(result);
-	if (getsockopt(this->s, SOL_SOCKET, SO_ERROR, &result, &result_len) < 0) {
-		LOG.errorStream() << "SOCKET. Cant getopt=" << result;
-		return 0;
-	}
 	return ::send(s, buf, size, 0);
 }
 

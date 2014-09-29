@@ -38,6 +38,8 @@ public:
 	virtual size_t send(char* buf, size_t size) = 0;
 	virtual size_t recv(char* buf, const size_t size) = 0;
 	virtual void nonblock() = 0;
+	virtual int is_sending() = 0;
+
 };
 
 #endif /* SOCKET_H_ */

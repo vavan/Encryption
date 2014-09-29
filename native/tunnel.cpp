@@ -18,6 +18,14 @@
 using namespace std;
 
 
+Addr parse_addr(string input) {
+	int has_colon = input.find(":");
+	if (has_colon > 0) {
+		return Addr(input.substr(0, has_colon), atoi(input.substr(has_colon + 1).c_str()));
+	} else {
+		return Addr("127.0.0.1", atoi(input.c_str()));
+	}
+}
 
 bool build_config(int argc, char* argv[]) {
 	if (argc != 3) {
@@ -29,8 +37,8 @@ bool build_config(int argc, char* argv[]) {
 	string r = argv[1];
 	string l = argv[2];
 
-	Config::get().server = Addr(l.substr(0, l.find(":")), atoi(l.substr(l.find(":")+1).c_str()));
-	Config::get().client = Addr(r.substr(0, r.find(":")), atoi(r.substr(r.find(":")+1).c_str()));
+	Config::get().server = parse_addr(l);
+	Config::get().client = parse_addr(r);
 
 	return true;
 }
@@ -53,26 +61,23 @@ int main(int argc, char* argv[]) {
 	signal(SIGTERM, terminationHandler);
 
 	Worker w = Worker();
-//	Listener* listener = new Listener(&w, new NormalSocket(Config::get().server));
-//	listener->init();
-
+#if 0
+	Listener* main = new Listener(&w, new NormalSocket(Config::get().server));
+	main->init();
+#else
 	SecureSocket ss(Addr("127.0.0.1", 5689));
-//	ss.connect();
-
-	ClientPipe cp = ClientPipe(&w, &ss);
-	cp.init();
-
+	ClientPipe* main = new ClientPipe(&w, &ss);
+	main->init();
 	char data[] = "OK";
-//	ss.send(data, 2);
 	Buffer b; b.assign(data, data+2);
-	cp.push(&b);
-
+	main->push(&b);
+#endif
 	running = true;
 	while (running) {
 		w.run();
 	}
 
-//	delete listener;
+	delete main;
 	LOG.noticeStream() << "Exit";
 	Config::done();
     return 0;

@@ -25,6 +25,7 @@ public:
 	SecureImpl();
 	~SecureImpl();
 	void checkErrors(const std::string& tag);
+	std::string getError(int ret_code);
 };
 
 

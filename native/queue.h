@@ -62,6 +62,10 @@ public:
 		back = inc(back);
 		return b;
 	}
+	Buffer* try_back() {
+		Buffer* b = queue[back];
+		return b;
+	}
 	bool empty() {
 		return front == back;
 	}

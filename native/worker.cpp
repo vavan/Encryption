@@ -50,9 +50,9 @@ void Worker::build() {
 	FD_ZERO(&recv_fds);
 	for (WorkItems::iterator i = points.begin(); i != points.end(); i++) {
 		int fd = (*i)->get_fd();
-//		if ((*i)->is_sending()) {
+		if ((*i)->is_sending()) {
 			FD_SET(fd, &send_fds);
-//		}
+		}
 		FD_SET(fd, &recv_fds);
 		if (fd > max_fd) max_fd = fd;
 	}
