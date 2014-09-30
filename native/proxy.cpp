@@ -9,6 +9,7 @@
 #include "config.h"
 #include "connection.h"
 #include "proxy.h"
+#include "secure_socket.h"
 
 
 Listener::Listener(Worker* parent, Socket* socket): WorkItem(parent, socket) {}
@@ -22,15 +23,19 @@ void Listener::init() {
 }
 
 void Listener::recv() {
-	Socket* accepted = this->socket->accept();
-	ServerPipe* sp = new ServerPipe(this->parent, accepted);
-	ClientPipe* cp = new ClientPipe(this->parent, new NormalSocket(Config::get().client));
-	sp->join(cp);
-	sp->init();
-	cp->init();
+	NormalSocket* accepted = (NormalSocket*)this->socket->accept();
+	if (accepted) {
+		ServerPipe* sp = new ServerPipe(this->parent, accepted);
+		ClientPipe* cp = new ClientPipe(this->parent,
+				new NormalSocket(Config::get().client));
+		sp->join(cp);
+		sp->init();
+		cp->init();
+	}
 }
 
 void Listener::send() {
+
 };
 
 

@@ -37,6 +37,9 @@ public:
 class ServerPipe : public Pipe {
 public:
 	ServerPipe(Worker* parent, Socket* socket): Pipe(parent, socket) {};
+	void init() {
+		//this->socket->accept();
+	}
 };
 
 class ClientPipe : public Pipe {

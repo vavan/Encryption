@@ -17,15 +17,15 @@ protected:
 public:
 	NormalSocket(Addr addr);
 	NormalSocket(Addr addr, int s);
-	NormalSocket(const NormalSocket& socket);
+	NormalSocket(const NormalSocket* socket);
 	virtual ~NormalSocket();
 
 	virtual int get();
 	virtual bool connect();
 	virtual bool listen();
 	virtual Socket* accept();
-	virtual size_t send(char* buf, size_t size);
-	virtual size_t recv(char* buf, const size_t size);
+	virtual ssize_t send(char* buf, size_t size);
+	virtual ssize_t recv(char* buf, const size_t size);
 	virtual void nonblock();
 	virtual int is_sending() {return 0;};
 

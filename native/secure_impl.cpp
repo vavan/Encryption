@@ -7,6 +7,7 @@
 #include <iostream>
 
 #include "secure_impl.h"
+#include "socket.h"
 #include "config.h"
 
 SSL_CTX* SecureImpl::ctx = NULL;
@@ -46,5 +47,43 @@ SecureImpl::SecureImpl() {
 
 SecureImpl::~SecureImpl() {
 	SSL_free(connection);
+}
+
+
+ssize_t SecureImpl::connect() {
+	int ret;
+	if ((ret = SSL_connect(this->connection)) <= 0) {
+		ret = SSL_get_error(this->connection, ret);
+		if (ret == SSL_ERROR_WANT_READ || ret == SSL_ERROR_WANT_WRITE) {
+			return Socket::INPROGRESS;
+		} else {
+			LOG.errorStream() << "SSL_connect=" << ret;
+			return Socket::ERROR;
+		}
+	}
+	return Socket::DONE;
+}
+
+ssize_t SecureImpl::accept() {
+	int ret;
+	if ((ret = SSL_accept(this->connection)) <= 0) {
+		ret = SSL_get_error(this->connection, ret);
+		if (ret == SSL_ERROR_WANT_READ || ret == SSL_ERROR_WANT_WRITE) {
+			return Socket::INPROGRESS;
+		} else {
+			LOG.errorStream() << "SSL_accept=" << ret;
+			return Socket::ERROR;
+		}
+	}
+	return Socket::DONE;
+}
+
+ssize_t SecureImpl::send(char* buf, size_t size) {
+	//TODO handle SSL_error
+	return SSL_write(this->connection, buf, size);
+}
+ssize_t SecureImpl::recv(char* buf, const size_t size) {
+	//TODO handle SSL_error
+	return SSL_read(this->connection, buf, size);
 }
 

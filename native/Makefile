@@ -10,7 +10,8 @@ CPP_FILES := \
     worker.cpp \
     normal_socket.cpp \
     secure_socket.cpp \
-    secure_impl.cpp
+    secure_impl.cpp \
+    secure_state.cpp
 
 
 ifeq ($(CROSS), TRUE)

@@ -61,8 +61,12 @@ int main(int argc, char* argv[]) {
 	signal(SIGTERM, terminationHandler);
 
 	Worker w = Worker();
-#if 0
-	Listener* main = new Listener(&w, new NormalSocket(Config::get().server));
+#if 1
+//	Listener* main = new Listener(&w, new NormalSocket(Config::get().server));
+	SecureSocket* ss = new SecureSocket(Addr("127.0.0.1", 5689));
+	ss->set_security("test.crt","test.key");
+	Listener* main = new Listener(&w, ss);
+
 	main->init();
 #else
 	SecureSocket ss(Addr("127.0.0.1", 5689));

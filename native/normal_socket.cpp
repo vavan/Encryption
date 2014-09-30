@@ -44,8 +44,8 @@ NormalSocket::NormalSocket(Addr addr, int s) :
 	LOG.debugStream() << "SOCKET.Copy:" << this->s;
 }
 
-NormalSocket::NormalSocket(const NormalSocket& socket) :
-		Socket(socket.addr), s(socket.s) {
+NormalSocket::NormalSocket(const NormalSocket* socket) :
+		Socket(socket->addr), s(socket->s) {
 	LOG.debugStream() << "SOCKET.Copy:" << this->s;
 }
 
@@ -115,11 +115,13 @@ void NormalSocket::nonblock() {
 	}
 }
 
-size_t NormalSocket::send(char* buf, size_t size) {
+ssize_t NormalSocket::send(char* buf, size_t size) {
+	//TODO handle errno
 	return ::send(s, buf, size, 0);
 }
 
-size_t NormalSocket::recv(char* buf, const size_t size) {
+ssize_t NormalSocket::recv(char* buf, const size_t size) {
+	//TODO handle errno
 	return ::recv(s, buf, size, 0);
 }
 

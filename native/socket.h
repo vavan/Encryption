@@ -6,6 +6,7 @@
  */
 #ifndef SOCKET_H_
 #define SOCKET_H_
+#include <sys/types.h>
 #include <string>
 
 class Addr {
@@ -24,10 +25,18 @@ public:
 	std::string str();
 };
 
+
 class Socket {
 protected:
 	Addr addr;
 public:
+	enum SocketReturns {
+		ENDOFFILE = 0,
+		DONE = 0,
+		ERROR = -1,
+		INPROGRESS = -2
+	};
+
 	Socket(Addr addr);
 	virtual ~Socket();
 
@@ -35,8 +44,8 @@ public:
 	virtual bool connect() = 0;
 	virtual bool listen() = 0;
 	virtual Socket* accept() = 0;
-	virtual size_t send(char* buf, size_t size) = 0;
-	virtual size_t recv(char* buf, const size_t size) = 0;
+	virtual ssize_t send(char* buf, size_t size) = 0;
+	virtual ssize_t recv(char* buf, const size_t size) = 0;
 	virtual void nonblock() = 0;
 	virtual int is_sending() = 0;
 

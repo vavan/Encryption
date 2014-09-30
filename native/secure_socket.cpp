@@ -5,7 +5,6 @@
  *      Author: vova
  */
 
-
 #include <sys/types.h>
 #include <sys/socket.h>
 #include "config.h"
@@ -17,24 +16,70 @@ using namespace std;
 SecureSocket::SecureSocket(Addr addr) :
 		NormalSocket(addr) {
 	this->impl = new SecureImpl();
+	this->state = &idleState;
 	if (SSL_set_fd(this->impl->connection, this->s) == 0)
 		this->impl->checkErrors("SSL_set_fd");
-	is_connected = false;
-	_is_sending = 0;
+
+//	is_connected = false;
+//	_is_sending = 0;
 }
 
-SecureSocket::SecureSocket(NormalSocket& socket) :
+SecureSocket::SecureSocket(NormalSocket* socket) :
 		NormalSocket(socket) {
 	this->impl = new SecureImpl();
-	is_connected = false;
-	_is_sending = 0;
+	this->state = &idleState;
+	if (SSL_set_fd(this->impl->connection, this->s) == 0)
+		this->impl->checkErrors("SSL_set_fd");
+//	is_connected = false;
+//	_is_sending = 0;
 }
 
 SecureSocket::~SecureSocket() {
 	delete this->impl;
 }
 
-void SecureSocket::setSecurity(string cert_file, string key_file) {
+bool SecureSocket::connect() {
+	NormalSocket::connect();
+	this->state->connect(this);
+//	if (SSL_set_fd(this->impl->connection, this->s) == 0) {
+//		this->impl->checkErrors("SSL_set_fd");
+//	}
+	return true;
+}
+bool SecureSocket::listen() {
+	NormalSocket::listen();
+	return false;
+}
+
+Socket* SecureSocket::accept() {
+	//TODO delete accepted & secured
+	NormalSocket* accepted = (NormalSocket*)NormalSocket::accept();
+	SecureSocket* secured = new SecureSocket(accepted);
+	secured->state->accept(secured);
+	delete accepted;
+//    SSL_set_accept_state(this->impl->connection);
+//    this->state->accept(this);
+    //TODO - create new socket
+	return secured;
+}
+
+int SecureSocket::is_sending() {
+	return this->state->is_sending(this);
+}
+
+ssize_t SecureSocket::send(char* buf, size_t size) {
+	return this->state->send(this, buf, size);
+}
+
+ssize_t SecureSocket::recv(char* buf, const size_t size) {
+	return this->state->recv(this, buf, size);
+}
+
+void SecureSocket::change_state(BaseState* state) {
+	this->state = state;
+}
+
+void SecureSocket::set_security(string cert_file, string key_file) {
 	if (!cert_file.empty())
 		if (SSL_use_certificate_file(this->impl->connection, cert_file.c_str(),
 		SSL_FILETYPE_PEM) <= 0) {
@@ -55,102 +100,5 @@ void SecureSocket::setSecurity(string cert_file, string key_file) {
 	if (SSL_set_cipher_list(this->impl->connection, "ALL") <= 0) {
 		this->impl->checkErrors("SSL_set_cipher_list");
 	}
-}
-
-bool SecureSocket::connect() {
-//	string conn = "127.0.0.1:5689";
-//	this->impl->bio = BIO_new_connect((char*) conn.c_str());
-//	if (BIO_do_connect(this->impl->bio) <= 0) {
-//		return false;
-//	}
-//	SSL_set_bio(this->impl->connection, this->impl->bio, this->impl->bio);
-
-	NormalSocket::connect();
-
-	if (SSL_set_fd(this->impl->connection, this->s) == 0) {
-		this->impl->checkErrors("SSL_set_fd");
-	}
-	SSL_set_connect_state(this->impl->connection);
-
-
-	//	if (SSL_connect(this->impl->connection) <= 0) {
-//		int ret = ERR_get_error();
-//		if ((ret == SSL_ERROR_WANT_READ) || (ret == SSL_ERROR_WANT_WRITE)) {
-//			is_connecting = true;
-//			return true;
-//		} else {
-//			this->impl->checkErrors("SSL_connect");
-//			return false;
-//		}
-//	}
-//	is_connecting = true;
-	return true;
-}
-
-int SecureSocket::is_sending() {
-	return _is_sending;
-}
-
-bool SecureSocket::connect2() {
-	int ret = 0;
-	if ((ret = SSL_connect(this->impl->connection)) <= 0) {
-		int ret2 = SSL_get_error(this->impl->connection, ret);
-		if (ret2 == SSL_ERROR_WANT_READ) {
-			_is_sending = 2;
-			return false;
-		} else if (ret2 == SSL_ERROR_WANT_WRITE) {
-			_is_sending = 1;
-			return false;
-		} else {
-			LOG.errorStream() << "SSL_connect=" << ret << " | " << ret2;
-			return false;
-		}
-//		int ret = ERR_get_error();
-//		if ((ret == SSL_ERROR_WANT_READ) || (ret == SSL_ERROR_WANT_WRITE)) {
-//			is_connecting = true;
-//			return true;
-//		} else {
-			//this->impl->checkErrors("SSL_connect");
-//			return false;
-//		}
-	}
-	_is_sending = 0;
-	return true;
-}
-
-size_t SecureSocket::send(char* buf, size_t size) {
-	if (!is_connected) {
-		is_connected = this->connect2();
-//		this->connect2();
-//		is_connecting = false;
-		LOG.errorStream() << "SSL_connect ONSEND=" << is_connected;
-		return -1;
-	} else {
-		return SSL_write(this->impl->connection, buf, size);
-	}
-}
-
-size_t SecureSocket::recv(char* buf, const size_t size) {
-	if (!is_connected) {
-		is_connected = this->connect2();
-		LOG.errorStream() << "SSL_connect ONRECV=" << is_connected;
-		return -1;
-	}
-	return SSL_read(this->impl->connection, buf, size);
-}
-
-bool SecureSocket::listen() {
-	return false;
-}
-
-Socket* SecureSocket::accept() {
-	return NULL;
-}
-
-void SecureSocket::nonblock() {
-}
-
-int SecureSocket::get() {
-	return 0;
 }
 
