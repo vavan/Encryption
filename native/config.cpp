@@ -22,7 +22,7 @@ void init_log()
 {
 #ifdef LOG4CPP
 //	log4cpp::Appender *appender = new log4cpp::OstreamAppender("console", &std::cout);
-	log4cpp::Appender *appender = new log4cpp::FileAppender("default", "tunnel.log");
+	log4cpp::Appender *appender = new log4cpp::FileAppender("default", "atunnel.log");
 	appender->setLayout(new log4cpp::BasicLayout());
 
 	log4cpp::PatternLayout* layout = new log4cpp::PatternLayout();

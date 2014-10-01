@@ -56,10 +56,10 @@ Socket* SecureSocket::accept() {
 	NormalSocket* accepted = (NormalSocket*)NormalSocket::accept();
 	SecureSocket* secured = new SecureSocket(accepted);
 	secured->state->accept(secured);
-	delete accepted;
+	secured->set_security("test.crt","test.key");
+//	delete accepted;
 //    SSL_set_accept_state(this->impl->connection);
 //    this->state->accept(this);
-    //TODO - create new socket
 	return secured;
 }
 
@@ -80,23 +80,29 @@ void SecureSocket::change_state(BaseState* state) {
 }
 
 void SecureSocket::set_security(string cert_file, string key_file) {
-	if (!cert_file.empty())
+	if (!cert_file.empty()) {
+		LOG.debugStream() << "SSL Cert: " << cert_file;
 		if (SSL_use_certificate_file(this->impl->connection, cert_file.c_str(),
-		SSL_FILETYPE_PEM) <= 0) {
+				SSL_FILETYPE_PEM) <= 0) {
 			this->impl->checkErrors("SSL_use_certificate_file");
 			return;
 		}
-	if (!key_file.empty())
+	}
+	if (!key_file.empty()) {
+		LOG.debugStream() << "SSL Cert: " << cert_file;
 		if (SSL_use_RSAPrivateKey_file(this->impl->connection, key_file.c_str(),
-		SSL_FILETYPE_PEM) <= 0) {
+				SSL_FILETYPE_PEM) <= 0) {
 			this->impl->checkErrors("SSL_use_RSAPrivateKey_file");
 			return;
 		}
-	if (!key_file.empty() && !cert_file.empty())
+	}
+	if (!key_file.empty() && !cert_file.empty()) {
+		LOG.debugStream() << "SSL Private";
 		if (SSL_check_private_key(this->impl->connection) <= 0) {
 			this->impl->checkErrors("SSL_check_private_key");
 			return;
 		}
+	}
 	if (SSL_set_cipher_list(this->impl->connection, "ALL") <= 0) {
 		this->impl->checkErrors("SSL_set_cipher_list");
 	}

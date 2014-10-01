@@ -72,6 +72,7 @@ ssize_t SecureImpl::accept() {
 			return Socket::INPROGRESS;
 		} else {
 			LOG.errorStream() << "SSL_accept=" << ret;
+			this->checkErrors("SSL_check_private_key");
 			return Socket::ERROR;
 		}
 	}

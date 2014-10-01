@@ -15,7 +15,10 @@ void BufferedPoint::recv() {
 	} else if (recved == 0) {
 		this->on_close();
 	} else if (recved == Socket::ERROR) {
-		LOG.errorStream() << "BufferedPoint. Recv error";
+		this->return_buffer();
+		//TODO close connection
+	} else if (recved == Socket::INPROGRESS) {
+		this->return_buffer();
 	}
 }
 

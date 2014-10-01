@@ -69,9 +69,12 @@ int main(int argc, char* argv[]) {
 
 	main->init();
 #else
+//	ServerPipe* sp = new ServerPipe(&w, new NormalSocket(Addr("127.0.0.1", 5000)));
 	SecureSocket ss(Addr("127.0.0.1", 5689));
 	ClientPipe* main = new ClientPipe(&w, &ss);
+//	main->join(sp);
 	main->init();
+//	sp->init();
 	char data[] = "OK";
 	Buffer b; b.assign(data, data+2);
 	main->push(&b);

@@ -70,8 +70,11 @@ bool NormalSocket::connect() {
 
 	addr_size = sizeof(serveraddr);
 	if (::connect(s, (struct sockaddr *) &serveraddr, addr_size) == -1) {
-		LOG.errorStream() << "SOCKET. Connect failed:" << this->s <<" errno:"<<errno;
-		return false;
+		int ret = errno;
+		if (ret != EINPROGRESS) {
+			LOG.errorStream() << "SOCKET. Connect failed:" << this->s << " errno:" << ret;
+			return false;
+		}
 	}
 	return true;
 }
@@ -116,12 +119,22 @@ void NormalSocket::nonblock() {
 }
 
 ssize_t NormalSocket::send(char* buf, size_t size) {
-	//TODO handle errno
-	return ::send(s, buf, size, 0);
+	ssize_t ret = ::send(s, buf, size, 0);
+	if (ret >= 0) {
+		return ret;
+	} else {
+		LOG.errorStream() << "SOCKET["<< this->s << "]. Send failed:" << errno;
+		return Socket::ERROR;
+	}
 }
 
 ssize_t NormalSocket::recv(char* buf, const size_t size) {
-	//TODO handle errno
-	return ::recv(s, buf, size, 0);
+	ssize_t ret = ::recv(s, buf, size, 0);
+	if (ret >= 0) {
+		return ret;
+	} else {
+		LOG.errorStream() << "SOCKET["<< this->s << "]. Recv failed:" << errno;
+		return Socket::ERROR;
+	}
 }
 

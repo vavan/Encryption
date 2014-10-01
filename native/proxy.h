@@ -26,6 +26,7 @@ private:
 	bool closing;
 
 	virtual Buffer* get_buffer();
+	void return_buffer();
 public:
 	Pipe(Worker* parent, Socket* socket): BufferedPoint(parent, socket), other(NULL), closing(false) {};
 	void join(Pipe* other);

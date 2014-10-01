@@ -30,6 +30,14 @@ class Queue {
 		}
 		return index;
 	}
+	int dec(int index) {
+		if  (index > 0) {
+			index--;
+		} else {
+			index = ENTRIES-1;
+		}
+		return index;
+	}
 public:
 	static const int ENTRIES = 50;
 	static const int DEPTH = 4096;
@@ -49,11 +57,15 @@ public:
 			queue.pop_back();
 		}
 	}
+	void return_front() {
+		front = dec(front);
+	}
 	Buffer* get_front() {
 		Buffer* b = queue[front];
 		front = inc(front);
 		if (front == back) {
 			LOG.alertStream() << "QUEUE. Buffer overflow";
+			return NULL;
 		}
 		return b;
 	}

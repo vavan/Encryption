@@ -37,7 +37,7 @@ bool ConnectingState::is_sending(SecureSocket* ctx) {
 }
 size_t ConnectingState::try_connect(SecureSocket* ctx, char* buf, size_t size) {
 	Socket::SocketReturns ret = (Socket::SocketReturns)ctx->impl->connect();
-	LOG.debugStream() << "SSL_connect=" << ret;
+//	LOG.debugStream() << "SSL_connect=" << ret;
 	if (ret == Socket::DONE) {
 		ctx->change_state(&established);
 	}
@@ -55,6 +55,7 @@ bool AcceptingState::is_sending(SecureSocket* ctx) {
 }
 size_t AcceptingState::try_accept(SecureSocket* ctx, char* buf, size_t size) {
 	Socket::SocketReturns ret = (Socket::SocketReturns)ctx->impl->accept();
+	LOG.debugStream() << "try_accept=" << ret;
 	if (ret == Socket::DONE) {
 		ctx->change_state(&established);
 	}
