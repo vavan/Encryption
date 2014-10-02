@@ -34,7 +34,7 @@ class Pipe(threading.Thread):
         other.other = self
     def recv(self):
         data = self.s.recv(Pipe.BUFFER_SIZE)
-        #log("Pipe received %s bytes"%len(data))
+        log("Pipe received %s bytes. %s"%(len(data), self.s))
         #log("[[%s]]"%data)
         if data:
             self.other.send(data)
@@ -62,11 +62,11 @@ class Pipe(threading.Thread):
         while self.running:
             try:
                 if not self.recv():
-                    log("Pipe disconnected")
+                    log("Pipe disconnected, %s"%self.s)
                     break
             except socket.timeout as e:
                 log("***: %s"%str(e))
-                break
+                pass
             except socket.error as e:
                 log("***: %s"%str(e))
                 break
@@ -83,6 +83,7 @@ class Client(Pipe):
         self.ip, self.port = (ip, port)
     def create(self):
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.s.settimeout(5)
         if self.secure:
             self.s = ssl.wrap_socket(self.s,
                                ca_certs="cert.pem",
@@ -95,6 +96,7 @@ class Server(Pipe):
     def __init__(self, parent, secure, socket):
         Pipe.__init__(self, parent, secure, socket)
     def create(self):
+        self.s.settimeout(5)
         if self.secure:
             self.s = ssl.wrap_socket(self.s,
                                server_side=True,

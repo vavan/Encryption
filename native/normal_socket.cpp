@@ -85,7 +85,8 @@ bool NormalSocket::listen() {
 	bzero((char *) &serveraddr, sizeof(serveraddr));
 	serveraddr.sin_family = AF_INET;
 	serveraddr.sin_port = htons(addr.port);
-	serveraddr.sin_addr.s_addr = INADDR_ANY; //TODO
+	//TODO Replace with input parameter
+	serveraddr.sin_addr.s_addr = INADDR_ANY;
 
 	if (bind(s, (struct sockaddr *) &serveraddr, sizeof(serveraddr)) < 0) {
 		LOG.errorStream() << "SOCKET. bind failed:" << this->s;

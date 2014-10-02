@@ -6,9 +6,11 @@ import time
 import unittest
 import threading
 
-SERVER_ADDR = '127.0.0.1'
-SERVER_PORT = 3003
-PIPE_PORT = 3002
+LOCALHOST = '127.0.0.1'
+LISTEN_ON_ADDR = LOCALHOST
+LISTEN_ON_PORT = 6000
+CONNECT_TO_ADDR = LOCALHOST
+CONNECT_TO_PORT = 2000
 
 
 class Thread(threading.Thread):
@@ -40,7 +42,7 @@ class EchoServer(Thread):
         self.s.close()    
 
 class Listener(Thread):
-    def __init__(self, addr = SERVER_ADDR, port = SERVER_PORT):
+    def __init__(self, addr = LISTEN_ON_ADDR, port = LISTEN_ON_PORT):
         Thread.__init__(self)
         self.addr = addr
         self.port = port
@@ -49,7 +51,6 @@ class Listener(Thread):
         self.listen()
     def listen(self):
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        print "Bind on", self.addr, self.port
         self.s.bind((self.addr, int(self.port)))
         self.s.listen(0)
         self.s.settimeout(1)
@@ -73,7 +74,7 @@ class Listener(Thread):
 
 class Client:
     BUFFER_SIZE = 2048
-    def __init__(self, ip = SERVER_ADDR, port = PIPE_PORT):
+    def __init__(self, ip = CONNECT_TO_ADDR, port = CONNECT_TO_PORT):
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.connect((ip, int(port)))
     def send(self, data):
@@ -96,7 +97,7 @@ class ProxyTests(unittest.TestCase):
     def tearDownClass(cls):
         cls.listener.stop()
 
-    @unittest.skip("Not now")
+    #@unittest.skip("Not now")
     def test_simple_ok(self):
         c = Client()
         request = 'ok';
@@ -106,7 +107,7 @@ class ProxyTests(unittest.TestCase):
         self.assertEqual(request, response)
 
 
-    #@unittest.skip("Not now")
+    @unittest.skip("Not now")
     def test_simple_128(self):
         c = Client()
         request = 'Z'*128;
@@ -115,7 +116,7 @@ class ProxyTests(unittest.TestCase):
         c.close()
         self.assertEqual(request, response)
 
-    #@unittest.skip("Not now")
+    @unittest.skip("Not now")
     def test_repeat_128(self):
         cycles = 128
         c = Client()

@@ -58,6 +58,7 @@ size_t AcceptingState::try_accept(SecureSocket* ctx, char* buf, size_t size) {
 	LOG.debugStream() << "try_accept=" << ret;
 	if (ret == Socket::DONE) {
 		ctx->change_state(&established);
+		ret = Socket::INPROGRESS;
 	}
 	return ret;
 }

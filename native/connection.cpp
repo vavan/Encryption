@@ -13,6 +13,7 @@ void BufferedPoint::recv() {
 		LOG.errorStream() << "SOCKET. recv bytes=" << recved;
 		this->on_recv(buffer);
 	} else if (recved == 0) {
+		this->return_buffer();
 		this->on_close();
 	} else if (recved == Socket::ERROR) {
 		this->return_buffer();

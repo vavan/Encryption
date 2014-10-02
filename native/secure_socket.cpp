@@ -56,7 +56,7 @@ Socket* SecureSocket::accept() {
 	NormalSocket* accepted = (NormalSocket*)NormalSocket::accept();
 	SecureSocket* secured = new SecureSocket(accepted);
 	secured->state->accept(secured);
-	secured->set_security("test.crt","test.key");
+	secured->set_security("cert.pem","key.pem");
 //	delete accepted;
 //    SSL_set_accept_state(this->impl->connection);
 //    this->state->accept(this);

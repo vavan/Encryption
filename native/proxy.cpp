@@ -26,11 +26,11 @@ void Listener::recv() {
 	NormalSocket* accepted = (NormalSocket*)this->socket->accept();
 	if (accepted) {
 		ServerPipe* sp = new ServerPipe(this->parent, accepted);
-//		ClientPipe* cp = new ClientPipe(this->parent,
-//				new NormalSocket(Config::get().client));
-//		sp->join(cp);
-//		sp->init();
-//		cp->init();
+		ClientPipe* cp = new ClientPipe(this->parent,
+				new NormalSocket(Config::get().client));
+		sp->join(cp);
+		sp->init();
+		cp->init();
 	}
 }
 
@@ -39,15 +39,11 @@ void Listener::send() {
 };
 
 void Pipe::return_buffer() {
-	//TODO FIX ME
-//	this->other->send_queue.return_front();
-	this->send_queue.return_front();
+	this->other->send_queue.return_front();
 }
 
 Buffer* Pipe::get_buffer() {
-	//TODO FIX ME
-//	return this->other->send_queue.get_front();
-	return this->send_queue.get_front();
+	return this->other->send_queue.get_front();
 }
 
 void Pipe::join(Pipe* other) {

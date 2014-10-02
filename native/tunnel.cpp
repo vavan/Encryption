@@ -34,8 +34,8 @@ bool build_config(int argc, char* argv[]) {
 	}
 	Config::init();
 
-	string r = argv[1];
-	string l = argv[2];
+	string l = argv[1];
+	string r = argv[2];
 
 	Config::get().server = parse_addr(l);
 	Config::get().client = parse_addr(r);
@@ -63,8 +63,8 @@ int main(int argc, char* argv[]) {
 	Worker w = Worker();
 #if 1
 //	Listener* main = new Listener(&w, new NormalSocket(Config::get().server));
-	SecureSocket* ss = new SecureSocket(Addr("127.0.0.1", 5689));
-	ss->set_security("test.crt","test.key");
+	SecureSocket* ss = new SecureSocket(Config::get().server);//Addr("127.0.0.1", 5689));
+	ss->set_security("cert.pem","key.pem");
 	Listener* main = new Listener(&w, ss);
 
 	main->init();
@@ -79,6 +79,9 @@ int main(int argc, char* argv[]) {
 	Buffer b; b.assign(data, data+2);
 	main->push(&b);
 #endif
+
+
+
 	running = true;
 	while (running) {
 		w.run();
