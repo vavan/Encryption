@@ -25,13 +25,13 @@ private:
 	Pipe* other;
 	bool closing;
 
-	virtual Buffer* get_buffer();
-	void return_buffer();
+//	virtual Buffer* get_buffer();
+//	void return_buffer();
 public:
 	Pipe(Worker* parent, Socket* socket): BufferedPoint(parent, socket), other(NULL), closing(false) {};
 	void join(Pipe* other);
-	virtual void on_recv(Buffer* buffer);
-	virtual void on_send(Buffer* buffer);
+	virtual void on_recv();
+	virtual void on_send();
 	virtual void on_close();
 };
 

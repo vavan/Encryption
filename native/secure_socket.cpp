@@ -15,7 +15,7 @@ using namespace std;
 
 SecureSocket::SecureSocket(Addr addr) :
 		NormalSocket(addr) {
-	this->impl = new SecureImpl();
+	this->impl = new SecureImpl(this);
 	this->state = &idleState;
 	if (SSL_set_fd(this->impl->connection, this->s) == 0)
 		this->impl->checkErrors("SSL_set_fd");
@@ -26,7 +26,7 @@ SecureSocket::SecureSocket(Addr addr) :
 
 SecureSocket::SecureSocket(NormalSocket* socket) :
 		NormalSocket(socket) {
-	this->impl = new SecureImpl();
+	this->impl = new SecureImpl(this);
 	this->state = &idleState;
 	if (SSL_set_fd(this->impl->connection, this->s) == 0)
 		this->impl->checkErrors("SSL_set_fd");
@@ -71,12 +71,12 @@ int SecureSocket::is_sending() {
 	return this->state->is_sending(this);
 }
 
-ssize_t SecureSocket::send(char* buf, size_t size) {
-	return this->state->send(this, buf, size);
+ssize_t SecureSocket::send() {
+	return this->state->send(this);
 }
 
-ssize_t SecureSocket::recv(char* buf, const size_t size) {
-	return this->state->recv(this, buf, size);
+ssize_t SecureSocket::recv() {
+	return this->state->recv(this);
 }
 
 void SecureSocket::change_state(BaseState* state) {

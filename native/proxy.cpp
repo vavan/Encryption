@@ -38,21 +38,26 @@ void Listener::send() {
 
 };
 
-void Pipe::return_buffer() {
-	this->other->send_queue.return_front();
-}
+//void Pipe::return_buffer() {
+//	this->other->send_queue.return_front();
+//}
 
-Buffer* Pipe::get_buffer() {
-	return this->other->send_queue.get_front();
-}
+//Buffer* Pipe::get_buffer() {
+//	return this->other->send_queue.get_front();
+//}
 
 void Pipe::join(Pipe* other) {
 	this->other = other;
 	this->other->other = this;
+
+	this->socket->recv_queue = &this->other->send_queue;
+	this->other->socket->recv_queue = &this->send_queue;
+	this->socket->send_queue = &this->send_queue;
+	this->other->socket->send_queue = &this->other->send_queue;
 }
 
-void Pipe::on_recv(Buffer* buffer) {
-	LOG.debugStream() << "PIPE, Recv bytes:" << buffer->size();
+void Pipe::on_recv() {
+	LOG.debugStream() << "PIPE, Recv bytes";
 }
 
 void Pipe::on_close() {
@@ -66,8 +71,8 @@ void Pipe::on_close() {
 	}
 }
 
-void Pipe::on_send(Buffer* buffer) {
-	LOG.debugStream() << "Sent bytes:" << buffer->size();
+void Pipe::on_send() {
+	LOG.debugStream() << "Sent bytes";
 	if (this->closing) {
 		this->closed = true;
 		if (this->other)

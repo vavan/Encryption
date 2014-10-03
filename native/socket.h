@@ -9,6 +9,8 @@
 #include <sys/types.h>
 #include <string>
 
+class Queue;
+
 class Addr {
 public:
 	std::string ip;
@@ -36,6 +38,8 @@ public:
 		ERROR = -1,
 		INPROGRESS = -2
 	};
+	Queue* recv_queue;
+	Queue* send_queue;
 
 	Socket(Addr addr);
 	virtual ~Socket();
@@ -44,8 +48,8 @@ public:
 	virtual bool connect() = 0;
 	virtual bool listen() = 0;
 	virtual Socket* accept() = 0;
-	virtual ssize_t send(char* buf, size_t size) = 0;
-	virtual ssize_t recv(char* buf, const size_t size) = 0;
+	virtual ssize_t send() = 0;
+	virtual ssize_t recv() = 0;
 	virtual void nonblock() = 0;
 	virtual int is_sending() = 0;
 

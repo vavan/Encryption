@@ -20,6 +20,17 @@ typedef vector<char> Buffer;
 
 
 class Queue {
+private:
+	vector<Buffer*> queue;
+
+	enum State {
+		IDLE,
+		FRONT,
+		BACK
+	};
+
+	State state;
+
 	int front;
 	int back;
 	int inc(int index) {
@@ -30,23 +41,16 @@ class Queue {
 		}
 		return index;
 	}
-	int dec(int index) {
-		if  (index > 0) {
-			index--;
-		} else {
-			index = ENTRIES-1;
-		}
-		return index;
-	}
+
 public:
 	static const int ENTRIES = 50;
 	static const int DEPTH = 4096;
 	Queue() {
+		state = IDLE;
 		front = 0;
 		back = 0;
 		for(int i = 0; i < ENTRIES; i++) {
 			Buffer* b = new Buffer(DEPTH);
-//			b.reserve(DEPTH);
 			queue.push_back(b);
 		}
 	}
@@ -57,32 +61,43 @@ public:
 			queue.pop_back();
 		}
 	}
-	void return_front() {
-		front = dec(front);
-	}
+//	//TODO remove
+//	void return_front() {
+//		front = dec(front);
+//	}
 	Buffer* get_front() {
-		Buffer* b = queue[front];
-		front = inc(front);
-		if (front == back) {
+		if (front+1 == back) {
 			LOG.alertStream() << "QUEUE. Buffer overflow";
 			return NULL;
 		}
+		state = FRONT;
+		Buffer* b = queue[front];
+//		front = inc(front); //TODO remove
 		return b;
 	}
 	Buffer* get_back() {
+		state = BACK;
 		Buffer* b = queue[back];
-		back = inc(back);
+//		back = inc(back);//TODO remove
 		return b;
 	}
-	Buffer* try_back() {
-		Buffer* b = queue[back];
-		return b;
+//	//TODO remove
+//	Buffer* try_back() {
+//		Buffer* b = queue[back];
+//		return b;
+//	}
+	void compleate(ssize_t actual) {
+		if (state == FRONT) {
+			queue[front]->resize(actual);
+			front = inc(front);
+		} else if (state == BACK){
+			back = inc(back);
+		}
+		state = IDLE;
 	}
 	bool empty() {
 		return front == back;
 	}
-private:
-	vector<Buffer*> queue;
 };
 
 

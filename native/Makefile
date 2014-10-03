@@ -64,7 +64,7 @@ $(TARGET): $(OBJ_FILES) $(MAIN) | $(BIN)
 
 
 clean:
-	rm -rf $(BIN) $(OBJS) *.pem *.tgz core
+	rm -rf $(BIN) $(OBJS) *.tgz core
 
 
 install:

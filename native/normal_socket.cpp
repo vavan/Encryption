@@ -29,6 +29,7 @@
 #include <iostream>
 #include "normal_socket.h"
 #include "config.h"
+#include "queue.h"
 
 #define LISTEN_BACKLOG 100
 
@@ -119,20 +120,27 @@ void NormalSocket::nonblock() {
 	}
 }
 
-ssize_t NormalSocket::send(char* buf, size_t size) {
-	ssize_t ret = ::send(s, buf, size, 0);
-	if (ret >= 0) {
-		LOG.debugStream() << "QQQQ SOCKET["<< this->s << "]. Recv:" << ret;
-		return ret;
-	} else {
-		LOG.errorStream() << "SOCKET["<< this->s << "]. Send failed:" << errno;
-		return Socket::ERROR;
+ssize_t NormalSocket::send() {
+	if (!send_queue->empty()) {
+		Buffer * buffer = send_queue->get_back();
+		ssize_t ret = ::send(s, &(*buffer)[0], buffer->size(), 0);
+		if (ret >= 0) {
+			send_queue->compleate(ret);
+			LOG.debugStream() << "QQQQ SOCKET["<< this->s << "]. Send:" << ret;
+			return ret;
+		} else {
+			LOG.errorStream() << "SOCKET["<< this->s << "]. Send failed:" << errno;
+			return Socket::ERROR;
+		}
 	}
+	return 0;
 }
 
-ssize_t NormalSocket::recv(char* buf, const size_t size) {
-	ssize_t ret = ::recv(s, buf, size, 0);
+ssize_t NormalSocket::recv() {
+	Buffer * buffer = recv_queue->get_front();
+	ssize_t ret = ::recv(s, &(*buffer)[0], buffer->size(), 0);
 	if (ret >= 0) {
+		recv_queue->compleate(ret);
 		LOG.debugStream() << "ZZZZ SOCKET["<< this->s << "]. Recv:" << ret;
 		return ret;
 	} else {

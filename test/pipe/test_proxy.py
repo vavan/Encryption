@@ -118,7 +118,7 @@ class ProxyTests(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.listener.stop()
-        print "STOP:", cls.listener.recvd
+        #print "STOP:", cls.listener.recvd
 
     #@unittest.skip("Not now")
     def test_simple_ok(self):
@@ -203,9 +203,9 @@ class ProxyTests(unittest.TestCase):
         for i in range(cycles):
             self.assertEqual(request, response[i])
 
-    @unittest.skip("Not now")
+    #@unittest.skip("Not now")
     def test_thread_same_128x12(self):
-        cycles = 200
+        cycles = 80
         request = ['Q'*128, ]
         response = []
         threads = []
@@ -221,14 +221,54 @@ class ProxyTests(unittest.TestCase):
         for i in range(cycles):
             self.assertEqual(request, response[i])
 
-    @unittest.skip("Not now")
+    #@unittest.skip("Not now")
+    def test_thread_sequance(self):
+        outer_cycles = 10
+        cycles = 20
+        request = ['Q'*32, ]
+        response = []
+        for outer in range(outer_cycles):
+            threads = []
+            for i in range(cycles):
+                c = ClientThread(request)
+                c.start()
+                threads.append(c)
+            for t in threads:
+                t.join()
+                response.append(t.response) 
+            
+        self.assertEqual(len(response), cycles*outer_cycles)
+        for i in range(cycles*outer_cycles):
+            self.assertEqual(request, response[i])
+
+    #@unittest.skip("Not now")
     def test_thread_diff_128x12(self):
-        cycles = 128
+        cycles = 100
         request = []
         response = []
         threads = []
         for i in range(cycles):
-            a_request = chr(i)*12
+            a_request = [ chr(i+0x40)*12, ]
+            request.append(a_request)
+            c = ClientThread(a_request)
+            c.start()
+            threads.append(c)
+        for t in threads:
+            t.join()
+            response.append(t.response) 
+            
+        self.assertEqual(len(response), cycles)
+        for i in range(cycles):
+            self.assertEqual(request[i], response[i])
+
+    #@unittest.skip("Not now")
+    def test_thread_chr_30x30x30(self):
+        cycles = 30
+        request = []
+        response = []
+        threads = []
+        for i in range(cycles):
+            a_request = [ chr(i+0x40)*30, ]*30
             request.append(a_request)
             c = ClientThread(a_request)
             c.start()

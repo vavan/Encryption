@@ -9,6 +9,9 @@
 #include "secure_impl.h"
 #include "socket.h"
 #include "config.h"
+#include "queue.h"
+#include "secure_socket.h"
+
 
 SSL_CTX* SecureImpl::ctx = NULL;
 
@@ -40,7 +43,7 @@ void SecureImpl::init() {
 	}
 }
 
-SecureImpl::SecureImpl() {
+SecureImpl::SecureImpl(SecureSocket* parent) : parent(parent) {
 	init();
 	connection = SSL_new(ctx);
 }
@@ -79,21 +82,28 @@ ssize_t SecureImpl::accept() {
 	return Socket::DONE;
 }
 
-ssize_t SecureImpl::send(char* buf, size_t size) {
+ssize_t SecureImpl::send() {
 	//TODO ->beautiful
-	ssize_t ret = SSL_write(this->connection, buf, size);
-	if (ret >= 0) {
-		LOG.debugStream() << "QQQQ SSL[]. send:" << ret;
-		return ret;
-	} else {
-		LOG.errorStream() << "SSL. Send failed:" << errno;
-		return Socket::ERROR;
+	if (!parent->send_queue->empty()) {
+		Buffer * buffer = parent->send_queue->get_back();
+		ssize_t ret = SSL_write(this->connection, &(*buffer)[0], buffer->size());
+		if (ret >= 0) {
+			parent->send_queue->compleate(ret);
+			LOG.debugStream() << "QQQQ SSL[]. send:" << ret;
+			return ret;
+		} else {
+			LOG.errorStream() << "SSL. Send failed:" << errno;
+			return Socket::ERROR;
+		}
 	}
+	return 0;
 }
-ssize_t SecureImpl::recv(char* buf, const size_t size) {
+ssize_t SecureImpl::recv() {
 	//TODO ->beautiful
-	ssize_t ret = SSL_read(this->connection, buf, size);
+	Buffer * buffer = parent->recv_queue->get_front();
+	ssize_t ret = SSL_read(this->connection, &(*buffer)[0], buffer->size());
 	if (ret >= 0) {
+		parent->recv_queue->compleate(ret);
 		LOG.debugStream() << "ZZZZ SSL. Recv:" << ret;
 		return ret;
 	} else {
