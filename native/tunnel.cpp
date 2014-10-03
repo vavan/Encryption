@@ -47,7 +47,7 @@ bool running;
 
 void terminationHandler(int sig)
 {
-	LOG.debugStream() << "MAIN. Got signal:" << sig;
+	LOG.noticeStream() << "MAIN. Got signal:" << sig;
 	running = false;
 }
 

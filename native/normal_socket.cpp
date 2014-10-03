@@ -37,21 +37,21 @@ NormalSocket::NormalSocket(Addr addr) :
 		Socket(addr) {
 	this->s = socket(AF_INET, SOCK_STREAM, 0);
 	this->nonblock();
-	LOG.debugStream() << "SOCKET["<< this->s << "]. New";
+	LOG.infoStream() << "SOCKET["<< this->s << "]. New";
 }
 
 NormalSocket::NormalSocket(Addr addr, int s) :
 		Socket(addr), s(s) {
-	LOG.debugStream() << "SOCKET["<< this->s << "]. Copy";
+	LOG.infoStream() << "SOCKET["<< this->s << "]. Copy";
 }
 
 NormalSocket::NormalSocket(const NormalSocket* socket) :
 		Socket(socket->addr), s(socket->s) {
-	LOG.debugStream() << "SOCKET["<< this->s << "]. Copy";
+	LOG.infoStream() << "SOCKET["<< this->s << "]. Copy";
 }
 
 NormalSocket::~NormalSocket() {
-	LOG.debugStream() << "SOCKET["<< this->s << "]. Delete/Close";
+	LOG.infoStream() << "SOCKET["<< this->s << "]. Delete/Close";
 	::close(this->s);
 }
 
@@ -60,7 +60,7 @@ int NormalSocket::get() {
 }
 
 bool NormalSocket::connect() {
-	LOG.debugStream() << "SOCKET["<< this->s << "]. Connect";
+	LOG.infoStream() << "SOCKET["<< this->s << "]. Connect";
 	struct sockaddr_in serveraddr;
 	socklen_t addr_size;
 
@@ -81,7 +81,7 @@ bool NormalSocket::connect() {
 }
 
 bool NormalSocket::listen() {
-	LOG.debugStream() << "SOCKET["<< this->s << "]. Listen";
+	LOG.infoStream() << "SOCKET["<< this->s << "]. Listen";
 	struct sockaddr_in serveraddr;
 	bzero((char *) &serveraddr, sizeof(serveraddr));
 	serveraddr.sin_family = AF_INET;
@@ -101,7 +101,7 @@ bool NormalSocket::listen() {
 }
 
 Socket* NormalSocket::accept() {
-	LOG.debugStream() << "SOCKET["<< this->s << "]. Accept";
+	LOG.infoStream() << "SOCKET["<< this->s << "]. Accept";
 	struct sockaddr_in clientaddr;
 	unsigned int addr_size = sizeof(clientaddr);
 	int newsocket = ::accept(s, (struct sockaddr *) &clientaddr, &addr_size);

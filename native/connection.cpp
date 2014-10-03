@@ -11,7 +11,6 @@ void BufferedPoint::recv() {
 	int recved = this->socket->recv();
 
 	if (recved > 0) {
-		LOG.errorStream() << "SOCKET. recv bytes=" << recved;
 		this->on_recv();
 	} else if (recved == 0) {
 		this->on_close();
