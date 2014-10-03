@@ -15,6 +15,7 @@
 
 
 //TODO LOG output with socket <fd>, like NormalSocket
+//TODO Clean up
 
 SSL_CTX* SecureImpl::ctx = NULL;
 
