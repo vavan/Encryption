@@ -33,7 +33,6 @@ public:
 	virtual ~WorkItem();
 	int get_fd();
 	bool is_closed();
-	Socket* relese_socket();
 
 	virtual void init() = 0;
 	virtual void recv() = 0;
@@ -43,15 +42,13 @@ public:
 
 
 class Worker {
-	static const int INITIAL_PULL = 1;
+	static const int INITIAL_PULL = 30;
 	typedef list<WorkItem*> WorkItems;
 	WorkItems points;
-//	fd_set recv_fds, send_fds;
-//	int max_fd;
 	typedef struct pollfd Item;
+	size_t size;
 	Item* fds;
 	bool fd_changed;
-	size_t size;
 	void update_items();
 	void close_items();
 	void reallocate_fds();
