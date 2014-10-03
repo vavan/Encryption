@@ -73,3 +73,7 @@ install:
 tar:
 	tar -czf $(APP).$(MAJ_VERSION).$(MIN_VERSION).tgz $(CPP_FILES) *.h Makefile 
 
+test:
+	cd ../test/pipe && ./run_tests.sh
+
+

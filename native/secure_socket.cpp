@@ -13,6 +13,7 @@
 
 using namespace std;
 
+
 SecureSocket::SecureSocket(Addr addr) :
 		NormalSocket(addr) {
 	this->impl = new SecureImpl(this);
@@ -44,7 +45,7 @@ bool SecureSocket::listen() {
 }
 
 Socket* SecureSocket::accept() {
-	//TODO delete accepted & secured
+	//TODO delete <accepted>
 	NormalSocket* accepted = (NormalSocket*)NormalSocket::accept();
 	if (accepted) {
 		SecureSocket* secured = new SecureSocket(accepted);

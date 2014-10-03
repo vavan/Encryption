@@ -18,7 +18,7 @@
 
 class SecureSocket;
 
-
+//TODO SecureImpl -> SecureSocket
 class SecureImpl {
 private:
 	static SSL_CTX* ctx;

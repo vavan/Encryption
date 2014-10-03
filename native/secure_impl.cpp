@@ -13,6 +13,9 @@
 #include "secure_socket.h"
 
 
+
+//TODO LOG output with socket <fd>, like NormalSocket
+
 SSL_CTX* SecureImpl::ctx = NULL;
 
 std::string SecureImpl::getError(int ret_code) {
@@ -83,7 +86,6 @@ ssize_t SecureImpl::accept() {
 }
 
 ssize_t SecureImpl::send() {
-	//TODO ->beautiful
 	if (!parent->send_queue->empty()) {
 		Buffer * buffer = parent->send_queue->get_back();
 		ssize_t ret = SSL_write(this->connection, &(*buffer)[0], buffer->size());
@@ -99,7 +101,6 @@ ssize_t SecureImpl::send() {
 	return 0;
 }
 ssize_t SecureImpl::recv() {
-	//TODO ->beautiful
 	Buffer * buffer = parent->recv_queue->get_front();
 	ssize_t ret = SSL_read(this->connection, &(*buffer)[0], buffer->size());
 	if (ret >= 0) {

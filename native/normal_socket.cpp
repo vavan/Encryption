@@ -37,21 +37,21 @@ NormalSocket::NormalSocket(Addr addr) :
 		Socket(addr) {
 	this->s = socket(AF_INET, SOCK_STREAM, 0);
 	this->nonblock();
-	LOG.debugStream() << "SOCKET.New:" << this->s;
+	LOG.debugStream() << "SOCKET["<< this->s << "]. New";
 }
 
 NormalSocket::NormalSocket(Addr addr, int s) :
 		Socket(addr), s(s) {
-	LOG.debugStream() << "SOCKET.Copy:" << this->s;
+	LOG.debugStream() << "SOCKET["<< this->s << "]. Copy";
 }
 
 NormalSocket::NormalSocket(const NormalSocket* socket) :
 		Socket(socket->addr), s(socket->s) {
-	LOG.debugStream() << "SOCKET.Copy:" << this->s;
+	LOG.debugStream() << "SOCKET["<< this->s << "]. Copy";
 }
 
 NormalSocket::~NormalSocket() {
-	LOG.debugStream() << "SOCKET.Delete:" << this->s;
+	LOG.debugStream() << "SOCKET["<< this->s << "]. Delete/Close";
 	::close(this->s);
 }
 
@@ -60,7 +60,7 @@ int NormalSocket::get() {
 }
 
 bool NormalSocket::connect() {
-	LOG.debugStream() << "SOCKET.Connect:" << this->s;
+	LOG.debugStream() << "SOCKET["<< this->s << "]. Connect";
 	struct sockaddr_in serveraddr;
 	socklen_t addr_size;
 
@@ -73,7 +73,7 @@ bool NormalSocket::connect() {
 	if (::connect(s, (struct sockaddr *) &serveraddr, addr_size) == -1) {
 		int ret = errno;
 		if (ret != EINPROGRESS) {
-			LOG.errorStream() << "SOCKET. Connect failed:" << this->s << " errno:" << ret;
+			LOG.errorStream() << "SOCKET["<< this->s << "]. Connect failed:" << errno;
 			return false;
 		}
 	}
@@ -81,7 +81,7 @@ bool NormalSocket::connect() {
 }
 
 bool NormalSocket::listen() {
-	LOG.debugStream() << "SOCKET.Listen:" << this->s;
+	LOG.debugStream() << "SOCKET["<< this->s << "]. Listen";
 	struct sockaddr_in serveraddr;
 	bzero((char *) &serveraddr, sizeof(serveraddr));
 	serveraddr.sin_family = AF_INET;
@@ -90,25 +90,25 @@ bool NormalSocket::listen() {
 	serveraddr.sin_addr.s_addr = INADDR_ANY;
 
 	if (bind(s, (struct sockaddr *) &serveraddr, sizeof(serveraddr)) < 0) {
-		LOG.errorStream() << "SOCKET. bind failed:" << this->s;
+		LOG.errorStream() << "SOCKET["<< this->s << "]. Bind failed:" << errno;
 		return false;
 	}
 	if (::listen(s, LISTEN_BACKLOG) < 0) {
-		LOG.errorStream() << "SOCKET. bind failed:" << this->s;
+		LOG.errorStream() << "SOCKET["<< this->s << "]. Listen failed:" << errno;
 		return false;
 	}
 	return true;
 }
 
 Socket* NormalSocket::accept() {
-	LOG.debugStream() << "SOCKET.Accept:" << this->s;
+	LOG.debugStream() << "SOCKET["<< this->s << "]. Accept";
 	struct sockaddr_in clientaddr;
 	unsigned int addr_size = sizeof(clientaddr);
 	int newsocket = ::accept(s, (struct sockaddr *) &clientaddr, &addr_size);
 	if (newsocket > 0) {
 		return new NormalSocket(this->addr, newsocket);
 	} else {
-		LOG.errorStream() << "SOCKET. accept failed:" << this->s;
+		LOG.errorStream() << "SOCKET["<< this->s << "]. Accept failed:" << errno;
 		return NULL;
 	}
 }
@@ -116,7 +116,7 @@ Socket* NormalSocket::accept() {
 void NormalSocket::nonblock() {
 	int rc = fcntl(s, F_SETFL, fcntl(s, F_GETFL, 0) | O_NONBLOCK);
 	if (rc < 0) {
-		LOG.errorStream() << "SOCKET. Couldn't set non blocking mode:" << this->s;
+		LOG.errorStream() << "SOCKET["<< this->s << "]. Couldn't set non blocking mode";
 	}
 }
 

@@ -14,6 +14,8 @@
 
 class SecureImpl;
 
+//TODO SecureSocket -> SecureConnection
+
 class SecureSocket: public NormalSocket
 {
 private:

@@ -5,6 +5,8 @@
 void BufferedPoint::init() {
 }
 
+
+//TODO clean up
 void BufferedPoint::recv() {
 	int recved = this->socket->recv();
 
@@ -16,10 +18,10 @@ void BufferedPoint::recv() {
 	} else if (recved == Socket::ERROR) {
 		//TODO close connection
 	} else if (recved == Socket::INPROGRESS) {
-//		this->return_buffer();
 	}
 }
 
+//TODO clean up
 void BufferedPoint::send() {
 	ssize_t sent = this->socket->send();
 	if (sent > 0) {
