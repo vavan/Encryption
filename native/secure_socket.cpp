@@ -54,13 +54,17 @@ bool SecureSocket::listen() {
 Socket* SecureSocket::accept() {
 	//TODO delete accepted & secured
 	NormalSocket* accepted = (NormalSocket*)NormalSocket::accept();
-	SecureSocket* secured = new SecureSocket(accepted);
-	secured->state->accept(secured);
-	secured->set_security("cert.pem","key.pem");
+	if (accepted) {
+		SecureSocket* secured = new SecureSocket(accepted);
+		secured->state->accept(secured);
+		secured->set_security("cert.pem","key.pem");
+		return secured;
+	} else {
+		return NULL;
+	}
 //	delete accepted;
 //    SSL_set_accept_state(this->impl->connection);
 //    this->state->accept(this);
-	return secured;
 }
 
 int SecureSocket::is_sending() {

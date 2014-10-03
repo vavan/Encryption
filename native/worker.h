@@ -43,12 +43,22 @@ public:
 
 
 class Worker {
+	static const int INITIAL_PULL = 1;
 	typedef list<WorkItem*> WorkItems;
 	WorkItems points;
-	fd_set recv_fds, send_fds;
-	int max_fd;
-	void build();
+//	fd_set recv_fds, send_fds;
+//	int max_fd;
+	typedef struct pollfd Item;
+	Item* fds;
+	bool fd_changed;
+	size_t size;
+	void update_items();
+	void close_items();
+	void reallocate_fds();
+
 public:
+	Worker();
+	~Worker();
 	void add(WorkItem* point);
 	void remove(WorkItem* point);
 	bool empty();

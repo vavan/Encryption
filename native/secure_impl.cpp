@@ -80,11 +80,25 @@ ssize_t SecureImpl::accept() {
 }
 
 ssize_t SecureImpl::send(char* buf, size_t size) {
-	//TODO handle SSL_error
-	return SSL_write(this->connection, buf, size);
+	//TODO ->beautiful
+	ssize_t ret = SSL_write(this->connection, buf, size);
+	if (ret >= 0) {
+		LOG.debugStream() << "QQQQ SSL[]. send:" << ret;
+		return ret;
+	} else {
+		LOG.errorStream() << "SSL. Send failed:" << errno;
+		return Socket::ERROR;
+	}
 }
 ssize_t SecureImpl::recv(char* buf, const size_t size) {
-	//TODO handle SSL_error
-	return SSL_read(this->connection, buf, size);
+	//TODO ->beautiful
+	ssize_t ret = SSL_read(this->connection, buf, size);
+	if (ret >= 0) {
+		LOG.debugStream() << "ZZZZ SSL. Recv:" << ret;
+		return ret;
+	} else {
+		LOG.errorStream() << "SSL. Recv failed:" << errno;
+		return Socket::ERROR;
+	}
 }
 

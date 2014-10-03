@@ -19,6 +19,8 @@ class Thread(threading.Thread):
         self.running = False
     def stop(self):
         self.running = False
+    def done(self):
+        pass
     def run(self):
         self.running = True
         while self.running:
@@ -33,6 +35,7 @@ class EchoServer(Thread):
         self.parent = parent
     def do(self):
         data = self.s.recv(EchoServer.BUFFER_SIZE)
+        self.parent.recvd += len(data)
         if data:
             self.s.send(data)
         else:
@@ -49,10 +52,11 @@ class Listener(Thread):
         self.children = []
         self.running = False
         self.listen()
+        self.recvd = 0
     def listen(self):
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.bind((self.addr, int(self.port)))
-        self.s.listen(0)
+        self.s.listen(100)
         self.s.settimeout(1)
     def stop(self):
         Thread.stop(self)
@@ -71,7 +75,6 @@ class Listener(Thread):
     def done(self):
         self.s.close()
 
-
 class Client:
     BUFFER_SIZE = 2048
     def __init__(self, ip = CONNECT_TO_ADDR, port = CONNECT_TO_PORT):
@@ -80,10 +83,29 @@ class Client:
     def send(self, data):
         self.s.send(data)
     def recv(self):
-        return self.s.recv(Client.BUFFER_SIZE)
+        try:
+            return self.s.recv(Client.BUFFER_SIZE)
+        except Exception, e:
+            print "Receive failed:", str(e)
+        return ''
     def close(self):
         self.s.close()
 
+class ClientThread(Thread):
+    def __init__(self, request):
+        Thread.__init__(self)
+        self.request = request
+        self.response = []
+        self.index = len(request) - 1
+    def do(self):
+        if (self.index >= 0):
+            c = Client()
+            c.send(self.request[self.index])
+            self.response.append(c.recv())
+            c.close()
+            self.index -= 1
+        else:
+            self.stop()
 
 
 class ProxyTests(unittest.TestCase):
@@ -96,6 +118,7 @@ class ProxyTests(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.listener.stop()
+        print "STOP:", cls.listener.recvd
 
     #@unittest.skip("Not now")
     def test_simple_ok(self):
@@ -107,20 +130,20 @@ class ProxyTests(unittest.TestCase):
         self.assertEqual(request, response)
 
 
-    @unittest.skip("Not now")
+    #@unittest.skip("Not now")
     def test_simple_128(self):
         c = Client()
-        request = 'Z'*128;
+        request = 'Z'*128
         c.send(request)
         response = c.recv()
         c.close()
         self.assertEqual(request, response)
 
-    @unittest.skip("Not now")
-    def test_repeat_128(self):
+    #@unittest.skip("Not now")
+    def test_repeat_same_128(self):
         cycles = 128
         c = Client()
-        request = 'Z'*128;
+        request = 'Z'*128
         response = []
         for i in range(cycles):
             c.send(request)
@@ -129,6 +152,96 @@ class ProxyTests(unittest.TestCase):
         self.assertEqual(len(response), cycles)
         for i in range(cycles):
             self.assertEqual(request, response[i])
+
+    #@unittest.skip("Not now")
+    def test_repeat_diff_128(self):
+        cycles = 128
+        request = 'Z'*128
+        response = []
+        for i in range(cycles):
+            c = Client()
+            c.send(request)
+            response.append(c.recv())
+            c.close()
+        self.assertEqual(len(response), cycles)
+        for i in range(cycles):
+            self.assertEqual(request, response[i])
+
+    #@unittest.skip("Not now")
+    def test_thread_same_2x4(self):
+        cycles = 2
+        request = ['COOL', ]
+        response = []
+        threads = []
+        for i in range(cycles):
+            c = ClientThread(request)
+            c.start()
+            threads.append(c)
+        for t in threads:
+            t.join()
+            response.append(t.response) 
+            
+        self.assertEqual(len(response), cycles)
+        for i in range(cycles):
+            self.assertEqual(request, response[i])
+
+    #@unittest.skip("Not now")
+    def test_thread_same_12x128(self):
+        cycles = 12
+        request = ['Q'*128, ]
+        response = []
+        threads = []
+        for i in range(cycles):
+            c = ClientThread(request)
+            c.start()
+            threads.append(c)
+        for t in threads:
+            t.join()
+            response.append(t.response) 
+            
+        self.assertEqual(len(response), cycles)
+        for i in range(cycles):
+            self.assertEqual(request, response[i])
+
+    @unittest.skip("Not now")
+    def test_thread_same_128x12(self):
+        cycles = 200
+        request = ['Q'*128, ]
+        response = []
+        threads = []
+        for i in range(cycles):
+            c = ClientThread(request)
+            c.start()
+            threads.append(c)
+        for t in threads:
+            t.join()
+            response.append(t.response) 
+            
+        self.assertEqual(len(response), cycles)
+        for i in range(cycles):
+            self.assertEqual(request, response[i])
+
+    @unittest.skip("Not now")
+    def test_thread_diff_128x12(self):
+        cycles = 128
+        request = []
+        response = []
+        threads = []
+        for i in range(cycles):
+            a_request = chr(i)*12
+            request.append(a_request)
+            c = ClientThread(a_request)
+            c.start()
+            threads.append(c)
+        for t in threads:
+            t.join()
+            response.append(t.response) 
+            
+        self.assertEqual(len(response), cycles)
+        for i in range(cycles):
+            self.assertEqual(request[i], response[i])
+
+
 
 if __name__ == '__main__':
     suite = unittest.TestLoader().loadTestsFromTestCase(ProxyTests)

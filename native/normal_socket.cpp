@@ -30,7 +30,7 @@
 #include "normal_socket.h"
 #include "config.h"
 
-#define LISTEN_BACKLOG 0
+#define LISTEN_BACKLOG 100
 
 NormalSocket::NormalSocket(Addr addr) :
 		Socket(addr) {
@@ -122,6 +122,7 @@ void NormalSocket::nonblock() {
 ssize_t NormalSocket::send(char* buf, size_t size) {
 	ssize_t ret = ::send(s, buf, size, 0);
 	if (ret >= 0) {
+		LOG.debugStream() << "QQQQ SOCKET["<< this->s << "]. Recv:" << ret;
 		return ret;
 	} else {
 		LOG.errorStream() << "SOCKET["<< this->s << "]. Send failed:" << errno;
@@ -132,6 +133,7 @@ ssize_t NormalSocket::send(char* buf, size_t size) {
 ssize_t NormalSocket::recv(char* buf, const size_t size) {
 	ssize_t ret = ::recv(s, buf, size, 0);
 	if (ret >= 0) {
+		LOG.debugStream() << "ZZZZ SOCKET["<< this->s << "]. Recv:" << ret;
 		return ret;
 	} else {
 		LOG.errorStream() << "SOCKET["<< this->s << "]. Recv failed:" << errno;

@@ -6,6 +6,9 @@ import threading, time
 import ssl
 import logging
 
+
+SOCKET_TIMEOUT = 3
+
 logging.basicConfig(level=logging.DEBUG,
                         format='%(asctime)s %(message)s',
                         filename='ssl-tunel.log',
@@ -34,9 +37,10 @@ class Pipe(threading.Thread):
         other.other = self
     def recv(self):
         data = self.s.recv(Pipe.BUFFER_SIZE)
-        log("Pipe received %s bytes. %s"%(len(data), self.s))
+        #log("ZZZZPipe received %s bytes. %s"%(len(data), self.s))
         #log("[[%s]]"%data)
         if data:
+            #log("QQQQPipe send %s bytes. %s"%(len(data), self.s))
             self.other.send(data)
         return data
     def unqueue(self):
@@ -83,12 +87,12 @@ class Client(Pipe):
         self.ip, self.port = (ip, port)
     def create(self):
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.s.settimeout(5)
         if self.secure:
             self.s = ssl.wrap_socket(self.s,
                                ca_certs="cert.pem",
                                cert_reqs=ssl.CERT_REQUIRED)
         self.s.connect((self.ip, int(self.port)))
+        self.s.settimeout(SOCKET_TIMEOUT)
         log("Client connected")
 
 
@@ -96,7 +100,7 @@ class Server(Pipe):
     def __init__(self, parent, secure, socket):
         Pipe.__init__(self, parent, secure, socket)
     def create(self):
-        self.s.settimeout(5)
+        self.s.settimeout(SOCKET_TIMEOUT)
         if self.secure:
             self.s = ssl.wrap_socket(self.s,
                                server_side=True,
@@ -115,7 +119,7 @@ class Listener:
     def create(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.bind((self.ip, int(self.port)))
-        s.listen(1)
+        s.listen(100)
         return s
     def stop(self):
         for i in self.children:
@@ -131,11 +135,11 @@ class Listener:
 
                 s = Server(self, self.secure, socket)
                 self.children.append( s )
-                s.start()
 
                 c = Client(self, *self.client_url)
                 self.children.append( c )
                 c.join_pipe(s)
+                s.start()
                 c.start()
             except KeyboardInterrupt:
                 break

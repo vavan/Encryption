@@ -5,6 +5,7 @@
  *      Author: vova
  */
 #include "worker.h"
+#include "poll.h"
 
 WorkItem::WorkItem(Worker* parent, Socket* socket): parent(parent), socket(socket) {
 	this->parent->add(this);
@@ -12,7 +13,7 @@ WorkItem::WorkItem(Worker* parent, Socket* socket): parent(parent), socket(socke
 }
 
 WorkItem::~WorkItem() {
-	this->parent->remove(this);
+//	this->parent->remove(this);
 	if (this->socket) {
 		delete this->socket;
 	}
@@ -32,59 +33,131 @@ Socket* WorkItem::relese_socket() {
 	return released;
 }
 
+Worker::Worker() {
+	this->size = Worker::INITIAL_PULL;
+	this->fds = new Item[this->size];
+	this->fd_changed = true;
+}
+
+Worker::~Worker() {
+	if (this->fds) {
+		delete[] fds;
+	}
+}
+
 void Worker::add(WorkItem* point) {
 	points.push_back(point);
+	this->fd_changed = true;
 }
 
 void Worker::remove(WorkItem* point) {
 	points.remove(point);
+	this->fd_changed = true;
 }
 
 bool Worker::empty() {
 	return points.empty();
 }
 
-void Worker::build() {
-	max_fd = 0;
-	FD_ZERO(&send_fds);
-	FD_ZERO(&recv_fds);
-	for (WorkItems::iterator i = points.begin(); i != points.end(); i++) {
-		int fd = (*i)->get_fd();
-		if ((*i)->is_sending()) {
-			FD_SET(fd, &send_fds);
+void Worker::reallocate_fds() {
+	if (this->fd_changed) {
+		if (this->size < points.size()) {
+			delete[] fds;
+			this->fds = new Item[points.size()];
 		}
-		FD_SET(fd, &recv_fds);
-		if (fd > max_fd) max_fd = fd;
+		this->size = points.size();
+		this->fd_changed = false;
 	}
-	max_fd++;
+}
+
+void Worker::update_items() {
+	reallocate_fds();
+	size_t i = 0;
+	for (WorkItems::iterator wi = points.begin(); wi != points.end(); ++wi) {
+		Item *item = this->fds + i++;
+		item->fd = (*wi)->get_fd();
+		item->events = POLLIN;
+		if ((*wi)->is_sending()) {
+			item->events |= POLLOUT;
+		}
+	}
+}
+
+void Worker::close_items() {
+	WorkItems::iterator wi = points.begin();
+	while (wi != points.end()) {
+		if ((*wi)->is_closed()) {
+			WorkItem* p = (*wi);
+			points.erase(wi++);
+			delete p;
+			this->fd_changed = true;
+		} else {
+			++wi;
+		}
+	}
 }
 
 void Worker::run() {
-	build();
-	int retval = select(max_fd, &recv_fds, &send_fds, NULL, NULL);
+	update_items();
+	int retval = poll(this->fds, points.size(), -1);
 	if (retval == -1) {
 		LOG.errorStream() << "WORKER. Select failed";
 	}
 	else if (retval) {
-		WorkItems::iterator i = points.begin();
-		while( i != points.end() ) {
-			int fd = (*i)->get_fd();
-			if FD_ISSET(fd, &recv_fds) {
-				(*i)->recv();
+		size_t i = 0;
+		for (WorkItems::iterator wi = points.begin(); wi != points.end(), i < this->size; ++wi ) {
+			Item *item = this->fds + i++;
+			if (item->revents & POLLIN) {
+				(*wi)->recv();
 			}
-			if FD_ISSET(fd, &send_fds) {
-				(*i)->send();
-			}
-			if ((*i)->is_closed()) {
-				WorkItem* p = (*i);
-				points.erase(i++);
-				delete p;
-			} else {
-				++i;
+			if (item->revents & POLLOUT) {
+				(*wi)->send();
 			}
 		}
+		close_items();
 	}
 }
 
 
 
+
+//void Worker::build() {
+//	max_fd = 0;
+//	FD_ZERO(&send_fds);
+//	FD_ZERO(&recv_fds);
+//	for (WorkItems::iterator i = points.begin(); i != points.end(); i++) {
+//		int fd = (*i)->get_fd();
+//		if ((*i)->is_sending()) {
+//			FD_SET(fd, &send_fds);
+//		}
+//		FD_SET(fd, &recv_fds);
+//		if (fd > max_fd) max_fd = fd;
+//	}
+//	max_fd++;
+//}
+//void Worker::run() {
+//	build();
+//	int retval = select(max_fd, &recv_fds, &send_fds, NULL, NULL);
+//	if (retval == -1) {
+//		LOG.errorStream() << "WORKER. Select failed";
+//	}
+//	else if (retval) {
+//		WorkItems::iterator i = points.begin();
+//		while( i != points.end() ) {
+//			int fd = (*i)->get_fd();
+//			if FD_ISSET(fd, &recv_fds) {
+//				(*i)->recv();
+//			}
+//			if FD_ISSET(fd, &send_fds) {
+//				(*i)->send();
+//			}
+//			if ((*i)->is_closed()) {
+//				WorkItem* p = (*i);
+//				points.erase(i++);
+//				delete p;
+//			} else {
+//				++i;
+//			}
+//		}
+//	}
+//}
