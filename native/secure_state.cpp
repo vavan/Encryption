@@ -37,7 +37,6 @@ bool ConnectingState::is_sending(SecureSocket* ctx) {
 }
 size_t ConnectingState::try_connect(SecureSocket* ctx) {
 	Socket::SocketReturns ret = (Socket::SocketReturns)ctx->impl->connect();
-//	LOG.debugStream() << "SSL_connect=" << ret;
 	if (ret == Socket::DONE) {
 		ctx->change_state(&established);
 	}

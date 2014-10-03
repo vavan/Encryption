@@ -25,8 +25,6 @@ private:
 	Pipe* other;
 	bool closing;
 
-//	virtual Buffer* get_buffer();
-//	void return_buffer();
 public:
 	Pipe(Worker* parent, Socket* socket): BufferedPoint(parent, socket), other(NULL), closing(false) {};
 	void join(Pipe* other);
@@ -38,9 +36,7 @@ public:
 class ServerPipe : public Pipe {
 public:
 	ServerPipe(Worker* parent, Socket* socket): Pipe(parent, socket) {};
-	void init() {
-		//this->socket->accept();
-	}
+	void init() {}
 };
 
 class ClientPipe : public Pipe {

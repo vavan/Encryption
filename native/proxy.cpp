@@ -34,17 +34,7 @@ void Listener::recv() {
 	}
 }
 
-void Listener::send() {
-
-};
-
-//void Pipe::return_buffer() {
-//	this->other->send_queue.return_front();
-//}
-
-//Buffer* Pipe::get_buffer() {
-//	return this->other->send_queue.get_front();
-//}
+void Listener::send() {}
 
 void Pipe::join(Pipe* other) {
 	this->other = other;
@@ -56,9 +46,7 @@ void Pipe::join(Pipe* other) {
 	this->other->socket->send_queue = &this->other->send_queue;
 }
 
-void Pipe::on_recv() {
-	LOG.debugStream() << "PIPE, Recv bytes";
-}
+void Pipe::on_recv() {}
 
 void Pipe::on_close() {
 	this->closing = true;
@@ -72,7 +60,6 @@ void Pipe::on_close() {
 }
 
 void Pipe::on_send() {
-	LOG.debugStream() << "Sent bytes";
 	if (this->closing) {
 		this->closed = true;
 		if (this->other)

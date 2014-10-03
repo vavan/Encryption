@@ -116,17 +116,17 @@ Socket* NormalSocket::accept() {
 void NormalSocket::nonblock() {
 	int rc = fcntl(s, F_SETFL, fcntl(s, F_GETFL, 0) | O_NONBLOCK);
 	if (rc < 0) {
-		LOG.errorStream() << "SOCKET.Couldn't set non blocking mode:" << this->s;
+		LOG.errorStream() << "SOCKET. Couldn't set non blocking mode:" << this->s;
 	}
 }
 
 ssize_t NormalSocket::send() {
 	if (!send_queue->empty()) {
-		Buffer * buffer = send_queue->get_back();
+		Buffer* buffer = send_queue->get_back();
 		ssize_t ret = ::send(s, &(*buffer)[0], buffer->size(), 0);
 		if (ret >= 0) {
 			send_queue->compleate(ret);
-			LOG.debugStream() << "QQQQ SOCKET["<< this->s << "]. Send:" << ret;
+			LOG.debugStream() << "SOCKET["<< this->s << "]. Send:" << ret;
 			return ret;
 		} else {
 			LOG.errorStream() << "SOCKET["<< this->s << "]. Send failed:" << errno;
@@ -137,11 +137,11 @@ ssize_t NormalSocket::send() {
 }
 
 ssize_t NormalSocket::recv() {
-	Buffer * buffer = recv_queue->get_front();
+	Buffer* buffer = recv_queue->get_front();
 	ssize_t ret = ::recv(s, &(*buffer)[0], buffer->size(), 0);
 	if (ret >= 0) {
 		recv_queue->compleate(ret);
-		LOG.debugStream() << "ZZZZ SOCKET["<< this->s << "]. Recv:" << ret;
+		LOG.debugStream() << "SOCKET["<< this->s << "]. Recv:" << ret;
 		return ret;
 	} else {
 		LOG.errorStream() << "SOCKET["<< this->s << "]. Recv failed:" << errno;

@@ -38,9 +38,6 @@ public:
 	virtual ssize_t accept();
 	virtual ssize_t send();
 	virtual ssize_t recv();
-
-
-
 };
 
 

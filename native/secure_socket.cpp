@@ -19,9 +19,6 @@ SecureSocket::SecureSocket(Addr addr) :
 	this->state = &idleState;
 	if (SSL_set_fd(this->impl->connection, this->s) == 0)
 		this->impl->checkErrors("SSL_set_fd");
-
-//	is_connected = false;
-//	_is_sending = 0;
 }
 
 SecureSocket::SecureSocket(NormalSocket* socket) :
@@ -30,8 +27,6 @@ SecureSocket::SecureSocket(NormalSocket* socket) :
 	this->state = &idleState;
 	if (SSL_set_fd(this->impl->connection, this->s) == 0)
 		this->impl->checkErrors("SSL_set_fd");
-//	is_connected = false;
-//	_is_sending = 0;
 }
 
 SecureSocket::~SecureSocket() {
@@ -41,9 +36,6 @@ SecureSocket::~SecureSocket() {
 bool SecureSocket::connect() {
 	NormalSocket::connect();
 	this->state->connect(this);
-//	if (SSL_set_fd(this->impl->connection, this->s) == 0) {
-//		this->impl->checkErrors("SSL_set_fd");
-//	}
 	return true;
 }
 bool SecureSocket::listen() {
@@ -62,9 +54,6 @@ Socket* SecureSocket::accept() {
 	} else {
 		return NULL;
 	}
-//	delete accepted;
-//    SSL_set_accept_state(this->impl->connection);
-//    this->state->accept(this);
 }
 
 int SecureSocket::is_sending() {

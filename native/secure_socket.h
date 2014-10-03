@@ -17,11 +17,7 @@ class SecureImpl;
 class SecureSocket: public NormalSocket
 {
 private:
-//	SecureImpl* impl;
 	BaseState* state;
-//	bool is_connected;
-//	int _is_sending;
-//	ConnectState ssl_connect();
 public:
 	SecureImpl* impl;
 	SecureSocket(Addr addr);

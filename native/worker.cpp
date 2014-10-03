@@ -26,12 +26,6 @@ bool WorkItem::is_closed() {
 	return closed;
 }
 
-//Socket* WorkItem::relese_socket() {
-//	Socket* released = this->socket;
-//	this->socket = NULL;
-//	return released;
-//}
-
 Worker::Worker() {
 	this->size = Worker::INITIAL_PULL;
 	this->fds = new Item[this->size];

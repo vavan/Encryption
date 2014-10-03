@@ -61,26 +61,13 @@ int main(int argc, char* argv[]) {
 	signal(SIGTERM, terminationHandler);
 
 	Worker w = Worker();
-#if 1
-//	Listener* main = new Listener(&w, new NormalSocket(Config::get().server));
-	SecureSocket* ss = new SecureSocket(Config::get().server);//Addr("127.0.0.1", 5689));
+
+	//TODO parse starting <s>, pass it to Listener
+	SecureSocket* ss = new SecureSocket(Config::get().server);
 	ss->set_security("cert.pem","key.pem");
 	Listener* main = new Listener(&w, ss);
 
 	main->init();
-#else
-//	ServerPipe* sp = new ServerPipe(&w, new NormalSocket(Addr("127.0.0.1", 5000)));
-	SecureSocket ss(Addr("127.0.0.1", 5689));
-	ClientPipe* main = new ClientPipe(&w, &ss);
-//	main->join(sp);
-	main->init();
-//	sp->init();
-	char data[] = "OK";
-	Buffer b; b.assign(data, data+2);
-	main->push(&b);
-#endif
-
-
 
 	running = true;
 	while (running) {

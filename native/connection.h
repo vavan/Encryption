@@ -25,9 +25,7 @@
 class BufferedPoint: public WorkItem {
 protected:
 	Queue send_queue;
-//
-//	virtual Buffer* get_buffer() = 0;
-//	virtual void return_buffer() = 0;
+
 public:
 	BufferedPoint(Worker* parent, Socket* socket) : WorkItem(parent, socket) {};
 	virtual void init();

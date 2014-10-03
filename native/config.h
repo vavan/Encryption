@@ -31,7 +31,6 @@ public:
 
 	Addr server;
 	Addr client;
-	char** child;
 
 	static void init() {
 		Config::instance = new Config();
