@@ -17,8 +17,8 @@ protected:
 	int s;
 public:
 
-	NormalSocket(Addr addr);
-	NormalSocket(Addr addr, int s);
+	NormalSocket(Addr& addr);
+	NormalSocket(Addr& addr, int s);
 	NormalSocket(const NormalSocket* socket);
 	virtual ~NormalSocket();
 

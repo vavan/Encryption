@@ -14,7 +14,7 @@
 using namespace std;
 
 
-SecureSocket::SecureSocket(Addr addr) :
+SecureSocket::SecureSocket(Addr& addr) :
 		NormalSocket(addr) {
 	this->impl = new SecureImpl(this);
 	this->state = &idleState;

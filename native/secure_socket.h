@@ -22,7 +22,7 @@ private:
 	BaseState* state;
 public:
 	SecureImpl* impl;
-	SecureSocket(Addr addr);
+	SecureSocket(Addr& addr);
 	SecureSocket(NormalSocket* socket);
 	virtual ~SecureSocket();
 

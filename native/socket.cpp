@@ -23,7 +23,7 @@ std::string Addr::str() {
 	return os.str();
 }
 
-Socket::Socket(Addr addr) : addr(addr) {}
+Socket::Socket(const Addr& addr) : addr(addr) {}
 
 Socket::~Socket() {}
 

@@ -41,7 +41,7 @@ public:
 	Queue* recv_queue;
 	Queue* send_queue;
 
-	Socket(Addr addr);
+	Socket(const Addr& addr);
 	virtual ~Socket();
 
 	virtual int get() = 0;

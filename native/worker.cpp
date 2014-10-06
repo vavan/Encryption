@@ -26,19 +26,12 @@ bool WorkItem::is_closed() {
 	return closed;
 }
 
-Worker::Worker() {
-//	this->size = Worker::INITIAL_PULL;
-//	this->events = new WorkItemEvents[this->size];
-//	this->fd_changed = true;
-}
+Worker::Worker() {}
 
-Worker::~Worker() {
-//	delete[] events;
-}
+Worker::~Worker() {}
 
 void Worker::add(WorkItem* point) {
 	add_item_list.push_back(point);
-//	this->fd_changed = true;
 }
 
 void Worker::remove(WorkItem* point) {
@@ -60,21 +53,6 @@ bool Worker::delete_items() {
 		return true;
 	}
 	return false;
-
-
-//	bool updated = false;
-//	WorkItems::iterator wi = items.begin();
-//	while (wi != items.end()) {
-//		if ((*wi)->is_closed()) {
-//			WorkItem* p = (*wi);
-//			items.erase(wi++);
-//			delete p;
-//			updated = true;
-//		} else {
-//			++wi;
-//		}
-//	}
-//	return updated;
 }
 
 bool Worker::add_items() {
@@ -113,7 +91,6 @@ void Worker::update_items() {
 		}
 	}
 }
-
 
 void Worker::run() {
 	update_items();

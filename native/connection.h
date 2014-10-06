@@ -33,8 +33,6 @@ public:
 	virtual void send();
 	virtual bool is_sending();
 
-//	virtual void push(Buffer* data);
-
 	virtual void on_send() = 0;
 	virtual void on_close() = 0;
 };

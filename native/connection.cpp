@@ -26,13 +26,3 @@ void BufferedPoint::send() {
 bool BufferedPoint::is_sending() {
 	return this->socket->is_sending() || !this->send_queue.empty();
 }
-
-//void BufferedPoint::push(Buffer* msg) {
-//	Buffer* buffer = send_queue.get_front();
-//	buffer->assign(msg->begin(), msg->end());
-//}
-
-
-
-
-

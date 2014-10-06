@@ -296,7 +296,7 @@ class LongRunningTests(unittest.TestCase):
 
     #@unittest.skip("Not now")
     def test_repeat_long_seq(self):
-        cycles = 10000
+        cycles = 100000
         c = Client()
         request = 'Z'*2048
         response = []

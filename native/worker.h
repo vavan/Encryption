@@ -52,8 +52,6 @@ private:
 	WorkItems add_item_list;
 	WorkItems delete_item_list;
 	WorkItemEvents events;
-//	size_t size;
-//	bool fd_changed;
 	void update_items();
 	bool delete_items();
 	bool add_items();

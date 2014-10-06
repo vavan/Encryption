@@ -33,14 +33,14 @@
 
 #define LISTEN_BACKLOG 100
 
-NormalSocket::NormalSocket(Addr addr) :
+NormalSocket::NormalSocket(Addr& addr) :
 		Socket(addr) {
 	this->s = socket(AF_INET, SOCK_STREAM, 0);
 	this->nonblock();
 	LOG.infoStream() << "SOCKET["<< this->s << "]. New";
 }
 
-NormalSocket::NormalSocket(Addr addr, int s) :
+NormalSocket::NormalSocket(Addr& addr, int s) :
 		Socket(addr), s(s) {
 	LOG.infoStream() << "SOCKET["<< this->s << "]. Copy";
 }
