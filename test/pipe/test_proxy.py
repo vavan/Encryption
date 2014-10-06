@@ -296,7 +296,7 @@ class LongRunningTests(unittest.TestCase):
 
     #@unittest.skip("Not now")
     def test_repeat_long_seq(self):
-        cycles = 100000
+        cycles = 10000
         c = Client()
         request = 'Z'*2048
         response = []
@@ -313,8 +313,8 @@ class LongRunningTests(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    #suite = unittest.TestLoader().loadTestsFromTestCase(ProxyTests)
-    suite = unittest.TestLoader().loadTestsFromTestCase(LongRunningTests)
+    suite = unittest.TestLoader().loadTestsFromTestCase(ProxyTests)
+    #suite = unittest.TestLoader().loadTestsFromTestCase(LongRunningTests)
     unittest.TextTestRunner(verbosity=2).run(suite)
     #unittest.main()
 

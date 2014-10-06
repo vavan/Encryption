@@ -27,88 +27,110 @@ bool WorkItem::is_closed() {
 }
 
 Worker::Worker() {
-	this->size = Worker::INITIAL_PULL;
-	this->fds = new Item[this->size];
-	this->fd_changed = true;
+//	this->size = Worker::INITIAL_PULL;
+//	this->events = new WorkItemEvents[this->size];
+//	this->fd_changed = true;
 }
 
 Worker::~Worker() {
-	delete[] fds;
+//	delete[] events;
 }
 
 void Worker::add(WorkItem* point) {
-	points.push_back(point);
-	this->fd_changed = true;
+	add_item_list.push_back(point);
+//	this->fd_changed = true;
 }
 
 void Worker::remove(WorkItem* point) {
-	points.remove(point);
-	this->fd_changed = true;
+	delete_item_list.push_back(point);
 }
 
 bool Worker::empty() {
-	return points.empty();
+	return items.empty();
 }
 
-void Worker::reallocate_fds() {
-	if (this->fd_changed) {
-		if (this->size < points.size()) {
-			delete[] fds;
-			this->fds = new Item[points.size()];
+bool Worker::delete_items() {
+	if (!delete_item_list.empty()) {
+		for(WorkItems::iterator wi = delete_item_list.begin(); wi != delete_item_list.end(); ++wi) {
+			WorkItem* p = (*wi);
+			items.remove((*wi));
+			delete p;
 		}
-		this->size = points.size();
-		this->fd_changed = false;
+		delete_item_list.clear();
+		return true;
 	}
+	return false;
+
+
+//	bool updated = false;
+//	WorkItems::iterator wi = items.begin();
+//	while (wi != items.end()) {
+//		if ((*wi)->is_closed()) {
+//			WorkItem* p = (*wi);
+//			items.erase(wi++);
+//			delete p;
+//			updated = true;
+//		} else {
+//			++wi;
+//		}
+//	}
+//	return updated;
 }
+
+bool Worker::add_items() {
+	if (!add_item_list.empty()) {
+		items.insert(items.end(), add_item_list.begin(), add_item_list.end());
+		add_item_list.clear();
+		return true;
+	}
+	return false;
+}
+
 
 void Worker::update_items() {
-	reallocate_fds();
-	size_t i = 0;
-	for (WorkItems::iterator wi = points.begin(); wi != points.end(); ++wi) {
-		Item *item = this->fds + i++;
-		item->fd = (*wi)->get_fd();
-		item->events = POLLIN;
-		if ((*wi)->is_sending()) {
-			item->events |= POLLOUT;
+	bool add = add_items();
+	bool del = delete_items();
+	if (add || del) {
+		events.clear();
+		events.resize(items.size());
+		WorkItems::iterator wi = items.begin();
+		WorkItemEvents::iterator ei = events.begin();
+		for (; wi != items.end(); ++wi, ++ei) {
+			(*ei).fd = (*wi)->get_fd();
+			(*ei).events = POLLIN;
+			if ((*wi)->is_sending()) {
+				(*ei).events |= POLLOUT;
+			}
+		}
+	} else {
+		WorkItems::iterator wi = items.begin();
+		WorkItemEvents::iterator ei = events.begin();
+		for (; wi != items.end(); ++wi, ++ei) {
+			(*ei).events = POLLIN;
+			if ((*wi)->is_sending()) {
+				(*ei).events |= POLLOUT;
+			}
 		}
 	}
 }
 
-void Worker::close_items() {
-	WorkItems::iterator wi = points.begin();
-	while (wi != points.end()) {
-		if ((*wi)->is_closed()) {
-			WorkItem* p = (*wi);
-			points.erase(wi++);
-			delete p;
-			this->fd_changed = true;
-		} else {
-			++wi;
-		}
-	}
-}
 
 void Worker::run() {
-//	LOG.errorStream() << "1111";
-
 	update_items();
-//	LOG.errorStream() << "2222";
-	int retval = poll(this->fds, this->size, -1);
-//	LOG.errorStream() << "3333";
+	int retval = poll(&(this->events[0]), this->events.size(), -1);
 	if (retval == -1) {
 		LOG.errorStream() << "WORKER. Select failed";
 	}
 	else if (retval) {
-		size_t i = 0;
-		for (WorkItems::iterator wi = points.begin(); wi != points.end(), i < this->size; ++wi ) {
-			Item *item = this->fds + i++;
-			if (item->revents & POLLIN) {
+		WorkItems::iterator wi = items.begin();
+		WorkItemEvents::iterator ei = events.begin();
+		for (; wi != items.end(); ++wi, ++ei ) {
+			if ((*ei).revents & POLLIN) {
 				(*wi)->recv();
 			}
-			if (item->revents & POLLOUT) {
+			if ((*ei).revents & POLLOUT) {
 				(*wi)->send();
 			}
 		}
-		close_items();
 	}
 }

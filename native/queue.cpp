@@ -37,6 +37,7 @@ Queue::~Queue() {
 
 Buffer* Queue::get_front() {
 	if (front + 1 == back) {
+		//TODO reallocate instead of fail
 		LOG.alertStream() << "QUEUE. Buffer overflow";
 		return NULL;
 	}

@@ -23,7 +23,7 @@ CFLAGS+=-pg
 endif
 
 #-Wextra 
-CFLAGS := -Wall -O0 -ggdb -DLOG4CPP -I./include -I./objs
+CFLAGS := -Wall -O3 -ggdb -DLOG4CPP -I./include -I./objs
 LDFLAGS := -ggdb -lcrypto -lssl -llog4cpp 
 OBJS := objs
 BIN := bin

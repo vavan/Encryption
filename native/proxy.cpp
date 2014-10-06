@@ -54,16 +54,20 @@ void Pipe::on_close() {
 		this->other->closing = true;
 	if (send_queue.empty()) {
 		this->closed = true;
+		this->parent->remove(this);
 		if (this->other)
 			this->other->closed = true;
+			this->parent->remove(this->other);
 	}
 }
 
 void Pipe::on_send() {
 	if (this->closing) {
 		this->closed = true;
+		this->parent->remove(this);
 		if (this->other)
 			this->other->closed = true;
+			this->parent->remove(this->other);
 	}
 }
 

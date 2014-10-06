@@ -16,8 +16,10 @@
 #include <deque>
 #include <vector>
 #include <exception>
+#include <poll.h>
 #include "socket.h"
 #include "config.h"
+
 
 using namespace std;
 
@@ -42,15 +44,19 @@ public:
 
 
 class Worker {
+private:
 	static const int INITIAL_PULL = 30;
 	typedef list<WorkItem*> WorkItems;
-	WorkItems points;
-	typedef struct pollfd Item;
-	size_t size;
-	Item* fds;
-	bool fd_changed;
+	typedef vector<struct pollfd> WorkItemEvents;
+	WorkItems items;
+	WorkItems add_item_list;
+	WorkItems delete_item_list;
+	WorkItemEvents events;
+//	size_t size;
+//	bool fd_changed;
 	void update_items();
-	void close_items();
+	bool delete_items();
+	bool add_items();
 	void reallocate_fds();
 
 public:
