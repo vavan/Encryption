@@ -89,8 +89,12 @@ void Worker::close_items() {
 }
 
 void Worker::run() {
+//	LOG.errorStream() << "1111";
+
 	update_items();
-	int retval = poll(this->fds, points.size(), -1);
+//	LOG.errorStream() << "2222";
+	int retval = poll(this->fds, this->size, -1);
+//	LOG.errorStream() << "3333";
 	if (retval == -1) {
 		LOG.errorStream() << "WORKER. Select failed";
 	}

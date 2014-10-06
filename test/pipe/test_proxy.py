@@ -282,9 +282,39 @@ class ProxyTests(unittest.TestCase):
             self.assertEqual(request[i], response[i])
 
 
+class LongRunningTests(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.listener = Listener()
+        cls.listener.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.listener.stop()
+        #print "STOP:", cls.listener.recvd
+
+    #@unittest.skip("Not now")
+    def test_repeat_long_seq(self):
+        cycles = 100000
+        c = Client()
+        request = 'Z'*2048
+        response = []
+        for i in range(cycles):
+            c.send(request)
+            #time.sleep(0.1)
+            recvd = c.recv()
+            response.append((recvd == request))
+        c.close()
+        self.assertEqual(len(response), cycles)
+        for i in range(cycles):
+            self.assertTrue(response[i])
+
+
 
 if __name__ == '__main__':
-    suite = unittest.TestLoader().loadTestsFromTestCase(ProxyTests)
+    #suite = unittest.TestLoader().loadTestsFromTestCase(ProxyTests)
+    suite = unittest.TestLoader().loadTestsFromTestCase(LongRunningTests)
     unittest.TextTestRunner(verbosity=2).run(suite)
     #unittest.main()
 

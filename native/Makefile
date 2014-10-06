@@ -18,6 +18,10 @@ ifeq ($(CROSS), TRUE)
 PREFIX:=arm-none-linux-gnueabi-
 endif
 
+ifeq ($(PRUF), TRUE)
+CFLAGS+=-pg
+endif
+
 #-Wextra 
 CFLAGS := -Wall -O0 -ggdb -DLOG4CPP -I./include -I./objs
 LDFLAGS := -ggdb -lcrypto -lssl -llog4cpp 
@@ -30,6 +34,12 @@ CPP := $(PREFIX)g++
 LD := $(PREFIX)g++
 MAJ_VERSION := 0
 MIN_VERSION := 5
+
+ifeq ($(PRUF), TRUE)
+CFLAGS += -pg
+LDFLAGS += -pg
+endif
+
 
 all: $(TARGET)
 

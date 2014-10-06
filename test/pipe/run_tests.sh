@@ -18,4 +18,4 @@ sleep 1
 
 
 killall -9 ssl-tunel.py
-killall -9 tunnel
+killall -TERM tunnel
