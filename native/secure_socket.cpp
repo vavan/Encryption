@@ -38,7 +38,6 @@ SecureSocket::~SecureSocket() {
 bool SecureSocket::connect() {
 	NormalSocket::connect();
 	this->state->connect(this);
-	this->recv_queue->workItem->sending(true);
 	return true;
 }
 bool SecureSocket::listen() {
@@ -59,9 +58,9 @@ Socket* SecureSocket::accept() {
 	}
 }
 
-int SecureSocket::is_sending() {
-	return this->state->is_sending(this);
-}
+//int SecureSocket::is_sending() {
+//	return this->state->is_sending(this);
+//}
 
 ssize_t SecureSocket::send() {
 	return this->state->send(this);

@@ -6,6 +6,7 @@
  */
 #include "worker.h"
 #include "poll.h"
+#include "connection.h"
 
 WorkItem::WorkItem(Worker* parent, Socket* socket): parent(parent), socket(socket) {
 	this->parent->add(this);
@@ -35,9 +36,6 @@ void WorkItem::sending(bool start) {
 }
 
 
-Worker::Worker() {}
-
-Worker::~Worker() {}
 
 void Worker::add(WorkItem* point) {
 	add_item_list.push_back(point);
@@ -47,9 +45,9 @@ void Worker::remove(WorkItem* point) {
 	delete_item_list.insert(point);
 }
 
-bool Worker::empty() {
-	return items.empty();
-}
+//bool Worker::empty() {
+//	return items.empty();
+//}
 
 bool Worker::delete_items() {
 	if (!delete_item_list.empty()) {
@@ -83,24 +81,15 @@ void Worker::update_items() {
 			(*wi)->event = &(*ei);
 			(*ei).fd = (*wi)->get_fd();
 			(*ei).events = POLLIN;
-			if ((*wi)->is_sending()) {
+			BufferedPoint* bp = (BufferedPoint*)(*wi);
+			if (!bp->send_queue.empty()) {
 				(*ei).events |= POLLOUT;
 			}
+//			if ((*wi)->is_sending()) {
+//				(*ei).events |= POLLOUT;
+//			}
 		}
 	}
-//	else {
-//		for (WorkItems::iterator wi = items.begin(); wi != items.end(); ++wi) {
-//			WorkItem* _wi = (*wi);
-//			(*wi)->event->events = POLLIN;
-//			if ((*wi)->is_sending()) {
-//				if (((*wi)->event->events & POLLOUT) == 0) {
-//					LOG.debugStream() << "Got diff on:" << _wi->get_fd()<<"|"<<_wi->event<<"|"<<_wi->event->events;
-//				}
-//				(*wi)->event->events |= POLLOUT;
-//			}
-//			LOG.debugStream() << " UPDATE LIST:" << _wi->get_fd()<<"|"<<_wi->event<<"|"<<_wi->event->events;
-//		}
-//	}
 }
 
 

@@ -96,16 +96,17 @@ class ClientThread(Thread):
         Thread.__init__(self)
         self.request = request
         self.response = []
-        self.index = len(request) - 1
-    def do(self):
-        if (self.index >= 0):
-            c = Client()
+        self.index = 0
+    def run(self):
+        self.running = True
+        c = Client()
+        while self.running and self.index < len(self.request):
             c.send(self.request[self.index])
             self.response.append(c.recv())
-            c.close()
-            self.index -= 1
-        else:
-            self.stop()
+            self.index += 1
+        self.stop()
+        c.close()
+        
 
 class BasicTests(unittest.TestCase):
 
@@ -221,6 +222,7 @@ class MainTests(unittest.TestCase):
             c = ClientThread(request)
             c.start()
             threads.append(c)
+            #time.sleep(0.03)
         for t in threads:
             t.join()
             response.append(t.response) 
@@ -231,7 +233,7 @@ class MainTests(unittest.TestCase):
 
     #@unittest.skip("Not now")
     def test_thread_sequance(self):
-        outer_cycles = 10
+        outer_cycles = 1
         cycles = 20
         request = ['Q'*32, ]
         response = []
@@ -243,12 +245,13 @@ class MainTests(unittest.TestCase):
                 threads.append(c)
             for t in threads:
                 t.join()
-                response.append(t.response) 
+                response.append(t.response)
+                #time.sleep(0.05)
             
         self.assertEqual(len(response), cycles*outer_cycles)
         for i in range(cycles*outer_cycles):
             self.assertEqual(request, response[i])
-
+    
     #@unittest.skip("Not now")
     def test_thread_diff_128x12(self):
         cycles = 100
@@ -261,6 +264,7 @@ class MainTests(unittest.TestCase):
             c = ClientThread(a_request)
             c.start()
             threads.append(c)
+            #time.sleep(0.03)
         for t in threads:
             t.join()
             response.append(t.response) 
@@ -274,19 +278,22 @@ class MainTests(unittest.TestCase):
         cycles = 30
         request = []
         response = []
-        threads = []
+        clients = []
         for i in range(cycles):
             a_request = [ chr(i+0x40)*30, ]*30
             request.append(a_request)
             c = ClientThread(a_request)
             c.start()
-            threads.append(c)
-        for t in threads:
+            clients.append(c)
+            #time.sleep(0.03)
+        for t in clients:
             t.join()
-            response.append(t.response) 
+            response.append(t.response)
             
         self.assertEqual(len(response), cycles)
+        #print
         for i in range(cycles):
+            #print response[i]
             self.assertEqual(request[i], response[i])
 
 

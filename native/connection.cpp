@@ -23,6 +23,6 @@ void BufferedPoint::send() {
 	}
 }
 
-bool BufferedPoint::is_sending() {
-	return this->socket->is_sending() || !this->send_queue.empty();
-}
+//bool BufferedPoint::is_sending() {
+//	return this->socket->is_sending() || !this->send_queue.empty();
+//}

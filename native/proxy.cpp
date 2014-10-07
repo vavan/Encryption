@@ -14,9 +14,9 @@
 
 Listener::Listener(Worker* parent, Socket* socket): WorkItem(parent, socket) {}
 
-bool Listener::is_sending() {
-	return false;
-}
+//bool Listener::is_sending() {
+//	return false;
+//}
 
 void Listener::init() {
 	this->socket->listen();
@@ -49,16 +49,20 @@ void Pipe::join(Pipe* other) {
 //void Pipe::on_recv() {}
 
 void Pipe::on_close() {
+
+	LOG.debugStream() << "Pipe::on_close1:"<<this->closing<<"|"<<this->other->send_queue.empty()<<"|"<<this->closed;
+
 	this->closing = true;
 	if (this->other)
 		this->other->closing = true;
-	if (send_queue.empty()) {
+	if (this->other->send_queue.empty()) {
 		this->closed = true;
 		this->parent->remove(this);
 		if (this->other)
 			this->other->closed = true;
 			this->parent->remove(this->other);
 	}
+	LOG.debugStream() << "Pipe::on_close2:"<<this->closing<<"|"<<this->other->send_queue.empty()<<"|"<<this->closed<<"|"<<this->other->event->events;
 }
 
 void Pipe::on_send() {

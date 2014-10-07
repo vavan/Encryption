@@ -44,7 +44,7 @@ public:
 	virtual void init() = 0;
 	virtual void recv() = 0;
 	virtual void send() = 0;
-	virtual bool is_sending() = 0;
+//	virtual bool is_sending() = 0;
 };
 
 
@@ -61,14 +61,12 @@ private:
 	void update_items();
 	bool delete_items();
 	bool add_items();
-	void reallocate_fds();
+//	void reallocate_fds();
 
 public:
-	Worker();
-	~Worker();
 	void add(WorkItem* point);
 	void remove(WorkItem* point);
-	bool empty();
+//	bool empty();
 	void run();
 };
 

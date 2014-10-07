@@ -33,7 +33,7 @@ public:
 	virtual Socket* accept();
 	virtual ssize_t send();
 	virtual ssize_t recv();
-	virtual int is_sending();
+//	virtual int is_sending();
 
 	void set_security(std::string cert_file, std::string key_file);
 };

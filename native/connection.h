@@ -24,14 +24,16 @@
 
 class BufferedPoint: public WorkItem {
 protected:
-	Queue send_queue;
 
 public:
 	BufferedPoint(Worker* parent, Socket* socket) : WorkItem(parent, socket), send_queue(this) {};
+
+	Queue send_queue;
+
 	virtual void init();
 	virtual void recv();
 	virtual void send();
-	virtual bool is_sending();
+//	virtual bool is_sending();
 
 	virtual void on_send() = 0;
 	virtual void on_close() = 0;

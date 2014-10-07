@@ -17,7 +17,7 @@ public:
 	virtual void init();
 	virtual void recv();
 	virtual void send();
-	virtual bool is_sending();
+//	virtual bool is_sending();
 };
 
 class Pipe: public BufferedPoint {

@@ -105,7 +105,7 @@ ssize_t SecureImpl::recv() {
 	ssize_t ret = SSL_read(this->connection, &(*buffer)[0], buffer->size());
 	if (ret >= 0) {
 		LOG.debugStream() << "ZZZZ SSL. Recv:" << ret;
-		parent->recv_queue->compleate(ret);
+		if (ret > 0) parent->recv_queue->compleate(ret);
 		return ret;
 	} else {
 //		LOG.errorStream() << "SSL. Recv failed:" << errno;

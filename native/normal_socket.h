@@ -29,7 +29,7 @@ public:
 	virtual ssize_t send();
 	virtual ssize_t recv();
 	virtual void nonblock();
-	virtual int is_sending() {return 0;};
+//	virtual int is_sending() {return 0;};
 
 };
 
