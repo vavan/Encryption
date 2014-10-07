@@ -87,21 +87,17 @@ ssize_t SecureImpl::accept() {
 }
 
 ssize_t SecureImpl::send() {
-//	if (!parent->send_queue->empty()) {
-		Buffer * buffer = parent->send_queue->get_back();
-		ssize_t ret = SSL_write(this->connection, &(*buffer)[0], buffer->size());
-		if (ret >= 0) {
-			parent->send_queue->compleate(ret);
-			LOG.debugStream() << "QQQQ SSL[]. send:" << ret;
-			return ret;
-		} else {
+	Buffer * buffer = parent->send_queue->get_back();
+	ssize_t ret = SSL_write(this->connection, &(*buffer)[0], buffer->size());
+	if (ret >= 0) {
+		parent->send_queue->compleate(ret);
+		LOG.debugStream() << "QQQQ SSL[]. send:" << ret;
+		return ret;
+	} else {
 //			LOG.errorStream() << "SSL. Send failed:";
-			checkErrors("ssl send");
-			return Socket::ERROR;
-		}
-//	} else {
-//		LOG.errorStream() << "Empty send!";
-//	}
+		checkErrors("ssl send");
+		return Socket::ERROR;
+	}
 	return 0;
 }
 ssize_t SecureImpl::recv() {

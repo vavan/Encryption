@@ -79,12 +79,10 @@ void Worker::update_items() {
 			}
 		}
 	} else {
-		WorkItems::iterator wi = items.begin();
-		WorkItemEvents::iterator ei = events.begin();
-		for (; wi != items.end(); ++wi, ++ei) {
-			(*ei).events = POLLIN;
+		for (WorkItems::iterator wi = items.begin(); wi != items.end(); ++wi) {
+			(*wi)->event->events = POLLIN;
 			if ((*wi)->is_sending()) {
-				(*ei).events |= POLLOUT;
+				(*wi)->event->events |= POLLOUT;
 			}
 		}
 	}
@@ -97,9 +95,7 @@ void Worker::run() {
 	if (retval == -1) {
 		LOG.errorStream() << "WORKER. Select failed";
 	} else {
-		WorkItems::iterator wi = items.begin();
-//		WorkItemEvents::iterator ei = events.begin();
-		for (; wi != items.end(); ++wi ) {
+		for (WorkItems::iterator wi = items.begin(); wi != items.end(); ++wi ) {
 			if ((*wi)->event->revents & POLLOUT) {
 				(*wi)->send();
 			}
