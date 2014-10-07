@@ -54,7 +54,6 @@ bool AcceptingState::is_sending(SecureSocket* ctx) {
 }
 size_t AcceptingState::try_accept(SecureSocket* ctx) {
 	Socket::SocketReturns ret = (Socket::SocketReturns)ctx->impl->accept();
-	LOG.debugStream() << "try_accept=" << ret;
 	if (ret == Socket::DONE) {
 		ctx->change_state(&established);
 		ret = Socket::INPROGRESS;

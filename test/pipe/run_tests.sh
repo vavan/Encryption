@@ -14,7 +14,7 @@ sleep 1
 
 #ps ax | egrep "ssl-tunel.py|tunnel"
 
-./test_proxy.py
+./test_proxy.py $1
 
 
 killall -9 ssl-tunel.py

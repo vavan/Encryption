@@ -321,11 +321,17 @@ class LongRunningTests(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    #suite = unittest.TestLoader().loadTestsFromTestCase(BasicTests)
-    #suite = unittest.TestLoader().loadTestsFromTestCase(MainTests)
-    suite = unittest.TestLoader().loadTestsFromTestCase(LongRunningTests)
+    if len(sys.argv) > 1:
+        type = sys.argv[1]
+    else:
+        type = "main"
+    if (type == "basic"):
+        suite = unittest.TestLoader().loadTestsFromTestCase(BasicTests)
+    elif (type == "profile"):
+        suite = unittest.TestLoader().loadTestsFromTestCase(LongRunningTests)
+    else:
+        suite = unittest.TestLoader().loadTestsFromTestCase(MainTests)
     unittest.TextTestRunner(verbosity=2).run(suite)
-    #unittest.main()
 
 
 

@@ -35,7 +35,7 @@ void Worker::add(WorkItem* point) {
 }
 
 void Worker::remove(WorkItem* point) {
-	delete_item_list.push_back(point);
+	delete_item_list.insert(point);
 }
 
 bool Worker::empty() {
@@ -44,7 +44,7 @@ bool Worker::empty() {
 
 bool Worker::delete_items() {
 	if (!delete_item_list.empty()) {
-		for(WorkItems::iterator wi = delete_item_list.begin(); wi != delete_item_list.end(); ++wi) {
+		for(DeletedItems::iterator wi = delete_item_list.begin(); wi != delete_item_list.end(); ++wi) {
 			WorkItem* p = (*wi);
 			items.remove((*wi));
 			delete p;
@@ -65,14 +65,13 @@ bool Worker::add_items() {
 }
 
 void Worker::update_items() {
-	bool add = add_items();
-	bool del = delete_items();
-	if (add || del) {
+	if (add_items() || delete_items()) {
 		events.clear();
 		events.resize(items.size());
 		WorkItems::iterator wi = items.begin();
 		WorkItemEvents::iterator ei = events.begin();
 		for (; wi != items.end(); ++wi, ++ei) {
+			(*wi)->event = &(*ei);
 			(*ei).fd = (*wi)->get_fd();
 			(*ei).events = POLLIN;
 			if ((*wi)->is_sending()) {
@@ -99,13 +98,13 @@ void Worker::run() {
 		LOG.errorStream() << "WORKER. Select failed";
 	} else {
 		WorkItems::iterator wi = items.begin();
-		WorkItemEvents::iterator ei = events.begin();
-		for (; wi != items.end(); ++wi, ++ei ) {
-			if ((*ei).revents & POLLIN) {
-				(*wi)->recv();
-			}
-			if ((*ei).revents & POLLOUT) {
+//		WorkItemEvents::iterator ei = events.begin();
+		for (; wi != items.end(); ++wi ) {
+			if ((*wi)->event->revents & POLLOUT) {
 				(*wi)->send();
+			}
+			if ((*wi)->event->revents & POLLIN) {
+				(*wi)->recv();
 			}
 		}
 	}

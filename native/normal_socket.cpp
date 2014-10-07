@@ -121,7 +121,7 @@ void NormalSocket::nonblock() {
 }
 
 ssize_t NormalSocket::send() {
-	if (!send_queue->empty()) {
+//	if (!send_queue->empty()) {
 		Buffer* buffer = send_queue->get_back();
 		ssize_t ret = ::send(s, &(*buffer)[0], buffer->size(), 0);
 		if (ret >= 0) {
@@ -132,7 +132,7 @@ ssize_t NormalSocket::send() {
 			LOG.errorStream() << "SOCKET["<< this->s << "]. Send failed:" << errno;
 			return Socket::ERROR;
 		}
-	}
+//	}
 	return 0;
 }
 

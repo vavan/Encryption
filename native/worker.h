@@ -16,6 +16,7 @@
 #include <deque>
 #include <vector>
 #include <exception>
+#include <set>
 #include <poll.h>
 #include "socket.h"
 #include "config.h"
@@ -31,8 +32,9 @@ protected:
 	Worker* parent;
 	Socket* socket;
 	bool closed;
-	WorkItemEvent* event;
 public:
+	WorkItemEvent* event;
+
 	WorkItem(Worker* parent, Socket* socket);
 	virtual ~WorkItem();
 	int get_fd();
@@ -49,10 +51,11 @@ class Worker {
 private:
 	static const int INITIAL_PULL = 30;
 	typedef list<WorkItem*> WorkItems;
+	typedef set<WorkItem*> DeletedItems;
 	typedef vector<WorkItemEvent> WorkItemEvents;
 	WorkItems items;
 	WorkItems add_item_list;
-	WorkItems delete_item_list;
+	DeletedItems delete_item_list;
 	WorkItemEvents events;
 	void update_items();
 	bool delete_items();
