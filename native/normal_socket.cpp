@@ -121,18 +121,16 @@ void NormalSocket::nonblock() {
 }
 
 ssize_t NormalSocket::send() {
-//	if (!send_queue->empty()) {
-		Buffer* buffer = send_queue->get_back();
-		ssize_t ret = ::send(s, &(*buffer)[0], buffer->size(), 0);
-		if (ret >= 0) {
-			send_queue->compleate(ret);
-			LOG.debugStream() << "SOCKET["<< this->s << "]. Send:" << ret;
-			return ret;
-		} else {
-			LOG.errorStream() << "SOCKET["<< this->s << "]. Send failed:" << errno;
-			return Socket::ERROR;
-		}
-//	}
+	Buffer* buffer = send_queue->get_back();
+	ssize_t ret = ::send(s, &(*buffer)[0], buffer->size(), 0);
+	if (ret >= 0) {
+		LOG.debugStream() << "SOCKET["<< this->s << "]. Send:" << ret;
+		send_queue->compleate(ret);
+		return ret;
+	} else {
+		LOG.errorStream() << "SOCKET["<< this->s << "]. Send failed:" << errno;
+		return Socket::ERROR;
+	}
 	return 0;
 }
 
@@ -140,8 +138,8 @@ ssize_t NormalSocket::recv() {
 	Buffer* buffer = recv_queue->get_front();
 	ssize_t ret = ::recv(s, &(*buffer)[0], buffer->size(), 0);
 	if (ret >= 0) {
-		recv_queue->compleate(ret);
 		LOG.debugStream() << "SOCKET["<< this->s << "]. Recv:" << ret;
+		recv_queue->compleate(ret);
 		return ret;
 	} else {
 		LOG.errorStream() << "SOCKET["<< this->s << "]. Recv failed:" << errno;

@@ -34,6 +34,7 @@ protected:
 	bool closed;
 public:
 	WorkItemEvent* event;
+	void sending(bool start);
 
 	WorkItem(Worker* parent, Socket* socket);
 	virtual ~WorkItem();

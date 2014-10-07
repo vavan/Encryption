@@ -6,6 +6,7 @@
  */
 
 #include "queue.h"
+#include "worker.h"
 
 
 int Queue::inc(int index) {
@@ -17,7 +18,7 @@ int Queue::inc(int index) {
 	return index;
 }
 
-Queue::Queue() {
+Queue::Queue(WorkItem* workItem) : workItem(workItem) {
 	state = IDLE;
 	front = 0;
 	back = 0;
@@ -56,8 +57,12 @@ void Queue::compleate(ssize_t actual) {
 	if (state == FRONT) {
 		queue[front]->resize(actual);
 		front = inc(front);
+		this->workItem->sending(true);
 	} else if (state == BACK){
 		back = inc(back);
+		if (front == back) {
+			this->workItem->sending(false);
+		}
 	}
 	state = IDLE;
 }

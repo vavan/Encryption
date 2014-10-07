@@ -10,6 +10,7 @@
 #include "config.h"
 #include "secure_socket.h"
 #include "secure_impl.h"
+#include "worker.h"
 
 using namespace std;
 
@@ -37,6 +38,7 @@ SecureSocket::~SecureSocket() {
 bool SecureSocket::connect() {
 	NormalSocket::connect();
 	this->state->connect(this);
+	this->recv_queue->workItem->sending(true);
 	return true;
 }
 bool SecureSocket::listen() {
@@ -75,7 +77,6 @@ void SecureSocket::change_state(BaseState* state) {
 
 void SecureSocket::set_security(string cert_file, string key_file) {
 	if (!cert_file.empty()) {
-		LOG.debugStream() << "SSL Cert: " << cert_file;
 		if (SSL_use_certificate_file(this->impl->connection, cert_file.c_str(),
 				SSL_FILETYPE_PEM) <= 0) {
 			this->impl->checkErrors("SSL_use_certificate_file");
@@ -83,7 +84,6 @@ void SecureSocket::set_security(string cert_file, string key_file) {
 		}
 	}
 	if (!key_file.empty()) {
-		LOG.debugStream() << "SSL Cert: " << cert_file;
 		if (SSL_use_RSAPrivateKey_file(this->impl->connection, key_file.c_str(),
 				SSL_FILETYPE_PEM) <= 0) {
 			this->impl->checkErrors("SSL_use_RSAPrivateKey_file");
@@ -91,7 +91,6 @@ void SecureSocket::set_security(string cert_file, string key_file) {
 		}
 	}
 	if (!key_file.empty() && !cert_file.empty()) {
-		LOG.debugStream() << "SSL Private";
 		if (SSL_check_private_key(this->impl->connection) <= 0) {
 			this->impl->checkErrors("SSL_check_private_key");
 			return;

@@ -26,6 +26,15 @@ bool WorkItem::is_closed() {
 	return closed;
 }
 
+void WorkItem::sending(bool start) {
+	if (start) {
+		event->events |= POLLOUT;
+	} else {
+		event->events &= ~POLLOUT;
+	}
+}
+
+
 Worker::Worker() {}
 
 Worker::~Worker() {}
@@ -78,14 +87,20 @@ void Worker::update_items() {
 				(*ei).events |= POLLOUT;
 			}
 		}
-	} else {
-		for (WorkItems::iterator wi = items.begin(); wi != items.end(); ++wi) {
-			(*wi)->event->events = POLLIN;
-			if ((*wi)->is_sending()) {
-				(*wi)->event->events |= POLLOUT;
-			}
-		}
 	}
+//	else {
+//		for (WorkItems::iterator wi = items.begin(); wi != items.end(); ++wi) {
+//			WorkItem* _wi = (*wi);
+//			(*wi)->event->events = POLLIN;
+//			if ((*wi)->is_sending()) {
+//				if (((*wi)->event->events & POLLOUT) == 0) {
+//					LOG.debugStream() << "Got diff on:" << _wi->get_fd()<<"|"<<_wi->event<<"|"<<_wi->event->events;
+//				}
+//				(*wi)->event->events |= POLLOUT;
+//			}
+//			LOG.debugStream() << " UPDATE LIST:" << _wi->get_fd()<<"|"<<_wi->event<<"|"<<_wi->event->events;
+//		}
+//	}
 }
 
 

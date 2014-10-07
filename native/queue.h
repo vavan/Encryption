@@ -17,7 +17,7 @@ using namespace std;
 
 
 typedef vector<char> Buffer;
-
+class WorkItem;
 
 class Queue {
 private:
@@ -37,7 +37,8 @@ private:
 public:
 	static const int ENTRIES = 50;
 	static const int DEPTH = 4096;
-	Queue();
+	WorkItem* workItem;
+	Queue(WorkItem* workItem);
 	~Queue();
 	Buffer* get_front();
 	Buffer* get_back();

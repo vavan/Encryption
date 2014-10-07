@@ -90,8 +90,8 @@ ssize_t SecureImpl::send() {
 	Buffer * buffer = parent->send_queue->get_back();
 	ssize_t ret = SSL_write(this->connection, &(*buffer)[0], buffer->size());
 	if (ret >= 0) {
-		parent->send_queue->compleate(ret);
 		LOG.debugStream() << "QQQQ SSL[]. send:" << ret;
+		parent->send_queue->compleate(ret);
 		return ret;
 	} else {
 //			LOG.errorStream() << "SSL. Send failed:";
@@ -104,8 +104,8 @@ ssize_t SecureImpl::recv() {
 	Buffer * buffer = parent->recv_queue->get_front();
 	ssize_t ret = SSL_read(this->connection, &(*buffer)[0], buffer->size());
 	if (ret >= 0) {
-		parent->recv_queue->compleate(ret);
 		LOG.debugStream() << "ZZZZ SSL. Recv:" << ret;
+		parent->recv_queue->compleate(ret);
 		return ret;
 	} else {
 //		LOG.errorStream() << "SSL. Recv failed:" << errno;

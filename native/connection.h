@@ -27,7 +27,7 @@ protected:
 	Queue send_queue;
 
 public:
-	BufferedPoint(Worker* parent, Socket* socket) : WorkItem(parent, socket) {};
+	BufferedPoint(Worker* parent, Socket* socket) : WorkItem(parent, socket), send_queue(this) {};
 	virtual void init();
 	virtual void recv();
 	virtual void send();

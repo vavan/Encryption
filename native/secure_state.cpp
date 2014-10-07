@@ -8,6 +8,7 @@
 #include "secure_state.h"
 #include "secure_socket.h"
 #include "config.h"
+#include "worker.h"
 
 IdleState idleState;
 AcceptingState accepting;
@@ -54,9 +55,12 @@ bool AcceptingState::is_sending(SecureSocket* ctx) {
 }
 size_t AcceptingState::try_accept(SecureSocket* ctx) {
 	Socket::SocketReturns ret = (Socket::SocketReturns)ctx->impl->accept();
+	ctx->send_queue->workItem->sending(true);
 	if (ret == Socket::DONE) {
 		ctx->change_state(&established);
 		ret = Socket::INPROGRESS;
+
+		ctx->send_queue->workItem->sending(false);
 	}
 	return ret;
 }
