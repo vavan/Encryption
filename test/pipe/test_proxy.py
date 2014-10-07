@@ -107,8 +107,7 @@ class ClientThread(Thread):
         else:
             self.stop()
 
-
-class ProxyTests(unittest.TestCase):
+class BasicTests(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -118,9 +117,7 @@ class ProxyTests(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.listener.stop()
-        #print "STOP:", cls.listener.recvd
 
-    #@unittest.skip("Not now")
     def test_simple_ok(self):
         c = Client()
         request = 'ok';
@@ -129,6 +126,17 @@ class ProxyTests(unittest.TestCase):
         c.close()
         self.assertEqual(request, response)
 
+
+class MainTests(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.listener = Listener()
+        cls.listener.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.listener.stop()
 
     #@unittest.skip("Not now")
     def test_simple_128(self):
@@ -313,8 +321,9 @@ class LongRunningTests(unittest.TestCase):
 
 
 if __name__ == '__main__':
-    suite = unittest.TestLoader().loadTestsFromTestCase(ProxyTests)
-    #suite = unittest.TestLoader().loadTestsFromTestCase(LongRunningTests)
+    #suite = unittest.TestLoader().loadTestsFromTestCase(BasicTests)
+    #suite = unittest.TestLoader().loadTestsFromTestCase(MainTests)
+    suite = unittest.TestLoader().loadTestsFromTestCase(LongRunningTests)
     unittest.TextTestRunner(verbosity=2).run(suite)
     #unittest.main()
 

@@ -64,7 +64,6 @@ bool Worker::add_items() {
 	return false;
 }
 
-
 void Worker::update_items() {
 	bool add = add_items();
 	bool del = delete_items();
@@ -92,13 +91,13 @@ void Worker::update_items() {
 	}
 }
 
+
 void Worker::run() {
 	update_items();
 	int retval = poll(&(this->events[0]), this->events.size(), -1);
 	if (retval == -1) {
 		LOG.errorStream() << "WORKER. Select failed";
-	}
-	else if (retval) {
+	} else {
 		WorkItems::iterator wi = items.begin();
 		WorkItemEvents::iterator ei = events.begin();
 		for (; wi != items.end(); ++wi, ++ei ) {

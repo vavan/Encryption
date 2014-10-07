@@ -24,12 +24,14 @@
 using namespace std;
 
 class Worker;
+typedef struct pollfd WorkItemEvent;
 
 class WorkItem {
 protected:
 	Worker* parent;
 	Socket* socket;
 	bool closed;
+	WorkItemEvent* event;
 public:
 	WorkItem(Worker* parent, Socket* socket);
 	virtual ~WorkItem();
@@ -47,7 +49,7 @@ class Worker {
 private:
 	static const int INITIAL_PULL = 30;
 	typedef list<WorkItem*> WorkItems;
-	typedef vector<struct pollfd> WorkItemEvents;
+	typedef vector<WorkItemEvent> WorkItemEvents;
 	WorkItems items;
 	WorkItems add_item_list;
 	WorkItems delete_item_list;

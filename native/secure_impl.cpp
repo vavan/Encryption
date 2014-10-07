@@ -42,8 +42,8 @@ void SecureImpl::init() {
 	if (ctx == NULL) {
 		SSL_load_error_strings();
 		SSL_library_init();
-		ctx = SSL_CTX_new(SSLv3_method());
-		SSL_CTX_set_options(ctx, SSL_OP_ALL);
+		ctx = SSL_CTX_new(SSLv23_method());
+//		SSL_CTX_set_options(ctx, SSL_OP_ALL);
 	}
 }
 
@@ -95,7 +95,8 @@ ssize_t SecureImpl::send() {
 			LOG.debugStream() << "QQQQ SSL[]. send:" << ret;
 			return ret;
 		} else {
-			LOG.errorStream() << "SSL. Send failed:" << errno;
+//			LOG.errorStream() << "SSL. Send failed:";
+			checkErrors("ssl send");
 			return Socket::ERROR;
 		}
 	}

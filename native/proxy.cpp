@@ -46,7 +46,7 @@ void Pipe::join(Pipe* other) {
 	this->other->socket->send_queue = &this->other->send_queue;
 }
 
-void Pipe::on_recv() {}
+//void Pipe::on_recv() {}
 
 void Pipe::on_close() {
 	this->closing = true;
