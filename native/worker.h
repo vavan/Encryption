@@ -31,7 +31,6 @@ class WorkItem {
 protected:
 	Worker* parent;
 	Socket* socket;
-	bool closed;
 public:
 	WorkItemEvent* event;
 	void sending(bool start);
@@ -39,7 +38,6 @@ public:
 	WorkItem(Worker* parent, Socket* socket);
 	virtual ~WorkItem();
 	int get_fd();
-	bool is_closed();
 
 	virtual void init() = 0;
 	virtual void recv() = 0;

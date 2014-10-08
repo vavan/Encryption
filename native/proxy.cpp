@@ -45,27 +45,23 @@ void Pipe::join(Pipe* other) {
 
 void Pipe::on_close() {
 
-	LOG.debugStream() << "Pipe::on_close1:"<<this->closing<<"|"<<this->other->send_queue.empty()<<"|"<<this->closed;
+	LOG.debugStream() << "Pipe::on_close1:"<<this->closing<<"|"<<this->other->send_queue.empty();
 
 	this->closing = true;
 	if (this->other)
 		this->other->closing = true;
 	if (this->other->send_queue.empty()) {
-		this->closed = true;
 		this->parent->remove(this);
 		if (this->other)
-			this->other->closed = true;
 			this->parent->remove(this->other);
 	}
-	LOG.debugStream() << "Pipe::on_close2:"<<this->closing<<"|"<<this->other->send_queue.empty()<<"|"<<this->closed<<"|"<<this->other->event->events;
+	LOG.debugStream() << "Pipe::on_close2:"<<this->closing<<"|"<<this->other->send_queue.empty()<<"|"<<this->other->event->events;
 }
 
 void Pipe::on_send() {
 	if (this->closing) {
-		this->closed = true;
 		this->parent->remove(this);
 		if (this->other)
-			this->other->closed = true;
 			this->parent->remove(this->other);
 	}
 }

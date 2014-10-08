@@ -10,7 +10,6 @@
 
 WorkItem::WorkItem(Worker* parent, Socket* socket): parent(parent), socket(socket) {
 	this->parent->add(this);
-	this->closed = false;
 }
 
 WorkItem::~WorkItem() {
@@ -21,10 +20,6 @@ WorkItem::~WorkItem() {
 
 int WorkItem::get_fd() {
 	return this->socket->get();
-}
-
-bool WorkItem::is_closed() {
-	return closed;
 }
 
 void WorkItem::sending(bool start) {
