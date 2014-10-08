@@ -51,7 +51,6 @@ public:
 	virtual ssize_t send() = 0;
 	virtual ssize_t recv() = 0;
 	virtual void nonblock() = 0;
-//	virtual int is_sending() = 0;
 
 };
 

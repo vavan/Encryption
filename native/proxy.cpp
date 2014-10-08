@@ -14,10 +14,6 @@
 
 Listener::Listener(Worker* parent, Socket* socket): WorkItem(parent, socket) {}
 
-//bool Listener::is_sending() {
-//	return false;
-//}
-
 void Listener::init() {
 	this->socket->listen();
 }
@@ -46,7 +42,6 @@ void Pipe::join(Pipe* other) {
 	this->other->socket->send_queue = &this->other->send_queue;
 }
 
-//void Pipe::on_recv() {}
 
 void Pipe::on_close() {
 

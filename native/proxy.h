@@ -17,7 +17,6 @@ public:
 	virtual void init();
 	virtual void recv();
 	virtual void send();
-//	virtual bool is_sending();
 };
 
 class Pipe: public BufferedPoint {
@@ -28,7 +27,6 @@ private:
 public:
 	Pipe(Worker* parent, Socket* socket): BufferedPoint(parent, socket), other(NULL), closing(false) {};
 	void join(Pipe* other);
-//	virtual void on_recv();
 	virtual void on_send();
 	virtual void on_close();
 };

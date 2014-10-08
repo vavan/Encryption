@@ -45,10 +45,6 @@ void Worker::remove(WorkItem* point) {
 	delete_item_list.insert(point);
 }
 
-//bool Worker::empty() {
-//	return items.empty();
-//}
-
 bool Worker::delete_items() {
 	if (!delete_item_list.empty()) {
 		for(DeletedItems::iterator wi = delete_item_list.begin(); wi != delete_item_list.end(); ++wi) {
@@ -85,9 +81,6 @@ void Worker::update_items() {
 			if (!bp->send_queue.empty()) {
 				(*ei).events |= POLLOUT;
 			}
-//			if ((*wi)->is_sending()) {
-//				(*ei).events |= POLLOUT;
-//			}
 		}
 	}
 }

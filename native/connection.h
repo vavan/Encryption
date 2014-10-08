@@ -22,6 +22,7 @@
 #include "worker.h"
 
 
+//TODO get rid of this class
 class BufferedPoint: public WorkItem {
 protected:
 
@@ -33,7 +34,6 @@ public:
 	virtual void init();
 	virtual void recv();
 	virtual void send();
-//	virtual bool is_sending();
 
 	virtual void on_send() = 0;
 	virtual void on_close() = 0;

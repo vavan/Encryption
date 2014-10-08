@@ -24,14 +24,17 @@ private:
 	static SSL_CTX* ctx;
 	static void init();
 
+	static void set_security(string cert_file, string key_file);
+
 public:
 	SSL* connection;
 	BIO* bio;
 	SecureSocket* parent;
 
+	static void checkErrors(const std::string& tag);
+
 	SecureImpl(SecureSocket* parent);
 	virtual ~SecureImpl();
-	void checkErrors(const std::string& tag);
 	std::string getError(int ret_code);
 
 	virtual ssize_t connect();

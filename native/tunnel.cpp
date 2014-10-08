@@ -64,7 +64,6 @@ int main(int argc, char* argv[]) {
 
 	//TODO parse starting <s>, pass it to Listener
 	SecureSocket* ss = new SecureSocket(Config::get().server);
-	ss->set_security("cert.pem","key.pem");
 	Listener* main = new Listener(&w, ss);
 
 	main->init();

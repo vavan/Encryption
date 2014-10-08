@@ -34,6 +34,7 @@ Queue::~Queue() {
 		delete b;
 		queue.pop_back();
 	}
+	LOG.alertStream() << "QUEUE. MAX Size: " << max;
 }
 
 Buffer* Queue::get_front() {
@@ -44,6 +45,7 @@ Buffer* Queue::get_front() {
 	}
 	state = FRONT;
 	Buffer* b = queue[front];
+	b->resize(DEPTH);
 	return b;
 }
 
@@ -66,6 +68,7 @@ void Queue::compleate(ssize_t actual) {
 	}
 	state = IDLE;
 }
+
 bool Queue::empty() {
 	return front == back;
 }

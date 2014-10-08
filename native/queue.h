@@ -34,8 +34,10 @@ private:
 	int back;
 	int inc(int index);
 
+	int max;
+
 public:
-	static const int ENTRIES = 50;
+	static const int ENTRIES = 3;
 	static const int DEPTH = 4096;
 	WorkItem* workItem;
 	Queue(WorkItem* workItem);

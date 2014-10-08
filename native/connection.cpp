@@ -6,7 +6,6 @@ void BufferedPoint::init() {
 }
 
 
-//TODO clean up
 void BufferedPoint::recv() {
 	int recved = this->socket->recv();
 
@@ -15,14 +14,9 @@ void BufferedPoint::recv() {
 	}
 }
 
-//TODO clean up
 void BufferedPoint::send() {
 	ssize_t sent = this->socket->send();
 	if (sent > 0) {
 		this->on_send();
 	}
 }
-
-//bool BufferedPoint::is_sending() {
-//	return this->socket->is_sending() || !this->send_queue.empty();
-//}

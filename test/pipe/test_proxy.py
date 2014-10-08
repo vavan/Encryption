@@ -12,6 +12,11 @@ LISTEN_ON_PORT = 6000
 CONNECT_TO_ADDR = LOCALHOST
 CONNECT_TO_PORT = 2000
 
+BUFFER_SIZE = 4096
+
+
+def TOTEXT(x):
+    return chr(x%94+32)
 
 class Thread(threading.Thread):
     def __init__(self):
@@ -28,13 +33,12 @@ class Thread(threading.Thread):
         self.done()
 
 class EchoServer(Thread):
-    BUFFER_SIZE = 2048
     def __init__(self, socket, parent):
         Thread.__init__(self)
         self.s = socket
         self.parent = parent
     def do(self):
-        data = self.s.recv(EchoServer.BUFFER_SIZE)
+        data = self.s.recv(BUFFER_SIZE)
         self.parent.recvd += len(data)
         if data:
             self.s.send(data)
@@ -76,7 +80,6 @@ class Listener(Thread):
         self.s.close()
 
 class Client:
-    BUFFER_SIZE = 2048
     def __init__(self, ip = CONNECT_TO_ADDR, port = CONNECT_TO_PORT):
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.s.connect((ip, int(port)))
@@ -84,7 +87,7 @@ class Client:
         self.s.send(data)
     def recv(self):
         try:
-            return self.s.recv(Client.BUFFER_SIZE)
+            return self.s.recv(BUFFER_SIZE)
         except Exception, e:
             print "Receive failed:", str(e)
         return ''
@@ -140,162 +143,111 @@ class MainTests(unittest.TestCase):
         cls.listener.stop()
 
     #@unittest.skip("Not now")
-    def test_simple_128(self):
+    def test_same_connect_128(self):
+        cycles = 128
+        a_request = 'Z'*128
+        request = []
+        response = []
         c = Client()
-        request = 'Z'*128
-        c.send(request)
-        response = c.recv()
+        for i in range(cycles):
+            request.append(a_request)
+            c.send(a_request)
+            response.append(c.recv())
         c.close()
         self.assertEqual(request, response)
 
     #@unittest.skip("Not now")
-    def test_repeat_same_128(self):
+    def test_diff_connect_128(self):
         cycles = 128
-        c = Client()
-        request = 'Z'*128
-        response = []
-        for i in range(cycles):
-            c.send(request)
-            response.append(c.recv())
-        c.close()
-        self.assertEqual(len(response), cycles)
-        for i in range(cycles):
-            self.assertEqual(request, response[i])
-
-    #@unittest.skip("Not now")
-    def test_repeat_diff_128(self):
-        cycles = 128
-        request = 'Z'*128
+        a_request = 'Z'*128
+        request = []
         response = []
         for i in range(cycles):
             c = Client()
-            c.send(request)
+            request.append(a_request)
+            c.send(a_request)
             response.append(c.recv())
             c.close()
-        self.assertEqual(len(response), cycles)
-        for i in range(cycles):
-            self.assertEqual(request, response[i])
+        self.assertEqual(request, response)
+
+    #@unittest.skip("Not now")
+    def test_same_connect_4096to1(self):
+        request = []
+        response = []
+        c = Client()
+        for i in range(4096, 1, 10):
+            a_request = TOTEXT(i)*i
+            request.append(a_request)
+            c.send(a_request)
+            response.append(c.recv())
+        c.close()          
+        self.assertEqual(request, response)
+
+    #@unittest.skip("Not now")
+    def test_same_connect_1to4096(self):
+        request = []
+        response = []
+        c = Client()
+        for i in range(1, 4096, 10):
+            a_request = TOTEXT(i)*i
+            request.append(a_request)
+            c.send(a_request)
+            response.append(c.recv())
+        c.close()          
+        self.assertEqual(request, response)
 
     #@unittest.skip("Not now")
     def test_thread_same_2x4(self):
         cycles = 2
-        request = ['COOL', ]
+        a_request = ['COOL', ]
+        request = []
         response = []
         threads = []
         for i in range(cycles):
-            c = ClientThread(request)
+            request.append(a_request)
+            c = ClientThread(a_request)
             c.start()
             threads.append(c)
         for t in threads:
             t.join()
-            response.append(t.response) 
-            
-        self.assertEqual(len(response), cycles)
-        for i in range(cycles):
-            self.assertEqual(request, response[i])
+            response.append(t.response)            
+        self.assertEqual(request, response)
 
     #@unittest.skip("Not now")
-    def test_thread_same_12x128(self):
-        cycles = 12
-        request = ['Q'*128, ]
+    def test_thread_same_128x128(self):
+        cycles = 128
+        a_request = ['Q'*128, ]
+        request = []
         response = []
         threads = []
         for i in range(cycles):
-            c = ClientThread(request)
+            request.append(a_request)
+            c = ClientThread(a_request)
             c.start()
             threads.append(c)
         for t in threads:
             t.join()
-            response.append(t.response) 
-            
-        self.assertEqual(len(response), cycles)
-        for i in range(cycles):
-            self.assertEqual(request, response[i])
+            response.append(t.response)             
+        self.assertEqual(request, response)
 
     #@unittest.skip("Not now")
-    def test_thread_same_128x12(self):
-        cycles = 80
-        request = ['Q'*128, ]
-        response = []
-        threads = []
-        for i in range(cycles):
-            c = ClientThread(request)
-            c.start()
-            threads.append(c)
-            #time.sleep(0.03)
-        for t in threads:
-            t.join()
-            response.append(t.response) 
-            
-        self.assertEqual(len(response), cycles)
-        for i in range(cycles):
-            self.assertEqual(request, response[i])
-
-    #@unittest.skip("Not now")
-    def test_thread_sequance(self):
-        outer_cycles = 1
+    def test_thread_sequance_10x20x128x128(self):
+        outer_cycles = 10
         cycles = 20
-        request = ['Q'*32, ]
+        request = []
         response = []
         for outer in range(outer_cycles):
             threads = []
             for i in range(cycles):
-                c = ClientThread(request)
+                a_request = [ TOTEXT(i)*128, ]*128
+                request.append(a_request)
+                c = ClientThread(a_request)
                 c.start()
                 threads.append(c)
             for t in threads:
                 t.join()
                 response.append(t.response)
-                #time.sleep(0.05)
-            
-        self.assertEqual(len(response), cycles*outer_cycles)
-        for i in range(cycles*outer_cycles):
-            self.assertEqual(request, response[i])
-    
-    #@unittest.skip("Not now")
-    def test_thread_diff_128x12(self):
-        cycles = 100
-        request = []
-        response = []
-        threads = []
-        for i in range(cycles):
-            a_request = [ chr(i+0x40)*12, ]
-            request.append(a_request)
-            c = ClientThread(a_request)
-            c.start()
-            threads.append(c)
-            #time.sleep(0.03)
-        for t in threads:
-            t.join()
-            response.append(t.response) 
-            
-        self.assertEqual(len(response), cycles)
-        for i in range(cycles):
-            self.assertEqual(request[i], response[i])
-
-    #@unittest.skip("Not now")
-    def test_thread_chr_30x30x30(self):
-        cycles = 30
-        request = []
-        response = []
-        clients = []
-        for i in range(cycles):
-            a_request = [ chr(i+0x40)*30, ]*30
-            request.append(a_request)
-            c = ClientThread(a_request)
-            c.start()
-            clients.append(c)
-            #time.sleep(0.03)
-        for t in clients:
-            t.join()
-            response.append(t.response)
-            
-        self.assertEqual(len(response), cycles)
-        #print
-        for i in range(cycles):
-            #print response[i]
-            self.assertEqual(request[i], response[i])
-
+        self.assertEqual(request, response)         
 
 class LongRunningTests(unittest.TestCase):
 
@@ -307,17 +259,16 @@ class LongRunningTests(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         cls.listener.stop()
-        #print "STOP:", cls.listener.recvd
+
 
     #@unittest.skip("Not now")
     def test_repeat_long_seq(self):
-        cycles = 100000
+        cycles = 1000000
         c = Client()
-        request = 'Z'*2048
+        request = 'Z'*256
         response = []
         for i in range(cycles):
             c.send(request)
-            #time.sleep(0.1)
             recvd = c.recv()
             response.append((recvd == request))
         c.close()
