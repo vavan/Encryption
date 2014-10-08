@@ -14,7 +14,6 @@
 
 #include <sstream>
 #include "socket.h"
-#include "config.h"
 
 
 std::string Addr::str() {
@@ -23,8 +22,15 @@ std::string Addr::str() {
 	return os.str();
 }
 
-Socket::Socket(const Addr& addr) : addr(addr) {}
+Socket::Socket(const Addr& addr) : addr(addr), s(0), recv_queue(NULL), send_queue(NULL) {}
+
+Socket::Socket(const Addr& addr, int accepted) : addr(addr), s(accepted), recv_queue(NULL), send_queue(NULL) {}
 
 Socket::~Socket() {}
+
+int Socket::get() {
+	return this->s;
+}
+
 
 

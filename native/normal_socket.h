@@ -14,21 +14,19 @@
 class NormalSocket: public Socket
 {
 protected:
-	int s;
+	void nonblock();
 public:
 
-	NormalSocket(Addr& addr);
-	NormalSocket(Addr& addr, int s);
-	NormalSocket(const NormalSocket* socket);
+	NormalSocket(const Addr& addr);
+	NormalSocket(const Addr& addr, int accepted);
 	virtual ~NormalSocket();
 
-	virtual int get();
+	virtual Socket* copy(const Addr& addr, int s);
 	virtual bool connect();
 	virtual bool listen();
 	virtual Socket* accept();
 	virtual ssize_t send();
 	virtual ssize_t recv();
-	virtual void nonblock();
 };
 
 

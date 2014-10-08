@@ -11,43 +11,34 @@
  *      Author: vova
  */
 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <errno.h>
-#include <strings.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <string>
-#include <stdio.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <iostream>
 #include "normal_socket.h"
-#include "config.h"
+
+#include <arpa/inet.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <netinet/in.h>
+#include <strings.h>
+#include <sys/socket.h>
+#include <unistd.h>
+#include <string>
+#include <vector>
+
 #include "queue.h"
+#include "config.h"
 
 #define LISTEN_BACKLOG 100
 
-NormalSocket::NormalSocket(Addr& addr) :
+NormalSocket::NormalSocket(const Addr& addr) :
 		Socket(addr) {
 	this->s = socket(AF_INET, SOCK_STREAM, 0);
 	this->nonblock();
-	LOG.infoStream() << "SOCKET["<< this->s << "]. New";
+	LOG.infoStream() << "SOCKET["<< this->s << "]. Create/New";
 }
 
-NormalSocket::NormalSocket(Addr& addr, int s) :
-		Socket(addr), s(s) {
-	LOG.infoStream() << "SOCKET["<< this->s << "]. Copy";
-}
-
-NormalSocket::NormalSocket(const NormalSocket* socket) :
-		Socket(socket->addr), s(socket->s) {
-	LOG.infoStream() << "SOCKET["<< this->s << "]. Copy";
+NormalSocket::NormalSocket(const Addr& addr, int accepted) :
+		Socket(addr, accepted) {
+	this->nonblock();
+	LOG.infoStream() << "SOCKET["<< this->s << "]. Create/Accepted";
 }
 
 NormalSocket::~NormalSocket() {
@@ -55,9 +46,6 @@ NormalSocket::~NormalSocket() {
 	::close(this->s);
 }
 
-int NormalSocket::get() {
-	return this->s;
-}
 
 bool NormalSocket::connect() {
 	LOG.infoStream() << "SOCKET["<< this->s << "]. Connect";
@@ -99,13 +87,17 @@ bool NormalSocket::listen() {
 	return true;
 }
 
+Socket* NormalSocket::copy(const Addr& addr, int newsocket) {
+	return new NormalSocket(this->addr, newsocket);
+}
+
 Socket* NormalSocket::accept() {
-	LOG.infoStream() << "SOCKET["<< this->s << "]. Accept";
+	LOG.debugStream() << "SOCKET["<< this->s << "]. Accept";
 	struct sockaddr_in clientaddr;
 	unsigned int addr_size = sizeof(clientaddr);
 	int newsocket = ::accept(s, (struct sockaddr *) &clientaddr, &addr_size);
 	if (newsocket > 0) {
-		return new NormalSocket(this->addr, newsocket);
+		return this->copy(this->addr, newsocket);
 	} else {
 		LOG.errorStream() << "SOCKET["<< this->s << "]. Accept failed:" << errno;
 		return NULL;

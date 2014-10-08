@@ -11,23 +11,16 @@
 #include "secure_impl.h"
 
 class SecureSocket;
-class IdleState;
-extern IdleState idleState;
+class ConnectingState;
+class AcceptingState;
+extern ConnectingState connecting;
+extern AcceptingState accepting;
 
 class BaseState {
 public:
 	virtual ~BaseState(){};
 	virtual size_t send(SecureSocket* ctx) = 0;
 	virtual size_t recv(SecureSocket* ctx) = 0;
-	virtual void connect(SecureSocket* ctx){};
-	virtual void accept(SecureSocket* ctx){};
-};
-class IdleState: public BaseState  {
-public:
-	size_t send(SecureSocket* ctx);
-	size_t recv(SecureSocket* ctx);
-	void connect(SecureSocket* ctx);
-	void accept(SecureSocket* ctx);
 };
 class ConnectingState : public BaseState  {
 	size_t try_connect(SecureSocket* ctx);

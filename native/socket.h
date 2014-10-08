@@ -6,6 +6,7 @@
  */
 #ifndef SOCKET_H_
 #define SOCKET_H_
+
 #include <sys/types.h>
 #include <string>
 
@@ -31,6 +32,7 @@ public:
 class Socket {
 protected:
 	Addr addr;
+	int s;
 public:
 	enum SocketReturns {
 		ENDOFFILE = 0,
@@ -42,15 +44,16 @@ public:
 	Queue* send_queue;
 
 	Socket(const Addr& addr);
+	Socket(const Addr& addr, int accepted);
 	virtual ~Socket();
 
-	virtual int get() = 0;
+	int get();
+	virtual Socket* copy(const Addr& addr, int s) = 0;
 	virtual bool connect() = 0;
 	virtual bool listen() = 0;
 	virtual Socket* accept() = 0;
 	virtual ssize_t send() = 0;
 	virtual ssize_t recv() = 0;
-	virtual void nonblock() = 0;
 
 };
 

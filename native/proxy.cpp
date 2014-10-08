@@ -6,10 +6,10 @@
  */
 
 #include "normal_socket.h"
-#include "config.h"
-#include "connection.h"
-#include "proxy.h"
 #include "secure_socket.h"
+#include "proxy.h"
+#include "worker.h"
+#include "config.h"
 
 
 Listener::Listener(Worker* parent, Socket* socket): WorkItem(parent, socket) {}
@@ -45,8 +45,6 @@ void Pipe::join(Pipe* other) {
 
 void Pipe::on_close() {
 
-	LOG.debugStream() << "Pipe::on_close1:"<<this->closing<<"|"<<this->other->send_queue.empty();
-
 	this->closing = true;
 	if (this->other)
 		this->other->closing = true;
@@ -55,7 +53,6 @@ void Pipe::on_close() {
 		if (this->other)
 			this->parent->remove(this->other);
 	}
-	LOG.debugStream() << "Pipe::on_close2:"<<this->closing<<"|"<<this->other->send_queue.empty()<<"|"<<this->other->event->events;
 }
 
 void Pipe::on_send() {

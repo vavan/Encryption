@@ -7,31 +7,17 @@
 
 #include "secure_state.h"
 #include "secure_socket.h"
-#include "config.h"
+#include "queue.h"
 #include "worker.h"
+#include "config.h"
 
-IdleState idleState;
 AcceptingState accepting;
 ConnectingState connecting;
 EstablishedState established;
 
-size_t IdleState::send(SecureSocket* ctx) {
-	return 0;
-}
-size_t IdleState::recv(SecureSocket* ctx) {
-	return 0;
-}
-void IdleState::connect(SecureSocket* ctx) {
-	SSL_set_connect_state(ctx->impl->connection);
-	ctx->change_state(&connecting);
-}
-void IdleState::accept(SecureSocket* ctx) {
-    SSL_set_accept_state(ctx->impl->connection);
-	ctx->change_state(&accepting);
-}
 
 size_t ConnectingState::try_connect(SecureSocket* ctx) {
-	Socket::SocketReturns ret = (Socket::SocketReturns)ctx->impl->connect();
+	Socket::SocketReturns ret = (Socket::SocketReturns)ctx->do_connect();
 	ctx->send_queue->workItem->sending(true);
 	if (ret == Socket::DONE) {
 		ctx->change_state(&established);
@@ -46,11 +32,13 @@ size_t ConnectingState::recv(SecureSocket* ctx) {
 	return try_connect(ctx);
 }
 
+
 size_t AcceptingState::try_accept(SecureSocket* ctx) {
-	Socket::SocketReturns ret = (Socket::SocketReturns)ctx->impl->accept();
+	Socket::SocketReturns ret = (Socket::SocketReturns)ctx->do_accept();
 	ctx->send_queue->workItem->sending(true);
 	if (ret == Socket::DONE) {
 		ctx->change_state(&established);
+		//TODO Refactor this weirdness
 		ret = Socket::INPROGRESS;
 		ctx->send_queue->workItem->sending(false);
 	}
@@ -63,10 +51,11 @@ size_t AcceptingState::recv(SecureSocket* ctx) {
 	return try_accept(ctx);
 }
 
+
 size_t EstablishedState::send(SecureSocket* ctx) {
-	return ctx->impl->send();
+	return ctx->do_send();
 }
 size_t EstablishedState::recv(SecureSocket* ctx) {
-	return ctx->impl->recv();
+	return ctx->do_recv();
 }
 

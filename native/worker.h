@@ -8,19 +8,12 @@
 #ifndef WORKER_H_
 #define WORKER_H_
 
-#include <iostream>
-#include <string>
-#include <stdio.h>
-#include <stdlib.h>
-#include <list>
-#include <deque>
-#include <vector>
-#include <exception>
-#include <set>
 #include <poll.h>
-#include "socket.h"
-#include "config.h"
+#include <list>
+#include <set>
+#include <vector>
 
+class Socket;
 
 using namespace std;
 
@@ -47,7 +40,6 @@ public:
 
 class Worker {
 private:
-	static const int INITIAL_PULL = 30;
 	typedef list<WorkItem*> WorkItems;
 	typedef set<WorkItem*> DeletedItems;
 	typedef vector<WorkItemEvent> WorkItemEvents;

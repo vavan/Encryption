@@ -1,11 +1,12 @@
 /*
  * worker.cpp
+
  *
  *  Created on: Sep 25, 2014
  *      Author: vova
  */
+
 #include "worker.h"
-#include "poll.h"
 #include "connection.h"
 
 WorkItem::WorkItem(Worker* parent, Socket* socket): parent(parent), socket(socket) {

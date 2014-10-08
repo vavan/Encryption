@@ -6,51 +6,33 @@
  */
 
 #include <sys/types.h>
-#include <sys/socket.h>
-#include "config.h"
 #include "secure_socket.h"
-#include "secure_impl.h"
-#include "worker.h"
+#include "config.h"
 
 using namespace std;
 
 
-SecureSocket::SecureSocket(Addr& addr) :
-		NormalSocket(addr) {
-	this->impl = new SecureImpl(this);
-	this->state = &idleState;
-	if (SSL_set_fd(this->impl->connection, this->s) == 0)
-		this->impl->checkErrors("SSL_set_fd");
+SecureSocket::SecureSocket(const Addr& addr) :
+		NormalSocket(addr), SecureLayer() {
+	this->set(this->s);
+	this->state = &connecting;
+	LOG.infoStream() << "SSL["<< this->s << "]. Create/New";
 }
 
-SecureSocket::SecureSocket(NormalSocket* socket) :
-		NormalSocket(socket) {
-	this->impl = new SecureImpl(this);
-	this->state = &idleState;
-	if (SSL_set_fd(this->impl->connection, this->s) == 0)
-		this->impl->checkErrors("SSL_set_fd");
+SecureSocket::SecureSocket(const Addr& addr, int accepted) :
+		NormalSocket(addr, accepted), SecureLayer() {
+	this->set(this->s);
+	this->state = &accepting;
+	LOG.infoStream() << "SSL["<< this->s << "]. Create/Accepted";
 }
 
 SecureSocket::~SecureSocket() {
-	delete this->impl;
+	LOG.infoStream() << "SSL["<< this->s << "]. Delete/Close";
 }
 
-bool SecureSocket::connect() {
-	NormalSocket::connect();
-	this->state->connect(this);
-	return true;
-}
 
-Socket* SecureSocket::accept() {
-	//TODO delete <accepted>
-	NormalSocket* accepted = (NormalSocket*)NormalSocket::accept();
-	if (accepted) {
-		SecureSocket* secured = new SecureSocket(accepted);
-		secured->state->accept(secured);
-		return secured;
-	} else {
-		return NULL;
-	}
+Socket* SecureSocket::copy(const Addr& addr, int newsocket) {
+	return new SecureSocket(this->addr, newsocket);
 }
 
 ssize_t SecureSocket::send() {
@@ -65,5 +47,11 @@ void SecureSocket::change_state(BaseState* state) {
 	this->state = state;
 }
 
+Queue* SecureSocket::get_send_queue() {
+	return this->send_queue;
+}
 
+Queue* SecureSocket::get_recv_queue() {
+	return this->recv_queue;
+}
 

@@ -11,29 +11,28 @@
 #include "socket.h"
 #include "normal_socket.h"
 #include "secure_state.h"
+#include "secure_impl.h"
 
-class SecureImpl;
 
-//TODO SecureSocket -> SecureConnection
-
-class SecureSocket: public NormalSocket
+class SecureSocket: public NormalSocket, public SecureLayer
 {
 private:
 	BaseState* state;
+
+protected:
+	virtual Queue* get_send_queue();
+	virtual Queue* get_recv_queue();
+
 public:
-	SecureImpl* impl;
-	SecureSocket(Addr& addr);
-	SecureSocket(NormalSocket* socket);
+	SecureSocket(const Addr& addr);
+	SecureSocket(const Addr& addr, int accepted);
 	virtual ~SecureSocket();
 
 	void change_state(BaseState* new_state);
 
-	virtual bool connect();
-	virtual Socket* accept();
+	virtual Socket* copy(const Addr& addr, int s);
 	virtual ssize_t send();
 	virtual ssize_t recv();
-
-	void set_security(std::string cert_file, std::string key_file);
 };
 
 

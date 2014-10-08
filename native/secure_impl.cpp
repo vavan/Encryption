@@ -4,132 +4,145 @@
  *  Created on: Sep 25, 2014
  *      Author: vova
  */
-#include <iostream>
+
+/*
+ * secure_socket.cpp
+ *
+ *  Created on: Sep 25, 2014
+ *      Author: vova
+ */
 
 #include "secure_impl.h"
-#include "socket.h"
+
+#include <log4cpp/Category.hh>
+#include <log4cpp/CategoryStream.hh>
+#include <openssl/err.h>
+#include <openssl/ossl_typ.h>
+#include <sys/types.h>
+#include <vector>
+
 #include "config.h"
+#include "socket.h"
 #include "queue.h"
-#include "secure_socket.h"
 
+using namespace std;
 
+SSL_CTX* SecureLayer::ctx = NULL;
 
-//TODO LOG output with socket <fd>, like NormalSocket
-//TODO Clean up
+SecureLayer::SecureLayer() {
+	init();
+	this->connection = SSL_new(ctx);
+}
 
-SSL_CTX* SecureImpl::ctx = NULL;
+SecureLayer::~SecureLayer() {
+	SSL_free(this->connection);
+}
 
-void SecureImpl::set_security(string cert_file, string key_file) {
-	if (SSL_CTX_use_certificate_file(SecureImpl::ctx, cert_file.c_str(), SSL_FILETYPE_PEM) <= 0) {
-		checkErrors("SSL_use_certificate_file");
+void SecureLayer::set(int derived_socket) {
+	derived_s = derived_socket;
+	if (SSL_set_fd(this->connection, derived_socket) == 0)
+		log_ssl_error("SSL_set_fd", this->derived_s);
+
+}
+
+void SecureLayer::set_security(string cert_file, string key_file) {
+	if (SSL_CTX_use_certificate_file(SecureLayer::ctx, cert_file.c_str(), SSL_FILETYPE_PEM) <= 0) {
+		log_ssl_error("SSL_CTX_use_certificate_file");
 		return;
 	}
-	if (SSL_CTX_use_RSAPrivateKey_file(SecureImpl::ctx, key_file.c_str(), SSL_FILETYPE_PEM) <= 0) {
-		checkErrors("SSL_use_RSAPrivateKey_file");
+	if (SSL_CTX_use_RSAPrivateKey_file(SecureLayer::ctx, key_file.c_str(), SSL_FILETYPE_PEM) <= 0) {
+		log_ssl_error("SSL_CTX_use_RSAPrivateKey_file");
 		return;
 	}
-	if (SSL_CTX_check_private_key(SecureImpl::ctx) <= 0) {
-		checkErrors("SSL_check_private_key");
+	if (SSL_CTX_check_private_key(SecureLayer::ctx) <= 0) {
+		log_ssl_error("SSL_CTX_check_private_key");
 		return;
 	}
 }
 
-std::string SecureImpl::getError(int ret_code) {
-	char buf[1024];
-	int err = SSL_get_error(this->connection, ret_code);
-	ERR_error_string_n(err, buf, sizeof(buf));
-	std::string out = buf;
-	return buf;
-}
 
-
-void SecureImpl::checkErrors(const std::string& tag) {
+void SecureLayer::log_ssl_error(const std::string& function, int id) {
 	int i;
-	LOG.errorStream() << tag << ':';
+	if (id > 0) {
+		LOG.errorStream() << "SSL[" << id << "] ERROR: " << function;
+	} else {
+		LOG.errorStream() << "SSL ERROR: " << function;
+	}
 	while ((i = ERR_get_error())) {
 		char buf[1024];
 		ERR_error_string_n(i, buf, sizeof(buf));
-		LOG.errorStream() << "\tError " << i << ": " << buf;
+		LOG.errorStream() << "*** " << i << ": " << buf;
 	}
 }
 
-void SecureImpl::init() {
+void SecureLayer::init() {
 	if (ctx == NULL) {
 		SSL_load_error_strings();
 		SSL_library_init();
 		ctx = SSL_CTX_new(SSLv23_method());
 		set_security("cert.pem","key.pem");
-		if (SSL_CTX_set_cipher_list(SecureImpl::ctx, "RC4, AES128") <= 0) {
-			checkErrors("SSL_CTX_set_cipher_list");
+		if (SSL_CTX_set_cipher_list(SecureLayer::ctx, "RC4, AES128") <= 0) {
+			log_ssl_error("SSL_CTX_set_cipher_list");
 		}
 //		SSL_CTX_set_options(ctx, SSL_OP_ALL);
 	}
 }
 
-SecureImpl::SecureImpl(SecureSocket* parent) : parent(parent) {
-	init();
-	connection = SSL_new(ctx);
-}
 
-SecureImpl::~SecureImpl() {
-	SSL_free(connection);
-}
-
-
-ssize_t SecureImpl::connect() {
+ssize_t SecureLayer::do_connect() {
 	int ret;
 	if ((ret = SSL_connect(this->connection)) <= 0) {
 		ret = SSL_get_error(this->connection, ret);
 		if (ret == SSL_ERROR_WANT_READ || ret == SSL_ERROR_WANT_WRITE) {
 			return Socket::INPROGRESS;
 		} else {
-			LOG.errorStream() << "SSL_connect=" << ret;
+			log_ssl_error("SSL_connect", this->derived_s);
 			return Socket::ERROR;
 		}
 	}
 	return Socket::DONE;
 }
 
-ssize_t SecureImpl::accept() {
+ssize_t SecureLayer::do_accept() {
 	int ret;
 	if ((ret = SSL_accept(this->connection)) <= 0) {
 		ret = SSL_get_error(this->connection, ret);
 		if (ret == SSL_ERROR_WANT_READ || ret == SSL_ERROR_WANT_WRITE) {
 			return Socket::INPROGRESS;
 		} else {
-			LOG.errorStream() << "SSL_accept=" << ret;
-			this->checkErrors("SSL_check_private_key");
+			log_ssl_error("SSL_accept", this->derived_s);
 			return Socket::ERROR;
 		}
 	}
 	return Socket::DONE;
 }
 
-ssize_t SecureImpl::send() {
-	Buffer * buffer = parent->send_queue->get_back();
+ssize_t SecureLayer::do_send() {
+	Buffer * buffer = get_send_queue()->get_back();
 	ssize_t ret = SSL_write(this->connection, &(*buffer)[0], buffer->size());
 	if (ret >= 0) {
-		LOG.debugStream() << "QQQQ SSL[]. send:" << ret;
-		parent->send_queue->compleate(ret);
+		LOG.debugStream() << "SSL["<< this->derived_s << "]. Send:" << ret;
+		get_send_queue()->compleate(ret);
 		return ret;
 	} else {
-		LOG.errorStream() << "SSL. Send failed:" << SSL_get_error(this->connection, ret);
-		checkErrors("ssl send");
+		log_ssl_error("SSL_write", this->derived_s);
 		return Socket::ERROR;
 	}
 	return 0;
 }
-ssize_t SecureImpl::recv() {
-	Buffer * buffer = parent->recv_queue->get_front();
+
+ssize_t SecureLayer::do_recv() {
+	Buffer * buffer = get_recv_queue()->get_front();
 	ssize_t ret = SSL_read(this->connection, &(*buffer)[0], buffer->size());
 	if (ret >= 0) {
-		LOG.debugStream() << "ZZZZ SSL. Recv:" << ret;
-		if (ret > 0) parent->recv_queue->compleate(ret);
+		LOG.debugStream() << "SSL["<< this->derived_s << "]. Recv:" << ret;
+		if (ret > 0)
+			get_recv_queue()->compleate(ret);
 		return ret;
 	} else {
-		LOG.errorStream() << "SSL. Recv failed:" << SSL_get_error(this->connection, ret);
-		checkErrors("ssl recv");
+		log_ssl_error("SSL_read", this->derived_s);
 		return Socket::ERROR;
 	}
 }
+
 
