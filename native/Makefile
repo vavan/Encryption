@@ -28,8 +28,8 @@ DEPENDENCY = $(OBJS)/depend
 TARGET = $(addprefix $(BIN)/,$(APP))
 CPP := $(PREFIX)g++
 LD := $(PREFIX)g++
-MAJ_VERSION := 0
-MIN_VERSION := 5
+MAJ_VERSION := 2
+MIN_VERSION := 0
 
 ifeq ($(PROF), TRUE)
 CFLAGS += -pg

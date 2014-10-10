@@ -86,7 +86,7 @@ void Worker::run() {
 	update_items();
 	int retval = poll(&(this->events[0]), this->events.size(), -1);
 	if (retval == -1) {
-		LOG.errorStream() << "WORKER. Select failed";
+		LOG.errorStream() << "WORKER. Wait failed";
 	} else {
 		for (WorkItems::iterator wi = items.begin(); wi != items.end(); ++wi ) {
 			if ((*wi)->event->revents & POLLOUT) {

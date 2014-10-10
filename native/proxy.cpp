@@ -19,7 +19,7 @@ void Listener::init() {
 }
 
 void Listener::recv() {
-	NormalSocket* accepted = (NormalSocket*)this->socket->accept();
+	Socket* accepted = this->socket->accept();
 	if (accepted) {
 		ServerPipe* sp = new ServerPipe(this->parent, accepted);
 		ClientPipe* cp = new ClientPipe(this->parent,
