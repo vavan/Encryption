@@ -101,7 +101,7 @@ void SecureLayer::init() {
 		SSL_library_init();
 		ctx = SSL_CTX_new(SSLv23_method());
 		set_security("cert.pem","key.pem");
-		if (SSL_CTX_set_cipher_list(SecureLayer::ctx, "RC4, AES128") <= 0) {
+		if (SSL_CTX_set_cipher_list(SecureLayer::ctx, "ALL") <= 0) { //"RC4, AES128"
 			log_ssl_error("SSL_CTX_set_cipher_list");
 		}
 //		SSL_CTX_set_options(ctx, SSL_OP_ALL);

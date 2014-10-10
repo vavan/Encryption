@@ -37,7 +37,7 @@ private:
 	void reallocate();
 
 public:
-	static const int ENTRIES = 10;
+	static const int ENTRIES = 30;
 	static const int DEPTH = 4096;
 	WorkItem* workItem;
 	Queue(WorkItem* workItem);
