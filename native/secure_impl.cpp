@@ -79,11 +79,11 @@ void SecureLayer::log_ssl_error(const std::string& function, int id) {
 
 //TODO its not working!!!
 void SecureLayer::log_error(const std::string& tag, ssize_t ret_code) {
-	LOG.errorStream() << "SSL[" << this->derived_s << "] Error in: " << tag;
-	int ret2 = SSL_get_error(this->connection, ret_code);
-	LOG.errorStream() << "SSL[" << this->derived_s << "] Ret codes: " << ret_code << "|" << ret2;
+	LOG.errorStream() << "SSL[" << this->derived_s << "] Error in: " << tag << "|" << ret_code ;
+//	int ret2 = SSL_get_error(this->connection, ret_code);
+//	LOG.errorStream() << "SSL[" << this->derived_s << "] Ret codes: " << ret_code << "|" << ret2;
 	char buf[1024];
-	ERR_error_string_n(ret2, buf, sizeof(buf));
+	ERR_error_string_n(ret_code, buf, sizeof(buf));
 	LOG.errorStream() << "*** " << ret_code << ": " << buf;
 
 	int i;
@@ -144,7 +144,7 @@ ssize_t SecureLayer::do_send() {
 		get_send_queue()->compleate(ret);
 		return ret;
 	} else {
-		log_ssl_error("SSL_write", this->derived_s);
+		log_error("SSL_write", ret);
 		return Socket::ERROR;
 	}
 	return 0;
@@ -159,8 +159,13 @@ ssize_t SecureLayer::do_recv() {
 			get_recv_queue()->compleate(ret);
 		return ret;
 	} else {
-		log_error("SSL_read", ret);
-		return Socket::ERROR;
+		ret = SSL_get_error(this->connection, ret);
+		if (ret == SSL_ERROR_WANT_READ || ret == SSL_ERROR_WANT_WRITE) {
+			return Socket::INPROGRESS;
+		} else {
+			log_error("SSL_read", ret);
+			return Socket::ERROR;
+		}
 	}
 }
 
