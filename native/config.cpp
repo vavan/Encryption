@@ -24,7 +24,7 @@ void init_log()
 	appender->setLayout(new log4cpp::BasicLayout());
 
 	log4cpp::PatternLayout* layout = new log4cpp::PatternLayout();
-	layout->setConversionPattern("%d %m%n");
+	layout->setConversionPattern("%d %p %m%n");
 	appender->setLayout(layout);
 
 	log4cpp::Category& root = log4cpp::Category::getRoot();

@@ -22,12 +22,13 @@ set -e
 
 case "$1" in
 	start)
+	    ulimit -c unlimited
 		cd $WORKDIR && ./$DAEMON.sh s0.0.0.0:8080 127.0.0.1:1935 &
 		;;
 
 	stop)
-		killall -9 $DAEMON.py 2> /dev/null
 		killall -9 $DAEMON.sh 2> /dev/null
+		killall -9 $DAEMON.py 2> /dev/null
 		;;
 
 	restart)

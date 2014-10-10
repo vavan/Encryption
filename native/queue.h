@@ -32,12 +32,12 @@ private:
 	State state;
 	int front;
 	int back;
+	int entries;
 	int inc(int index);
-
-	int max;
+	void reallocate();
 
 public:
-	static const int ENTRIES = 3;
+	static const int ENTRIES = 1;
 	static const int DEPTH = 4096;
 	WorkItem* workItem;
 	Queue(WorkItem* workItem);

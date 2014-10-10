@@ -10,7 +10,7 @@
 
 
 int Queue::inc(int index) {
-	if  (index < ENTRIES-1) {
+	if  (index < entries-1) {
 		index++;
 	} else {
 		index = 0;
@@ -22,26 +22,35 @@ Queue::Queue(WorkItem* workItem) : workItem(workItem) {
 	state = IDLE;
 	front = 0;
 	back = 0;
-	for(int i = 0; i < ENTRIES; i++) {
+	entries = ENTRIES;
+	for(int i = 0; i < entries; i++) {
 		Buffer* b = new Buffer(DEPTH);
 		queue.push_back(b);
 	}
 }
 
 Queue::~Queue() {
-	for(int i = 0; i < ENTRIES; i++) {
+	for(int i = 0; i < entries; i++) {
 		Buffer* b = queue.back();
 		delete b;
 		queue.pop_back();
 	}
-	LOG.alertStream() << "QUEUE. MAX Size: " << max;
+}
+
+void Queue::reallocate() {
+	int current_size = queue.size();
+	entries *= 2;
+	for(int i = current_size; i < entries; i++) {
+		Buffer* b = new Buffer(DEPTH);
+		queue.push_back(b);
+	}
 }
 
 Buffer* Queue::get_front() {
-	if (front + 1 == back) {
-		//TODO reallocate instead of fail
-		LOG.alertStream() << "QUEUE. Buffer overflow";
-		return NULL;
+	if (inc(front) == back) {
+		LOG.infoStream() << "QUEUE. Buffer overflow - reallocate";
+		reallocate();
+//		return NULL;
 	}
 	state = FRONT;
 	Buffer* b = queue[front];
