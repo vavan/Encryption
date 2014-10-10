@@ -28,7 +28,7 @@ void init_log()
 	appender->setLayout(layout);
 
 	log4cpp::Category& root = log4cpp::Category::getRoot();
-	root.setPriority(log4cpp::Priority::INFO);
+	root.setPriority(log4cpp::Priority::DEBUG);
 	root.addAppender(appender);
 }
 
