@@ -2,7 +2,6 @@
 APP = tunnel
 
 CPP_FILES := \
-    connection.cpp \
     config.cpp \
     proxy.cpp \
     socket.cpp \

@@ -7,9 +7,9 @@
  */
 
 #include "worker.h"
-#include "connection.h"
 
-WorkItem::WorkItem(Worker* parent, Socket* socket): parent(parent), socket(socket) {
+
+WorkItem::WorkItem(Worker* parent, Socket* socket): closing(false), parent(parent), socket(socket), send_queue(this) {
 	this->parent->add(this);
 }
 
@@ -28,6 +28,30 @@ void WorkItem::sending(bool start) {
 		event->events |= POLLOUT;
 	} else {
 		event->events &= ~POLLOUT;
+	}
+}
+
+void WorkItem::recv() {
+	int recved = this->socket->recv();
+
+    if (recved == Socket::CLOSE || recved == Socket::ERROR) {
+		this->close();
+	}
+}
+
+void WorkItem::send() {
+	ssize_t sent = this->socket->send();
+
+	if (this->closing || sent == Socket::ERROR) {
+		this->close();
+	}
+}
+
+void WorkItem::close() {
+	if (this->send_queue.empty()) {
+		this->parent->remove(this);
+	} else {
+		this->closing = true;
 	}
 }
 
@@ -76,8 +100,7 @@ void Worker::update_items() {
 			(*wi)->event = &(*ei);
 			(*ei).fd = (*wi)->get_fd();
 			(*ei).events = POLLIN;
-			BufferedPoint* bp = (BufferedPoint*)(*wi);
-			if (!bp->send_queue.empty()) {
+			if (!(*wi)->send_queue.empty()) {
 				(*ei).events |= POLLOUT;
 			}
 		}

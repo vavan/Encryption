@@ -12,20 +12,24 @@
 #include <list>
 #include <set>
 #include <vector>
+#include "queue.h"
 
 class Socket;
 
 using namespace std;
+
 
 class Worker;
 typedef struct pollfd WorkItemEvent;
 
 class WorkItem {
 protected:
+	bool closing;
 	Worker* parent;
 	Socket* socket;
 
 public:
+	Queue send_queue;
 	WorkItemEvent* event;
 	void sending(bool start);
 
@@ -33,9 +37,10 @@ public:
 	virtual ~WorkItem();
 	int get_fd();
 
-	virtual void init() = 0;
-	virtual void recv() = 0;
-	virtual void send() = 0;
+	virtual void init() {};
+	virtual void recv();
+	virtual void send();
+	virtual void close();
 };
 
 

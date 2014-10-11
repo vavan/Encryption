@@ -38,8 +38,6 @@ Socket::RetCode AcceptingState::try_accept(SecureSocket* ctx) {
 	ctx->send_queue->workItem->sending(true);
 	if (ret == Socket::OK) {
 		ctx->change_state(&established);
-		//TODO Refactor this weirdness
-		ret = Socket::INPROGRESS;
 		ctx->send_queue->workItem->sending(false);
 	}
 	return ret;

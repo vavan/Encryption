@@ -50,8 +50,8 @@ void Pipe::join(Pipe* other) {
 
 
 void Pipe::close() {
-	BufferedPoint::close();
+	WorkItem::close();
 	if (this->other)
-		this->other->BufferedPoint::close();
+		this->other->WorkItem::close();
 }
 

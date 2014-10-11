@@ -8,8 +8,7 @@
 #ifndef PROXY_H_
 #define PROXY_H_
 
-#include "connection.h"
-
+#include "worker.h"
 
 class Listener : public WorkItem {
 public:
@@ -19,12 +18,12 @@ public:
 	virtual void send();
 };
 
-class Pipe: public BufferedPoint {
+class Pipe: public WorkItem {
 private:
 	Pipe* other;
 
 public:
-	Pipe(Worker* parent, Socket* socket): BufferedPoint(parent, socket), other(NULL) {};
+	Pipe(Worker* parent, Socket* socket): WorkItem(parent, socket), other(NULL) {};
 	void join(Pipe* other);
 	virtual void close();
 };
