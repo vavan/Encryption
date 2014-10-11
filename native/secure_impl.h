@@ -31,10 +31,9 @@ protected:
 	virtual Queue* get_recv_queue() = 0;
 
 public:
-	SecureLayer();
+	SecureLayer(int derived_socket);
 	virtual ~SecureLayer();
 
-	void set(int derived_socket);
 	ssize_t do_connect();
 	ssize_t do_accept();
 	ssize_t do_recv();

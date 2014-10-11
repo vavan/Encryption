@@ -16,7 +16,7 @@
 #include "socket.h"
 
 
-std::string Addr::str() {
+std::string Addr::str() const {
 	std::stringstream os;
 	os << ip << ":" << port;
 	return os.str();

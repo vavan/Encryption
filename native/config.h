@@ -27,10 +27,15 @@ void init_log();
  */
 class Config {
 	static Config* instance;
+	Config() : inbound_secure(false), outbound_secure(false){};
 public:
 
-	Addr server;
-	Addr client;
+	Addr inbound;
+	Addr outbound;
+	bool inbound_secure;
+	bool outbound_secure;
+	std::string key_file;
+	std::string crt_file;
 
 	static void init() {
 		Config::instance = new Config();

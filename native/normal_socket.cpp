@@ -32,13 +32,13 @@ NormalSocket::NormalSocket(const Addr& addr) :
 		Socket(addr) {
 	this->s = socket(AF_INET, SOCK_STREAM, 0);
 	this->nonblock();
-	LOG.infoStream() << "SOCKET["<< this->s << "]. Create/New";
+	LOG.debugStream() << "SOCKET["<< this->s << "]. Create/New";
 }
 
 NormalSocket::NormalSocket(const Addr& addr, int accepted) :
 		Socket(addr, accepted) {
 	this->nonblock();
-	LOG.infoStream() << "SOCKET["<< this->s << "]. Create/Accepted";
+	LOG.debugStream() << "SOCKET["<< this->s << "]. Create/Accepted";
 }
 
 NormalSocket::~NormalSocket() {
@@ -48,7 +48,7 @@ NormalSocket::~NormalSocket() {
 
 
 bool NormalSocket::connect() {
-	LOG.infoStream() << "SOCKET["<< this->s << "]. Connect";
+	LOG.infoStream() << "SOCKET["<< this->s << "]. Connect to " << addr.str();
 	struct sockaddr_in serveraddr;
 	socklen_t addr_size;
 
@@ -69,7 +69,7 @@ bool NormalSocket::connect() {
 }
 
 bool NormalSocket::listen() {
-	LOG.infoStream() << "SOCKET["<< this->s << "]. Listen";
+	LOG.infoStream() << "SOCKET["<< this->s << "]. Listen on " << addr.str();
 	struct sockaddr_in serveraddr;
 	bzero((char *) &serveraddr, sizeof(serveraddr));
 	serveraddr.sin_family = AF_INET;
@@ -97,7 +97,11 @@ Socket* NormalSocket::accept() {
 	unsigned int addr_size = sizeof(clientaddr);
 	int newsocket = ::accept(s, (struct sockaddr *) &clientaddr, &addr_size);
 	if (newsocket > 0) {
-		return this->copy(this->addr, newsocket);
+		char string_addr[INET_ADDRSTRLEN];
+		inet_ntop(AF_INET, &(clientaddr.sin_addr), string_addr, sizeof(string_addr));
+		Addr newaddr(string_addr, clientaddr.sin_port);
+		LOG.infoStream() << "SOCKET["<< this->s << "]. Accepted from: " << newaddr.str();
+		return this->copy(newaddr, newsocket);
 	} else {
 		LOG.errorStream() << "SOCKET["<< this->s << "]. Accept failed:" << errno;
 		return NULL;

@@ -29,20 +29,16 @@ using namespace std;
 
 SSL_CTX* SecureLayer::ctx = NULL;
 
-SecureLayer::SecureLayer() {
+SecureLayer::SecureLayer(int derived_socket) {
 	init();
 	this->connection = SSL_new(ctx);
+	derived_s = derived_socket;
+	if (SSL_set_fd(this->connection, derived_socket) == 0)
+		log_error("SSL_set_fd");
 }
 
 SecureLayer::~SecureLayer() {
 	SSL_free(this->connection);
-}
-
-void SecureLayer::set(int derived_socket) {
-	derived_s = derived_socket;
-	if (SSL_set_fd(this->connection, derived_socket) == 0)
-		log_error("SSL_set_fd");
-
 }
 
 void SecureLayer::set_security(string cert_file, string key_file) {
@@ -60,9 +56,6 @@ void SecureLayer::set_security(string cert_file, string key_file) {
 	}
 }
 
-
-
-//TODO its not working!!!
 void SecureLayer::log_ssl_error(const std::string& function) {
 	int i;
 	LOG.errorStream() << "SSL ERROR: " << function;
@@ -94,7 +87,7 @@ void SecureLayer::init() {
 		SSL_load_error_strings();
 		SSL_library_init();
 		ctx = SSL_CTX_new(SSLv23_method());
-		set_security("cert.pem","key.pem");
+		set_security(Config::get().crt_file, Config::get().key_file);
 		if (SSL_CTX_set_cipher_list(SecureLayer::ctx, "ALL") <= 0) { //"RC4, AES128"
 			log_ssl_error("SSL_CTX_set_cipher_list");
 		}

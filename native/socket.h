@@ -25,7 +25,7 @@ public:
 	Addr() :
 			ip(""), port(0) {
 	}
-	std::string str();
+	std::string str() const;
 };
 
 

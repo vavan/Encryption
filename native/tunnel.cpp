@@ -29,16 +29,28 @@ Addr parse_addr(string input) {
 
 bool build_config(int argc, char* argv[]) {
 	if (argc != 3) {
-		cerr << "USAGE: remoute_addr:port local_listener:port" << endl;
+		cerr << "USAGE: <s><local_listener>:port <s><remoute_addr>:port" << endl;
 		return false;
 	}
 	Config::init();
+	Config::get().key_file = "key.pem";
+	Config::get().crt_file = "cert.pem";
 
-	string l = argv[1];
-	string r = argv[2];
+	string inb = argv[1];
+	string outb = argv[2];
 
-	Config::get().server = parse_addr(l);
-	Config::get().client = parse_addr(r);
+	if (inb[0] == 's') {
+		Config::get().inbound_secure = true;
+		Config::get().inbound = parse_addr(inb.substr(1, inb.size()));
+	} else {
+		Config::get().inbound = parse_addr(inb);
+	}
+	if (outb[0] == 's') {
+		Config::get().outbound_secure = true;
+		Config::get().outbound = parse_addr(outb.substr(1, outb.size()));
+	} else {
+		Config::get().outbound = parse_addr(outb);
+	}
 
 	return true;
 }
@@ -62,10 +74,13 @@ int main(int argc, char* argv[]) {
 
 	Worker w = Worker();
 
-	//TODO parse starting <s>, pass it to Listener
-	SecureSocket* ss = new SecureSocket(Config::get().server);
-	Listener* main = new Listener(&w, ss);
-
+	Socket* s;
+	if (Config::get().inbound_secure) {
+		s = new SecureSocket(Config::get().inbound);
+	} else {
+		s = new NormalSocket(Config::get().inbound);
+	}
+	Listener* main = new Listener(&w, s);
 	main->init();
 
 	running = true;

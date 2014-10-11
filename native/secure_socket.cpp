@@ -13,15 +13,13 @@ using namespace std;
 
 
 SecureSocket::SecureSocket(const Addr& addr) :
-		NormalSocket(addr), SecureLayer() {
-	this->set(this->s);
+		NormalSocket(addr), SecureLayer(this->s) {
 	this->state = &connecting;
 	LOG.infoStream() << "SSL["<< this->s << "]. Create/New";
 }
 
 SecureSocket::SecureSocket(const Addr& addr, int accepted) :
-		NormalSocket(addr, accepted), SecureLayer() {
-	this->set(this->s);
+		NormalSocket(addr, accepted), SecureLayer(this->s) {
 	this->state = &accepting;
 	LOG.infoStream() << "SSL["<< this->s << "]. Create/Accepted";
 }
