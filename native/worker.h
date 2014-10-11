@@ -24,6 +24,7 @@ class WorkItem {
 protected:
 	Worker* parent;
 	Socket* socket;
+
 public:
 	WorkItemEvent* event;
 	void sending(bool start);

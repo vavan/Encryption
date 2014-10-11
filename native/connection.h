@@ -25,18 +25,20 @@
 //TODO get rid of this class
 class BufferedPoint: public WorkItem {
 protected:
+	bool closing;
 
 public:
-	BufferedPoint(Worker* parent, Socket* socket) : WorkItem(parent, socket), send_queue(this) {};
-
 	Queue send_queue;
+	BufferedPoint(Worker* parent, Socket* socket) : WorkItem(parent, socket), closing(false), send_queue(this) {};
+
 
 	virtual void init();
 	virtual void recv();
 	virtual void send();
+	virtual void close();
 
-	virtual void on_send() = 0;
-	virtual void on_close() = 0;
+//	virtual void on_send() = 0;
+//	virtual void on_close() = 0;
 };
 
 

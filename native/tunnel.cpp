@@ -37,7 +37,7 @@ bool build_config(int argc, char* argv[]) {
 	Config::get().crt_file = "cert.pem";
 
 	string inb = argv[1];
-	string outb = argv[2];
+	string r = argv[2];
 
 	if (inb[0] == 's') {
 		Config::get().inbound_secure = true;
@@ -45,11 +45,11 @@ bool build_config(int argc, char* argv[]) {
 	} else {
 		Config::get().inbound = parse_addr(inb);
 	}
-	if (outb[0] == 's') {
+	if (r[0] == 's') {
 		Config::get().outbound_secure = true;
-		Config::get().outbound = parse_addr(outb.substr(1, outb.size()));
+		Config::get().outbound = parse_addr(r.substr(1, r.size()));
 	} else {
-		Config::get().outbound = parse_addr(outb);
+		Config::get().outbound = parse_addr(r);
 	}
 
 	return true;
