@@ -33,11 +33,11 @@ Socket* SecureSocket::copy(const Addr& addr, int newsocket) {
 	return new SecureSocket(this->addr, newsocket);
 }
 
-ssize_t SecureSocket::send() {
+Socket::RetCode SecureSocket::send() {
 	return this->state->send(this);
 }
 
-ssize_t SecureSocket::recv() {
+Socket::RetCode SecureSocket::recv() {
 	return this->state->recv(this);
 }
 

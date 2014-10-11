@@ -10,6 +10,7 @@
 
 #include <string>
 #include <openssl/ssl.h>
+#include "socket.h"
 
 class Queue;
 
@@ -34,10 +35,10 @@ public:
 	SecureLayer(int derived_socket);
 	virtual ~SecureLayer();
 
-	ssize_t do_connect();
-	ssize_t do_accept();
-	ssize_t do_recv();
-	ssize_t do_send();
+	Socket::RetCode do_connect();
+	Socket::RetCode do_accept();
+	Socket::RetCode do_recv();
+	Socket::RetCode do_send();
 };
 
 

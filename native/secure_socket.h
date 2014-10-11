@@ -31,8 +31,8 @@ public:
 	void change_state(BaseState* new_state);
 
 	virtual Socket* copy(const Addr& addr, int s);
-	virtual ssize_t send();
-	virtual ssize_t recv();
+	virtual Socket::RetCode send();
+	virtual Socket::RetCode recv();
 };
 
 

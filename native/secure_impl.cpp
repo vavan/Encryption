@@ -95,7 +95,7 @@ void SecureLayer::init() {
 	}
 }
 
-ssize_t SecureLayer::do_connect() {
+Socket::RetCode SecureLayer::do_connect() {
 	int ret;
 	if ((ret = SSL_connect(this->connection)) <= 0) {
 		ret = SSL_get_error(this->connection, ret);
@@ -106,10 +106,10 @@ ssize_t SecureLayer::do_connect() {
 			return Socket::ERROR;
 		}
 	}
-	return Socket::DONE;
+	return Socket::OK;
 }
 
-ssize_t SecureLayer::do_accept() {
+Socket::RetCode SecureLayer::do_accept() {
 	int ret;
 	if ((ret = SSL_accept(this->connection)) <= 0) {
 		ret = SSL_get_error(this->connection, ret);
@@ -120,16 +120,16 @@ ssize_t SecureLayer::do_accept() {
 			return Socket::ERROR;
 		}
 	}
-	return Socket::DONE;
+	return Socket::OK;
 }
 
-ssize_t SecureLayer::do_send() {
+Socket::RetCode SecureLayer::do_send() {
 	Buffer * buffer = get_send_queue()->get_back();
 	ssize_t ret = SSL_write(this->connection, &(*buffer)[0], buffer->size());
 	if (ret >= 0) {
 		LOG.debugStream() << "SSL["<< this->derived_s << "]. Send:" << ret;
 		get_send_queue()->compleate(ret);
-		return ret;
+		return Socket::OK;
 	} else {
 		ret = SSL_get_error(this->connection, ret);
 		if (ret == SSL_ERROR_WANT_READ || ret == SSL_ERROR_WANT_WRITE) {
@@ -139,17 +139,19 @@ ssize_t SecureLayer::do_send() {
 			return Socket::ERROR;
 		}
 	}
-	return 0;
 }
 
-ssize_t SecureLayer::do_recv() {
+Socket::RetCode SecureLayer::do_recv() {
 	Buffer * buffer = get_recv_queue()->get_front();
 	ssize_t ret = SSL_read(this->connection, &(*buffer)[0], buffer->size());
 	if (ret >= 0) {
 		LOG.debugStream() << "SSL["<< this->derived_s << "]. Recv:" << ret;
-		if (ret > 0)
+		if (ret > 0) {
 			get_recv_queue()->compleate(ret);
-		return ret;
+			return Socket::OK;
+		} else {
+			return Socket::CLOSE;
+		}
 	} else {
 		ret = SSL_get_error(this->connection, ret);
 		if (ret == SSL_ERROR_WANT_READ || ret == SSL_ERROR_WANT_WRITE) {

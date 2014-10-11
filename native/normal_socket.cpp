@@ -23,6 +23,7 @@
 #include <string>
 #include <vector>
 
+#include "normal_socket.h"
 #include "queue.h"
 #include "config.h"
 
@@ -47,7 +48,7 @@ NormalSocket::~NormalSocket() {
 }
 
 
-bool NormalSocket::connect() {
+Socket::RetCode NormalSocket::connect() {
 	LOG.infoStream() << "SOCKET["<< this->s << "]. Connect to " << addr.str();
 	struct sockaddr_in serveraddr;
 	socklen_t addr_size;
@@ -62,13 +63,13 @@ bool NormalSocket::connect() {
 		int ret = errno;
 		if (ret != EINPROGRESS) {
 			LOG.errorStream() << "SOCKET["<< this->s << "]. Connect failed:" << errno;
-			return false;
+			return Socket::ERROR;
 		}
 	}
-	return true;
+	return Socket::OK;
 }
 
-bool NormalSocket::listen() {
+Socket::RetCode NormalSocket::listen() {
 	LOG.infoStream() << "SOCKET["<< this->s << "]. Listen on " << addr.str();
 	struct sockaddr_in serveraddr;
 	bzero((char *) &serveraddr, sizeof(serveraddr));
@@ -78,13 +79,13 @@ bool NormalSocket::listen() {
 
 	if (bind(s, (struct sockaddr *) &serveraddr, sizeof(serveraddr)) < 0) {
 		LOG.errorStream() << "SOCKET["<< this->s << "]. Bind failed:" << errno;
-		return false;
+		return Socket::ERROR;
 	}
 	if (::listen(s, LISTEN_BACKLOG) < 0) {
 		LOG.errorStream() << "SOCKET["<< this->s << "]. Listen failed:" << errno;
-		return false;
+		return Socket::ERROR;
 	}
-	return true;
+	return Socket::OK;
 }
 
 Socket* NormalSocket::copy(const Addr& addr, int newsocket) {
@@ -115,27 +116,30 @@ void NormalSocket::nonblock() {
 	}
 }
 
-ssize_t NormalSocket::send() {
+Socket::RetCode NormalSocket::send() {
 	Buffer* buffer = send_queue->get_back();
 	ssize_t ret = ::send(s, &(*buffer)[0], buffer->size(), 0);
 	if (ret >= 0) {
 		LOG.debugStream() << "SOCKET["<< this->s << "]. Send:" << ret;
 		send_queue->compleate(ret);
-		return ret;
+		return Socket::OK;
 	} else {
 		LOG.errorStream() << "SOCKET["<< this->s << "]. Send failed:" << errno;
 		return Socket::ERROR;
 	}
-	return 0;
 }
 
-ssize_t NormalSocket::recv() {
+Socket::RetCode NormalSocket::recv() {
 	Buffer* buffer = recv_queue->get_front();
 	ssize_t ret = ::recv(s, &(*buffer)[0], buffer->size(), 0);
 	if (ret >= 0) {
 		LOG.debugStream() << "SOCKET["<< this->s << "]. Recv:" << ret;
-		if (ret > 0) recv_queue->compleate(ret);
-		return ret;
+		if (ret > 0) {
+			recv_queue->compleate(ret);
+			return Socket::OK;
+		} else {
+			return Socket::CLOSE;
+		}
 	} else {
 		LOG.errorStream() << "SOCKET["<< this->s << "]. Recv failed:" << errno;
 		return Socket::ERROR;

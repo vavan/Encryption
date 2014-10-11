@@ -34,11 +34,11 @@ protected:
 	Addr addr;
 	int s;
 public:
-	enum SocketReturns {
-		ENDOFFILE = 0,
-		DONE = 0,
+	enum RetCode {
+		OK = 0,
 		ERROR = -1,
-		INPROGRESS = -2
+		CLOSE = -2,
+		INPROGRESS = -3
 	};
 	Queue* recv_queue;
 	Queue* send_queue;
@@ -49,12 +49,11 @@ public:
 
 	int get();
 	virtual Socket* copy(const Addr& addr, int s) = 0;
-	virtual bool connect() = 0;
-	virtual bool listen() = 0;
+	virtual RetCode connect() = 0;
+	virtual RetCode listen() = 0;
 	virtual Socket* accept() = 0;
-	virtual ssize_t send() = 0;
-	virtual ssize_t recv() = 0;
-
+	virtual RetCode send() = 0;
+	virtual RetCode recv() = 0;
 };
 
 #endif /* SOCKET_H_ */

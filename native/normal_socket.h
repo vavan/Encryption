@@ -22,11 +22,11 @@ public:
 	virtual ~NormalSocket();
 
 	virtual Socket* copy(const Addr& addr, int s);
-	virtual bool connect();
-	virtual bool listen();
+	virtual Socket::RetCode connect();
+	virtual Socket::RetCode listen();
 	virtual Socket* accept();
-	virtual ssize_t send();
-	virtual ssize_t recv();
+	virtual Socket::RetCode send();
+	virtual Socket::RetCode recv();
 };
 
 

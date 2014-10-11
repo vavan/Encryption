@@ -19,28 +19,28 @@ extern AcceptingState accepting;
 class BaseState {
 public:
 	virtual ~BaseState(){};
-	virtual size_t send(SecureSocket* ctx) = 0;
-	virtual size_t recv(SecureSocket* ctx) = 0;
+	virtual Socket::RetCode send(SecureSocket* ctx) = 0;
+	virtual Socket::RetCode recv(SecureSocket* ctx) = 0;
 };
 class ConnectingState : public BaseState  {
-	size_t try_connect(SecureSocket* ctx);
+	Socket::RetCode try_connect(SecureSocket* ctx);
 public:
 	virtual ~ConnectingState(){};
-	virtual size_t send(SecureSocket* ctx);
-	virtual size_t recv(SecureSocket* ctx);
+	virtual Socket::RetCode send(SecureSocket* ctx);
+	virtual Socket::RetCode recv(SecureSocket* ctx);
 };
 class AcceptingState : public BaseState  {
-	size_t try_accept(SecureSocket* ctx);
+	Socket::RetCode try_accept(SecureSocket* ctx);
 public:
 	virtual ~AcceptingState(){};
-	virtual size_t send(SecureSocket* ctx);
-	virtual size_t recv(SecureSocket* ctx);
+	virtual Socket::RetCode send(SecureSocket* ctx);
+	virtual Socket::RetCode recv(SecureSocket* ctx);
 };
 class EstablishedState : public BaseState  {
 public:
 	virtual ~EstablishedState(){};
-	virtual size_t send(SecureSocket* ctx);
-	virtual size_t recv(SecureSocket* ctx);
+	virtual Socket::RetCode send(SecureSocket* ctx);
+	virtual Socket::RetCode recv(SecureSocket* ctx);
 };
 
 

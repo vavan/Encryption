@@ -53,20 +53,5 @@ void Pipe::close() {
 	BufferedPoint::close();
 	if (this->other)
 		this->other->BufferedPoint::close();
-//	this->closing = true;
-//	this->other->closing = true;
-//	if (this->other->send_queue.empty()) {
-//		this->parent->remove(this);
-//		this->parent->remove(this->other);
-//	}
 }
-
-//void Pipe::on_send() {
-//	if (this->closing) {
-////		if (this->send_queue.empty()) {
-//			this->parent->remove(this);
-//			this->parent->remove(this->other);
-////		}
-//	}
-//}
 

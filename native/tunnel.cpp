@@ -55,12 +55,12 @@ bool build_config(int argc, char* argv[]) {
 	return true;
 }
 
-bool running;
+Worker* w;
 
 void terminationHandler(int sig)
 {
 	LOG.noticeStream() << "MAIN. Got signal:" << sig;
-	running = false;
+	w->running = false;
 }
 
 int main(int argc, char* argv[]) {
@@ -70,9 +70,9 @@ int main(int argc, char* argv[]) {
 	if (!build_config(argc, argv)) {
 		return 1;
 	}
+	w = new Worker();
 	signal(SIGTERM, terminationHandler);
 
-	Worker w = Worker();
 
 	Socket* s;
 	if (Config::get().inbound_secure) {
@@ -80,14 +80,15 @@ int main(int argc, char* argv[]) {
 	} else {
 		s = new NormalSocket(Config::get().inbound);
 	}
-	Listener* main = new Listener(&w, s);
+	Listener* main = new Listener(w, s);
 	main->init();
 
-	running = true;
-	while (running) {
-		w.run();
+
+	while (w->running) {
+		w->run();
 	}
 
+	delete w;
 	delete main;
 	LOG.noticeStream() << "Exit";
 	Config::done();

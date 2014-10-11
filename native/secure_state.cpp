@@ -16,27 +16,27 @@ ConnectingState connecting;
 EstablishedState established;
 
 
-size_t ConnectingState::try_connect(SecureSocket* ctx) {
-	Socket::SocketReturns ret = (Socket::SocketReturns)ctx->do_connect();
+Socket::RetCode ConnectingState::try_connect(SecureSocket* ctx) {
+	Socket::RetCode ret = ctx->do_connect();
 	ctx->send_queue->workItem->sending(true);
-	if (ret == Socket::DONE) {
+	if (ret == Socket::OK) {
 		ctx->change_state(&established);
 		ctx->send_queue->workItem->sending(false);
 	}
 	return ret;
 }
-size_t ConnectingState::send(SecureSocket* ctx) {
+Socket::RetCode ConnectingState::send(SecureSocket* ctx) {
 	return try_connect(ctx);
 }
-size_t ConnectingState::recv(SecureSocket* ctx) {
+Socket::RetCode ConnectingState::recv(SecureSocket* ctx) {
 	return try_connect(ctx);
 }
 
 
-size_t AcceptingState::try_accept(SecureSocket* ctx) {
-	Socket::SocketReturns ret = (Socket::SocketReturns)ctx->do_accept();
+Socket::RetCode AcceptingState::try_accept(SecureSocket* ctx) {
+	Socket::RetCode ret = ctx->do_accept();
 	ctx->send_queue->workItem->sending(true);
-	if (ret == Socket::DONE) {
+	if (ret == Socket::OK) {
 		ctx->change_state(&established);
 		//TODO Refactor this weirdness
 		ret = Socket::INPROGRESS;
@@ -44,18 +44,18 @@ size_t AcceptingState::try_accept(SecureSocket* ctx) {
 	}
 	return ret;
 }
-size_t AcceptingState::send(SecureSocket* ctx) {
+Socket::RetCode AcceptingState::send(SecureSocket* ctx) {
 	return try_accept(ctx);
 }
-size_t AcceptingState::recv(SecureSocket* ctx) {
+Socket::RetCode AcceptingState::recv(SecureSocket* ctx) {
 	return try_accept(ctx);
 }
 
 
-size_t EstablishedState::send(SecureSocket* ctx) {
+Socket::RetCode EstablishedState::send(SecureSocket* ctx) {
 	return ctx->do_send();
 }
-size_t EstablishedState::recv(SecureSocket* ctx) {
+Socket::RetCode EstablishedState::recv(SecureSocket* ctx) {
 	return ctx->do_recv();
 }
 

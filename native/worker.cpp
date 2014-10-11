@@ -49,6 +49,9 @@ bool Worker::delete_items() {
 			delete p;
 		}
 		delete_item_list.clear();
+		if (items.empty()) {
+			this->running = false;
+		}
 		return true;
 	}
 	return false;

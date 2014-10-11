@@ -53,6 +53,8 @@ private:
 	bool add_items();
 
 public:
+	Worker() : running(true) {};
+	bool running;
 	void add(WorkItem* point);
 	void remove(WorkItem* point);
 	void run();
