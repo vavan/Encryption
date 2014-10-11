@@ -37,7 +37,7 @@ class EchoServer(Thread):
         Thread.__init__(self)
         self.s = socket
         self.parent = parent
-    def do(self):
+    def do(self):        
         data = self.s.recv(BUFFER_SIZE)
         self.parent.recvd += len(data)
         if data:
@@ -46,9 +46,11 @@ class EchoServer(Thread):
             self.stop()
             self.parent.disconnect(self)
     def done(self):
-        self.s.close()    
+        self.s.close()
+            
 
 class Listener(Thread):
+    START_TO = 0
     def __init__(self, addr = LISTEN_ON_ADDR, port = LISTEN_ON_PORT):
         Thread.__init__(self)
         self.addr = addr
@@ -70,6 +72,8 @@ class Listener(Thread):
         self.children.remove( child )
     def do(self):
         try:
+            if self.START_TO != 0:
+                time.sleep(self.START_TO)
             s, addr = self.s.accept()
             echo = EchoServer(s, self)
             self.children.append( echo )
@@ -276,6 +280,37 @@ class LongRunningTests(unittest.TestCase):
         for i in range(cycles):
             self.assertTrue(response[i])
 
+class SlowTests(unittest.TestCase):
+
+    @classmethod
+    def setUpClass(cls):
+        cls.listener = Listener()
+        cls.listener.START_TO = 10.0
+        cls.listener.start()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.listener.stop()
+
+    #@unittest.skip("Not now")
+    def test_slow_recv(self):
+        cycles = 20
+        c = Client()
+        a_request = 'Z'*2
+        request = []
+        response = []
+        for i in range(cycles):
+            c.send(a_request)
+            request.append(a_request)
+            #print request
+        for i in range(cycles):
+            recvd = c.recv()
+            response.append(recvd)
+            #print response
+        c.close()
+        request = ''.join(request)
+        response = ''.join(response)
+        self.assertEqual(request, response)
 
 
 if __name__ == '__main__':
@@ -287,6 +322,8 @@ if __name__ == '__main__':
         suite = unittest.TestLoader().loadTestsFromTestCase(BasicTests)
     elif (type == "profile"):
         suite = unittest.TestLoader().loadTestsFromTestCase(LongRunningTests)
+    elif (type == "slow"):
+        suite = unittest.TestLoader().loadTestsFromTestCase(SlowTests)
     else:
         suite = unittest.TestLoader().loadTestsFromTestCase(MainTests)
     unittest.TextTestRunner(verbosity=2).run(suite)

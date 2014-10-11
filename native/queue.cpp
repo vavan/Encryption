@@ -48,9 +48,8 @@ void Queue::reallocate() {
 
 Buffer* Queue::get_front() {
 	if (inc(front) == back) {
-		LOG.infoStream() << "QUEUE. Buffer overflow - reallocate";
+		LOG.infoStream() << "QUEUE. Not enough buffers - reallocate. Old size=" << queue.size();
 		reallocate();
-//		return NULL;
 	}
 	state = FRONT;
 	Buffer* b = queue[front];

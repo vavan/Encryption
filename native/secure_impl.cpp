@@ -74,7 +74,7 @@ void SecureLayer::log_ssl_error(const std::string& function) {
 }
 
 void SecureLayer::log_error(const std::string& tag, ssize_t ret_code) {
-	LOG.errorStream() << "SSL[" << this->derived_s << "] Error in: " << tag << "|" << ret_code ;
+	LOG.errorStream() << "SSL[" << this->derived_s << "] Error in: " << tag << "|" << ret_code << "|" << errno ;
 	if (ret_code != -1) {
 		char buf[1024];
 		ERR_error_string_n(ret_code, buf, sizeof(buf));
