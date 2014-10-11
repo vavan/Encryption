@@ -44,22 +44,20 @@ void Pipe::join(Pipe* other) {
 
 
 void Pipe::on_close() {
-
 	this->closing = true;
-	if (this->other)
-		this->other->closing = true;
+	this->other->closing = true;
 	if (this->other->send_queue.empty()) {
 		this->parent->remove(this);
-		if (this->other)
-			this->parent->remove(this->other);
+		this->parent->remove(this->other);
 	}
 }
 
 void Pipe::on_send() {
 	if (this->closing) {
-		this->parent->remove(this);
-		if (this->other)
+//		if (this->send_queue.empty()) {
+			this->parent->remove(this);
 			this->parent->remove(this->other);
+//		}
 	}
 }
 
