@@ -41,7 +41,7 @@ SecureLayer::~SecureLayer() {
 void SecureLayer::set(int derived_socket) {
 	derived_s = derived_socket;
 	if (SSL_set_fd(this->connection, derived_socket) == 0)
-		log_ssl_error("SSL_set_fd", this->derived_s);
+		log_error("SSL_set_fd");
 
 }
 
@@ -63,13 +63,9 @@ void SecureLayer::set_security(string cert_file, string key_file) {
 
 
 //TODO its not working!!!
-void SecureLayer::log_ssl_error(const std::string& function, int id) {
+void SecureLayer::log_ssl_error(const std::string& function) {
 	int i;
-	if (id > 0) {
-		LOG.errorStream() << "SSL[" << id << "] ERROR: " << function;
-	} else {
-		LOG.errorStream() << "SSL ERROR: " << function;
-	}
+	LOG.errorStream() << "SSL ERROR: " << function;
 	while ((i = ERR_get_error())) {
 		char buf[1024];
 		ERR_error_string_n(i, buf, sizeof(buf));
@@ -77,15 +73,13 @@ void SecureLayer::log_ssl_error(const std::string& function, int id) {
 	}
 }
 
-//TODO its not working!!!
 void SecureLayer::log_error(const std::string& tag, ssize_t ret_code) {
 	LOG.errorStream() << "SSL[" << this->derived_s << "] Error in: " << tag << "|" << ret_code ;
-//	int ret2 = SSL_get_error(this->connection, ret_code);
-//	LOG.errorStream() << "SSL[" << this->derived_s << "] Ret codes: " << ret_code << "|" << ret2;
-	char buf[1024];
-	ERR_error_string_n(ret_code, buf, sizeof(buf));
-	LOG.errorStream() << "*** " << ret_code << ": " << buf;
-
+	if (ret_code != -1) {
+		char buf[1024];
+		ERR_error_string_n(ret_code, buf, sizeof(buf));
+		LOG.errorStream() << "*** " << ret_code << ": " << buf;
+	}
 	int i;
 	while ((i = ERR_get_error())) {
 		char buf[1024];
@@ -104,7 +98,7 @@ void SecureLayer::init() {
 		if (SSL_CTX_set_cipher_list(SecureLayer::ctx, "ALL") <= 0) { //"RC4, AES128"
 			log_ssl_error("SSL_CTX_set_cipher_list");
 		}
-//		SSL_CTX_set_options(ctx, SSL_OP_ALL);
+		SSL_CTX_set_options(ctx, SSL_OP_ALL);
 	}
 }
 
@@ -115,7 +109,7 @@ ssize_t SecureLayer::do_connect() {
 		if (ret == SSL_ERROR_WANT_READ || ret == SSL_ERROR_WANT_WRITE) {
 			return Socket::INPROGRESS;
 		} else {
-			log_ssl_error("SSL_connect", this->derived_s);
+			log_error("SSL_connect");
 			return Socket::ERROR;
 		}
 	}
@@ -129,7 +123,7 @@ ssize_t SecureLayer::do_accept() {
 		if (ret == SSL_ERROR_WANT_READ || ret == SSL_ERROR_WANT_WRITE) {
 			return Socket::INPROGRESS;
 		} else {
-			log_ssl_error("SSL_accept", this->derived_s);
+			log_error("SSL_accept");
 			return Socket::ERROR;
 		}
 	}
@@ -144,8 +138,13 @@ ssize_t SecureLayer::do_send() {
 		get_send_queue()->compleate(ret);
 		return ret;
 	} else {
-		log_error("SSL_write", ret);
-		return Socket::ERROR;
+		ret = SSL_get_error(this->connection, ret);
+		if (ret == SSL_ERROR_WANT_READ || ret == SSL_ERROR_WANT_WRITE) {
+			return Socket::INPROGRESS;
+		} else {
+			log_error("SSL_write", ret);
+			return Socket::ERROR;
+		}
 	}
 	return 0;
 }

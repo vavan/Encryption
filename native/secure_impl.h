@@ -18,9 +18,9 @@ class SecureLayer
 private:
 	static SSL_CTX* ctx;
 	static void init();
-	static void log_ssl_error(const std::string& tag, int id = -1);
 	static void set_security(std::string cert_file, std::string key_file);
-	void log_error(const std::string& tag, ssize_t ret_code);
+	static void log_ssl_error(const std::string& function);
+	void log_error(const std::string& tag, ssize_t ret_code = -1);
 
 private:
 	SSL* connection;
