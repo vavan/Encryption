@@ -32,17 +32,17 @@ void WorkItem::sending(bool start) {
 }
 
 void WorkItem::recv() {
-	int recved = this->socket->recv();
+	Socket::RetCode retcode = this->socket->recv();
 
-    if (recved == Socket::CLOSE || recved == Socket::ERROR) {
+    if (retcode == Socket::CLOSE || retcode == Socket::ERROR) {
 		this->close();
 	}
 }
 
 void WorkItem::send() {
-	ssize_t sent = this->socket->send();
+	Socket::RetCode retcode = this->socket->send();
 
-	if (this->closing || sent == Socket::ERROR) {
+	if (this->closing || retcode == Socket::ERROR) {
 		this->close();
 	}
 }
@@ -65,6 +65,7 @@ void Worker::remove(WorkItem* point) {
 	delete_item_list.insert(point);
 }
 
+//TODO optimize
 bool Worker::delete_items() {
 	if (!delete_item_list.empty()) {
 		for(DeletedItems::iterator wi = delete_item_list.begin(); wi != delete_item_list.end(); ++wi) {
@@ -81,6 +82,7 @@ bool Worker::delete_items() {
 	return false;
 }
 
+//TODO optimize
 bool Worker::add_items() {
 	if (!add_item_list.empty()) {
 		items.insert(items.end(), add_item_list.begin(), add_item_list.end());

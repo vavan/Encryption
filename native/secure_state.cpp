@@ -18,10 +18,11 @@ EstablishedState established;
 
 Socket::RetCode ConnectingState::try_connect(SecureSocket* ctx) {
 	Socket::RetCode ret = ctx->do_connect();
-	ctx->send_queue->workItem->sending(true);
 	if (ret == Socket::OK) {
 		ctx->change_state(&established);
 		ctx->send_queue->workItem->sending(false);
+	} else {
+		ctx->send_queue->workItem->sending(true);
 	}
 	return ret;
 }
@@ -35,10 +36,11 @@ Socket::RetCode ConnectingState::recv(SecureSocket* ctx) {
 
 Socket::RetCode AcceptingState::try_accept(SecureSocket* ctx) {
 	Socket::RetCode ret = ctx->do_accept();
-	ctx->send_queue->workItem->sending(true);
 	if (ret == Socket::OK) {
 		ctx->change_state(&established);
 		ctx->send_queue->workItem->sending(false);
+	} else {
+		ctx->send_queue->workItem->sending(true);
 	}
 	return ret;
 }
