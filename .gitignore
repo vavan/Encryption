@@ -4,6 +4,4 @@
 objs/
 *~
 *.pyc
-*.pem
 *.log
-*.crt

@@ -6,6 +6,7 @@
  *      Author: vova
  */
 
+#include <algorithm>
 #include "worker.h"
 
 
@@ -65,7 +66,6 @@ void Worker::remove(WorkItem* point) {
 	delete_item_list.insert(point);
 }
 
-//TODO optimize
 bool Worker::delete_items() {
 	if (!delete_item_list.empty()) {
 		for(DeletedItems::iterator wi = delete_item_list.begin(); wi != delete_item_list.end(); ++wi) {
@@ -82,7 +82,6 @@ bool Worker::delete_items() {
 	return false;
 }
 
-//TODO optimize
 bool Worker::add_items() {
 	if (!add_item_list.empty()) {
 		items.insert(items.end(), add_item_list.begin(), add_item_list.end());
@@ -112,16 +111,20 @@ void Worker::update_items() {
 
 void Worker::run() {
 	update_items();
+
 	int retval = poll(&(this->events[0]), this->events.size(), -1);
+
 	if (retval == -1) {
 		LOG.errorStream() << "WORKER. Wait failed";
 	} else {
-		for (WorkItems::iterator wi = items.begin(); wi != items.end(); ++wi ) {
+		for (WorkItems::iterator wi = items.begin(); wi != items.end(), retval > 0; ++wi ) {
 			if ((*wi)->event->revents & POLLOUT) {
 				(*wi)->send();
+				retval--;
 			}
 			if ((*wi)->event->revents & POLLIN) {
 				(*wi)->recv();
+				retval--;
 			}
 		}
 	}
