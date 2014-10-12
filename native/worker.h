@@ -46,7 +46,7 @@ public:
 
 class Worker {
 private:
-	typedef list<WorkItem*> WorkItems;
+	typedef vector<WorkItem*> WorkItems;
 	typedef set<WorkItem*> DeletedItems;
 	typedef vector<WorkItemEvent> WorkItemEvents;
 	WorkItems items;

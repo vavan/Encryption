@@ -28,7 +28,7 @@ TARGET = $(addprefix $(BIN)/,$(APP))
 CPP := $(PREFIX)g++
 LD := $(PREFIX)g++
 MAJ_VERSION := 2
-MIN_VERSION := 2
+MIN_VERSION := 3
 
 ifeq ($(PROF), TRUE)
 CFLAGS += -pg
