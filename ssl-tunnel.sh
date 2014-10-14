@@ -2,5 +2,5 @@
 
 while true; do
     $1 $2 $3
-    sleep 5
+    sleep 15
 done;
