@@ -1,14 +1,16 @@
 #!/bin/bash
 
+DEST=/usr/local/ssl-tunnel
 echo "Copy scripts"
 sudo cp ssl-tunnel /etc/init.d/
-sudo mkdir -p /usr/local/ssl-tunnel/
-sudo cp ./native/bin/tunnel /usr/local/ssl-tunnel/
-sudo cp ./python/ssl-tunel.py /usr/local/ssl-tunnel/
-sudo cp ./ssl-tunel.sh /usr/local/ssl-tunnel/
-sudo cp ./pem/server.csr /usr/local/ssl-tunnel
+sudo mkdir -p $DEST
+sudo chmod 0755 $DEST
+sudo cp ./native/bin/tunnel $DEST/ssl-tunnel
+sudo cp ./python/ssl-tunnel.py $DEST/
+sudo cp ./ssl-tunnel.sh $DEST/
+sudo cp ./pem/server.csr $DEST/
 
-cd /usr/local/ssl-tunnel/
+cd $DEST/
 sudo chmod 0777 .
 
 #echo "Generate certificate request"
