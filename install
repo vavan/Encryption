@@ -5,7 +5,7 @@ sudo cp ssl-tunnel /etc/init.d/
 sudo mkdir -p /usr/local/ssl-tunnel/
 sudo cp ./native/bin/tunnel /usr/local/ssl-tunnel/
 sudo cp ./python/ssl-tunel.py /usr/local/ssl-tunnel/
-sudo cp ./python/ssl-tunel.sh /usr/local/ssl-tunnel/
+sudo cp ./ssl-tunel.sh /usr/local/ssl-tunnel/
 sudo cp ./pem/server.csr /usr/local/ssl-tunnel
 
 cd /usr/local/ssl-tunnel/
