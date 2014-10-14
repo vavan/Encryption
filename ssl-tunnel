@@ -12,7 +12,7 @@
 
 #PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 WORKDIR=/usr/local/ssl-tunel/
-DAEMON=ssl-tunel
+DAEMON=ssl-tunnel
 SHELLD=$DAEMON.sh
 MAIND=$DAEMON
 
