@@ -4,7 +4,6 @@ DEST=/usr/local/ssl-tunnel
 echo "Copy scripts"
 sudo cp ssl-tunnel /etc/init.d/
 sudo mkdir -p $DEST
-sudo chmod 0755 $DEST
 sudo cp ./native/bin/tunnel $DEST/ssl-tunnel
 sudo cp ./python/ssl-tunnel.py $DEST/
 sudo cp ./ssl-tunnel.sh $DEST/
@@ -29,4 +28,5 @@ sudo chmod 0500 ssl-tunnel.py
 sudo chmod 0500 ssl-tunnel.sh
 
 sudo update-rc.d ssl-tunnel defaults
+sudo chmod 0755 $DEST
 
