@@ -70,10 +70,7 @@ bool Worker::delete_items() {
 	if (!delete_item_list.empty()) {
 		for(DeletedItems::iterator wi = delete_item_list.begin(); wi != delete_item_list.end(); ++wi) {
 			WorkItem* p = (*wi);
-			WorkItems::iterator delete_iter = find(items.begin(), items.end(), p);
-			int position = delete_iter - items.begin();
-			items.erase(delete_iter);
-			events.erase(events.begin()+position);
+			items.remove((*wi));
 			delete p;
 		}
 		delete_item_list.clear();
@@ -87,19 +84,7 @@ bool Worker::delete_items() {
 
 bool Worker::add_items() {
 	if (!add_item_list.empty()) {
-		int last_event = events.size();
-		events.resize(events.size() + add_item_list.size());
-		WorkItems::iterator wi = add_item_list.begin();
-		WorkItemEvents::iterator ei = events.begin() + last_event;
-
-		for (; wi != add_item_list.end(); ++wi, ++ei) {
-			items.push_back((*wi));
-			(*ei).fd = (*wi)->get_fd();
-			(*ei).events = POLLIN;
-			if (!(*wi)->send_queue.empty()) {
-				(*ei).events |= POLLOUT;
-			}
-		}
+		items.insert(items.end(), add_item_list.begin(), add_item_list.end());
 		add_item_list.clear();
 		return true;
 	}
@@ -108,10 +93,17 @@ bool Worker::add_items() {
 
 void Worker::update_items() {
 	if (add_items() || delete_items()) {
+		events.clear();
+		events.resize(items.size());
 		WorkItems::iterator wi = items.begin();
 		WorkItemEvents::iterator ei = events.begin();
 		for (; wi != items.end(); ++wi, ++ei) {
 			(*wi)->event = &(*ei);
+			(*ei).fd = (*wi)->get_fd();
+			(*ei).events = POLLIN;
+			if (!(*wi)->send_queue.empty()) {
+				(*ei).events |= POLLOUT;
+			}
 		}
 	}
 }
