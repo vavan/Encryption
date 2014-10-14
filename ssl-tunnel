@@ -13,6 +13,8 @@
 #PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 WORKDIR=/usr/local/ssl-tunel/
 DAEMON=ssl-tunel
+SHELLD=$DAEMON.sh
+MAIND=$DAEMON
 
 
 set -e
@@ -22,13 +24,13 @@ set -e
 
 case "$1" in
 	start)
-	    ulimit -c unlimited
-		cd $WORKDIR && ./$DAEMON.sh s0.0.0.0:8080 127.0.0.1:1935 &
+                ulimit -c unlimited
+		cd $WORKDIR && ./$SHELLD ./$MAIND s0.0.0.0:8080 127.0.0.1:1935 &
 		;;
 
 	stop)
-		killall -9 $DAEMON.sh 2> /dev/null
-		killall -9 $DAEMON.py 2> /dev/null
+		killall -9 $SHELLD 2> /dev/null
+		killall -9 $MAIND 2> /dev/null
 		;;
 
 	restart)
