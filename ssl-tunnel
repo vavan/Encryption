@@ -11,7 +11,7 @@
 ### END INIT INFO
 
 #PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
-WORKDIR=/usr/local/ssl-tunel/
+WORKDIR=/usr/local/ssl-tunnel/
 DAEMON=ssl-tunnel
 SHELLD=$DAEMON.sh
 MAIND=$DAEMON
