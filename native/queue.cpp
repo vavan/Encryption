@@ -30,10 +30,9 @@ Queue::Queue(WorkItem* work_item) : work_item(work_item) {
 }
 
 Queue::~Queue() {
-	for(int i = 0; i < entries; i++) {
-		Buffer* b = queue.back();
+	for(vector<Buffer*>::iterator i = queue.begin(); i != queue.end(); ++i) {
+		Buffer* b = (*i);
 		delete b;
-		queue.pop_back();
 	}
 }
 
