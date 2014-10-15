@@ -40,7 +40,7 @@ private:
 
 public:
 
-	WorkItem* workItem;
+	WorkItem* work_item;
 	Queue(WorkItem* workItem);
 	~Queue();
 	Buffer* get_front();

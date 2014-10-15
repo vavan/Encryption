@@ -20,9 +20,9 @@ Socket::RetCode ConnectingState::try_connect(SecureSocket* ctx) {
 	Socket::RetCode ret = ctx->do_connect();
 	if (ret == Socket::OK) {
 		ctx->change_state(&established);
-		ctx->send_queue->workItem->sending(false);
+		ctx->send_queue->work_item->sending(false);
 	} else {
-		ctx->send_queue->workItem->sending(true);
+		ctx->send_queue->work_item->sending(true);
 	}
 	return ret;
 }
@@ -38,9 +38,9 @@ Socket::RetCode AcceptingState::try_accept(SecureSocket* ctx) {
 	Socket::RetCode ret = ctx->do_accept();
 	if (ret == Socket::OK) {
 		ctx->change_state(&established);
-		ctx->send_queue->workItem->sending(false);
+		ctx->send_queue->work_item->sending(false);
 	} else {
-		ctx->send_queue->workItem->sending(true);
+		ctx->send_queue->work_item->sending(true);
 	}
 	return ret;
 }

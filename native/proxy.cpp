@@ -15,7 +15,9 @@
 Listener::Listener(Worker* parent, Socket* socket): WorkItem(parent, socket) {}
 
 void Listener::init() {
-	this->socket->listen();
+	if (this->socket->listen() == Socket::ERROR) {
+		this->close();
+	}
 }
 
 void Listener::recv() {
@@ -37,6 +39,12 @@ void Listener::recv() {
 }
 
 void Listener::send() {}
+
+void ClientPipe::init() {
+	if (this->socket->connect() == Socket::ERROR) {
+		this->close();
+	}
+}
 
 void Pipe::join(Pipe* other) {
 	this->other = other;

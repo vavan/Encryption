@@ -68,9 +68,10 @@ void Worker::remove(WorkItem* point) {
 
 bool Worker::delete_items() {
 	if (!delete_item_list.empty()) {
-		for(DeletedItems::iterator wi = delete_item_list.begin(); wi != delete_item_list.end(); ++wi) {
-			WorkItem* p = (*wi);
-			items.remove((*wi));
+		for(DeletedItems::iterator di = delete_item_list.begin(); di != delete_item_list.end(); ++di) {
+			WorkItem* p = (*di);
+			WorkItems::iterator wi = find(items.begin(), items.end(), p);
+			items.erase(wi);
 			delete p;
 		}
 		delete_item_list.clear();

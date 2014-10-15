@@ -12,8 +12,6 @@ rm -r gmon.out
 
 sleep 1
 
-#ps ax | egrep "ssl-tunel.py|tunnel"
-
 ./test_proxy.py $1
 
 
@@ -22,4 +20,4 @@ killall -TERM tunnel
 
 
 sleep 1
-gprof ../../native/bin/tunnel > prof.report 
+#gprof ../../native/bin/tunnel > prof.report 

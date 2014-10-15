@@ -89,7 +89,7 @@ Socket::RetCode NormalSocket::listen() {
 }
 
 Socket* NormalSocket::copy(const Addr& addr, int newsocket) {
-	return new NormalSocket(this->addr, newsocket);
+	return new NormalSocket(addr, newsocket);
 }
 
 Socket* NormalSocket::accept() {

@@ -18,7 +18,7 @@ int Queue::inc(int index) {
 	return index;
 }
 
-Queue::Queue(WorkItem* workItem) : workItem(workItem) {
+Queue::Queue(WorkItem* work_item) : work_item(work_item) {
 	state = IDLE;
 	front = 0;
 	back = 0;
@@ -48,7 +48,8 @@ void Queue::reallocate() {
 
 Buffer* Queue::get_front() {
 	if (inc(front) == back) {
-		LOG.infoStream() << "QUEUE. Not enough buffers - reallocate. Old size=" << queue.size();
+		LOG.infoStream() << "QUEUE["<< this->work_item->get_fd() << "]. Not enough buffers - reallocate. Old size=" << queue.size();
+		LOG.infoStream() << "QUEUE. " << this->work_item << "|" << this->work_item->event << "|" << this->work_item->event->events << "|";
 		reallocate();
 	}
 	state = FRONT;
@@ -67,11 +68,11 @@ void Queue::compleate(ssize_t actual) {
 	if (state == FRONT) {
 		queue[front]->resize(actual);
 		front = inc(front);
-		this->workItem->sending(true);
+		this->work_item->sending(true);
 	} else if (state == BACK){
 		back = inc(back);
 		if (front == back) {
-			this->workItem->sending(false);
+			this->work_item->sending(false);
 		}
 	}
 	state = IDLE;

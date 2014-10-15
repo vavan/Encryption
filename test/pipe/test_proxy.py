@@ -37,7 +37,7 @@ class EchoServer(Thread):
         Thread.__init__(self)
         self.s = socket
         self.parent = parent
-    def do(self):        
+    def do(self):
         data = self.s.recv(BUFFER_SIZE)
         self.parent.recvd += len(data)
         if data:

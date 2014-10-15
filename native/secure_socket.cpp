@@ -30,7 +30,7 @@ SecureSocket::~SecureSocket() {
 
 
 Socket* SecureSocket::copy(const Addr& addr, int newsocket) {
-	return new SecureSocket(this->addr, newsocket);
+	return new SecureSocket(addr, newsocket);
 }
 
 Socket::RetCode SecureSocket::send() {
