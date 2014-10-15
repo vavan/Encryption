@@ -71,8 +71,12 @@ bool Worker::delete_items() {
 		for(DeletedItems::iterator di = delete_item_list.begin(); di != delete_item_list.end(); ++di) {
 			WorkItem* p = (*di);
 			WorkItems::iterator wi = find(items.begin(), items.end(), p);
-			items.erase(wi);
-			delete p;
+			if (wi == items.end()) {
+				LOG.errorStream() << "FUCK!!!" << (*wi);
+			} else {
+				items.erase(wi);
+				delete p;
+			}
 		}
 		delete_item_list.clear();
 		if (items.empty()) {
@@ -93,7 +97,9 @@ bool Worker::add_items() {
 }
 
 void Worker::update_items() {
-	if (add_items() || delete_items()) {
+	bool added = add_items();
+	bool deleted = delete_items();
+	if (added || deleted) {
 		events.clear();
 		events.resize(items.size());
 		WorkItems::iterator wi = items.begin();
@@ -118,14 +124,12 @@ void Worker::run() {
 	if (retval == -1) {
 		LOG.errorStream() << "WORKER. Wait failed";
 	} else {
-		for (WorkItems::iterator wi = items.begin(); wi != items.end(), retval > 0; ++wi ) {
+		for (WorkItems::iterator wi = items.begin(); wi != items.end(); ++wi ) {
 			if ((*wi)->event->revents & POLLOUT) {
 				(*wi)->send();
-				retval--;
 			}
 			if ((*wi)->event->revents & POLLIN) {
 				(*wi)->recv();
-				retval--;
 			}
 		}
 	}
