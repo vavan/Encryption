@@ -89,7 +89,6 @@ int main(int argc, char* argv[]) {
 	}
 
 	delete w;
-	delete main;
 	LOG.noticeStream() << "Exit";
 	Config::done();
     return 0;

@@ -101,7 +101,7 @@ Socket* NormalSocket::accept() {
 		char string_addr[INET_ADDRSTRLEN];
 		inet_ntop(AF_INET, &(clientaddr.sin_addr), string_addr, sizeof(string_addr));
 		Addr newaddr(string_addr, clientaddr.sin_port);
-		LOG.infoStream() << "SOCKET["<< this->s << "]. Accepted from: " << newaddr.str();
+		LOG.infoStream() << "SOCKET["<< newsocket << "]. Accepted from: " << newaddr.str();
 		return this->copy(newaddr, newsocket);
 	} else {
 		LOG.errorStream() << "SOCKET["<< this->s << "]. Accept failed:" << errno;

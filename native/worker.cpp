@@ -79,9 +79,6 @@ bool Worker::delete_items() {
 			}
 		}
 		delete_item_list.clear();
-		if (items.empty()) {
-			this->running = false;
-		}
 		return true;
 	}
 	return false;
@@ -118,6 +115,12 @@ void Worker::update_items() {
 
 void Worker::run() {
 	update_items();
+
+	if (items.empty()) {
+		LOG.infoStream() << "No more alive connection";
+		this->running = false;
+		return;
+	}
 
 	int retval = poll(&(this->events[0]), this->events.size(), -1);
 
