@@ -79,6 +79,7 @@ bool Worker::delete_items() {
 			WorkItems::iterator wi = find(items.begin(), items.end(), p);
 			if (wi == items.end()) {
 				LOG.errorStream() << "Unable to find for delete: " << p;
+				LOG.errorStream() << "Cont: " << p->get_fd();
 			} else {
 				items.erase(wi);
 				delete p;

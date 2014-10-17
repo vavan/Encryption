@@ -132,6 +132,7 @@ Socket::RetCode NormalSocket::send() {
 Socket::RetCode NormalSocket::recv() {
 	Buffer* buffer = recv_queue->get_front();
 	if (buffer == NULL) {
+		LOG.debugStream() << "SOCKET["<< this->s << "]. Get buffer failed";
 		return Socket::ERROR;
 	}
 	ssize_t ret = ::recv(s, &(*buffer)[0], buffer->size(), 0);

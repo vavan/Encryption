@@ -15,6 +15,16 @@
 
 using namespace std;
 
+class QueueStat {
+private:
+	static const int PERIOD = 20;
+	static int iteration;
+	static int max;
+public:
+	static void max_size(int size);
+	static void print();
+};
+
 
 typedef vector<char> Buffer;
 class WorkItem;
@@ -36,10 +46,9 @@ private:
 	int back;
 	int entries;
 	int inc(int index);
-	void max_size();
+	int size();
 
 public:
-	static int max;
 
 	WorkItem* work_item;
 	Queue(WorkItem* workItem);
