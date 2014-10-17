@@ -23,19 +23,21 @@ class Worker;
 typedef struct pollfd WorkItemEvent;
 
 class WorkItem {
+	friend class Worker;
 protected:
 	bool closing;
+	bool error;
 	Worker* parent;
 	Socket* socket;
-
-public:
 	Queue send_queue;
 	WorkItemEvent* event;
-	void sending(bool start);
+
+public:
 
 	WorkItem(Worker* parent, Socket* socket);
 	virtual ~WorkItem();
 	int get_fd();
+	void sending(bool start);
 
 	virtual void init() {};
 	virtual void recv();
@@ -45,6 +47,7 @@ public:
 
 
 class Worker {
+	friend class WorkeItem;
 private:
 	typedef vector<WorkItem*> WorkItems;
 	typedef set<WorkItem*> DeletedItems;

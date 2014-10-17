@@ -143,6 +143,9 @@ Socket::RetCode SecureLayer::do_send() {
 
 Socket::RetCode SecureLayer::do_recv() {
 	Buffer * buffer = get_recv_queue()->get_front();
+	if (buffer == NULL) {
+		return Socket::ERROR;
+	}
 	ssize_t ret = SSL_read(this->connection, &(*buffer)[0], buffer->size());
 	if (ret >= 0) {
 		LOG.debugStream() << "SSL["<< this->derived_s << "]. Recv:" << ret;

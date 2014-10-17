@@ -6,8 +6,8 @@ ulimit -c unlimited
 rm -r *.log
 rm -r gmon.out
 
-../../python/ssl-tunel.py 127.0.0.1:2000 s127.0.0.1:4000 &
-#../../native/bin/tunnel 127.0.0.1:4000 127.0.0.1:6000 &
+../../python/ssl-tunnel.py 127.0.0.1:2000 s127.0.0.1:4000 &
+#../../native/bin/tunnel s127.0.0.1:4000 127.0.0.1:6000 &
 
 
 sleep 1
@@ -17,7 +17,7 @@ sleep 1
 ./test_proxy.py $1
 
 
-killall -9 ssl-tunel.py
+killall -9 ssl-tunnel.py
 #killall -TERM tunnel
 
 

@@ -5,15 +5,26 @@ import subprocess, socket
 import time
 import unittest
 import threading
+import random
+import ssl
 
 LOCALHOST = '127.0.0.1'
 LISTEN_ON_ADDR = LOCALHOST
 LISTEN_ON_PORT = 6000
 CONNECT_TO_ADDR = LOCALHOST
-CONNECT_TO_PORT = 2000
+CONNECT_TO_PORT = 4000
 
 BUFFER_SIZE = 4096
 
+
+def setUpModule():
+    os.unlink('atunnel.log')
+    subprocess.Popen("../../native/bin/tunnel s127.0.0.1:4000 127.0.0.1:6000".split())
+    time.sleep(0.1)
+
+def tearDownModule():
+    subprocess.call("killall -TERM tunnel", shell=True)
+    pass
 
 def TOTEXT(x):
     return chr(x%94+32)
@@ -61,7 +72,14 @@ class Listener(Thread):
         self.recvd = 0
     def listen(self):
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.s.bind((self.addr, int(self.port)))
+        for i in range(100):
+            try:
+                self.s.bind((self.addr, int(self.port)))
+                break
+            except:
+                time.sleep(0.1)
+        else:
+            raise "Port %s is busy!"%self.port
         self.s.listen(100)
         self.s.settimeout(1)
     def stop(self):
@@ -86,6 +104,7 @@ class Listener(Thread):
 class Client:
     def __init__(self, ip = CONNECT_TO_ADDR, port = CONNECT_TO_PORT):
         self.s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.s = ssl.wrap_socket(self.s)
         self.s.connect((ip, int(port)))
     def send(self, data):
         self.s.send(data)
@@ -99,8 +118,9 @@ class Client:
         self.s.close()
 
 class ClientThread(Thread):
-    def __init__(self, request):
+    def __init__(self, request, name = ''):
         Thread.__init__(self)
+        self.name = name
         self.request = request
         self.response = []
         self.index = 0
@@ -115,7 +135,7 @@ class ClientThread(Thread):
         c.close()
         
 
-class BasicTests(unittest.TestCase):
+class Basic(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -135,7 +155,7 @@ class BasicTests(unittest.TestCase):
         self.assertEqual(request, response)
 
 
-class MainTests(unittest.TestCase):
+class Main(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -253,7 +273,7 @@ class MainTests(unittest.TestCase):
                 response.append(t.response)
         self.assertEqual(request, response)         
 
-class LongRunningTests(unittest.TestCase):
+class Long(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
@@ -280,53 +300,34 @@ class LongRunningTests(unittest.TestCase):
         for i in range(cycles):
             self.assertTrue(response[i])
 
-class SlowTests(unittest.TestCase):
+class Slow(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
         cls.listener = Listener()
-        cls.listener.START_TO = 10.0
         cls.listener.start()
 
     @classmethod
     def tearDownClass(cls):
         cls.listener.stop()
 
-    #@unittest.skip("Not now")
-    def test_slow_recv(self):
-        cycles = 20
-        c = Client()
-        a_request = 'Z'*2
-        request = []
-        response = []
-        for i in range(cycles):
-            c.send(a_request)
-            request.append(a_request)
-            #print request
-        for i in range(cycles):
-            recvd = c.recv()
-            response.append(recvd)
-            #print response
-        c.close()
-        request = ''.join(request)
-        response = ''.join(response)
+    def test_thread_same_128x128(self):
+        cycles = [46, 98, 94, 94, 81, 79, 44, 92, 98, 51]
+        a_request = ['Q'*128, ]
+        request = {}
+        response = {}
+        threads = []
+        for i, length in enumerate(cycles):
+            name = "%04d"%i
+            b_request = a_request * length
+            request[name] = b_request
+            c = ClientThread(b_request, name)
+            c.start()
+            threads.append(c)
+        for t in threads:
+            t.join()
+            response[t.name] = t.response             
         self.assertEqual(request, response)
-
-
-if __name__ == '__main__':
-    if len(sys.argv) > 1:
-        type = sys.argv[1]
-    else:
-        type = "main"
-    if (type == "basic"):
-        suite = unittest.TestLoader().loadTestsFromTestCase(BasicTests)
-    elif (type == "profile"):
-        suite = unittest.TestLoader().loadTestsFromTestCase(LongRunningTests)
-    elif (type == "slow"):
-        suite = unittest.TestLoader().loadTestsFromTestCase(SlowTests)
-    else:
-        suite = unittest.TestLoader().loadTestsFromTestCase(MainTests)
-    unittest.TextTestRunner(verbosity=2).run(suite)
 
 
 

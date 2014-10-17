@@ -20,9 +20,9 @@ public:
 
 class Pipe: public WorkItem {
 private:
-	Pipe* other;
 
 public:
+	Pipe* other;
 	Pipe(Worker* parent, Socket* socket): WorkItem(parent, socket), other(NULL) {};
 	void join(Pipe* other);
 	virtual void close();

@@ -8,9 +8,9 @@
 
 #include <algorithm>
 #include "worker.h"
+#include "proxy.h"
 
-
-WorkItem::WorkItem(Worker* parent, Socket* socket): closing(false), parent(parent), socket(socket), send_queue(this) {
+WorkItem::WorkItem(Worker* parent, Socket* socket): closing(false), error(false), parent(parent), socket(socket), send_queue(this) {
 	this->parent->add(this);
 }
 
@@ -33,7 +33,9 @@ void WorkItem::sending(bool start) {
 }
 
 void WorkItem::recv() {
-	Socket::RetCode retcode = this->socket->recv();
+	Socket::RetCode retcode = Socket::CLOSE;
+	if (!this->closing)
+		retcode = this->socket->recv();
 
     if (retcode == Socket::CLOSE || retcode == Socket::ERROR) {
 		this->close();
@@ -44,12 +46,16 @@ void WorkItem::send() {
 	Socket::RetCode retcode = this->socket->send();
 
 	if (this->closing || retcode == Socket::ERROR) {
+		if (retcode == Socket::ERROR) {
+			this->error = true;
+		}
 		this->close();
+
 	}
 }
 
 void WorkItem::close() {
-	if (this->send_queue.empty()) {
+	if (this->send_queue.empty() || this->error) {
 		this->parent->remove(this);
 	} else {
 		this->closing = true;
@@ -72,7 +78,7 @@ bool Worker::delete_items() {
 			WorkItem* p = (*di);
 			WorkItems::iterator wi = find(items.begin(), items.end(), p);
 			if (wi == items.end()) {
-				LOG.errorStream() << "FUCK!!!" << (*wi);
+				LOG.errorStream() << "Unable to find for delete: " << p;
 			} else {
 				items.erase(wi);
 				delete p;

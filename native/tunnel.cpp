@@ -87,6 +87,8 @@ int main(int argc, char* argv[]) {
 	while (w->running) {
 		w->run();
 	}
+	LOG.infoStream() << "QUEUE. Max used capacity: " << Queue::max;
+
 
 	delete w;
 	LOG.noticeStream() << "Exit";

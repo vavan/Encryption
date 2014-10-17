@@ -59,7 +59,14 @@ void Pipe::join(Pipe* other) {
 
 void Pipe::close() {
 	WorkItem::close();
-	if (this->other)
+	if (!this->closing) {
+//		this->socket->send_queue = NULL;
+//		this->other->socket->recv_queue = NULL;
+		this->other->other = NULL;
+	}
+
+	if (this->other) {
 		this->other->WorkItem::close();
+	}
 }
 

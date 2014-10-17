@@ -88,7 +88,8 @@ Socket::RetCode NormalSocket::listen() {
 	return Socket::OK;
 }
 
-Socket* NormalSocket::copy(const Addr& addr, int newsocket) {
+Socket* NormalSocket::copy(const Addr& newaddr, int newsocket) {
+	LOG.infoStream() << "SOCKET["<< newsocket << "]. Accepted from: " << newaddr.str();
 	return new NormalSocket(addr, newsocket);
 }
 
@@ -101,7 +102,6 @@ Socket* NormalSocket::accept() {
 		char string_addr[INET_ADDRSTRLEN];
 		inet_ntop(AF_INET, &(clientaddr.sin_addr), string_addr, sizeof(string_addr));
 		Addr newaddr(string_addr, clientaddr.sin_port);
-		LOG.infoStream() << "SOCKET["<< newsocket << "]. Accepted from: " << newaddr.str();
 		return this->copy(newaddr, newsocket);
 	} else {
 		LOG.errorStream() << "SOCKET["<< this->s << "]. Accept failed:" << errno;
@@ -131,6 +131,9 @@ Socket::RetCode NormalSocket::send() {
 
 Socket::RetCode NormalSocket::recv() {
 	Buffer* buffer = recv_queue->get_front();
+	if (buffer == NULL) {
+		return Socket::ERROR;
+	}
 	ssize_t ret = ::recv(s, &(*buffer)[0], buffer->size(), 0);
 	if (ret >= 0) {
 		LOG.debugStream() << "SOCKET["<< this->s << "]. Recv:" << ret;

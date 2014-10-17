@@ -21,7 +21,7 @@ class WorkItem;
 
 class Queue {
 private:
-	static const int ENTRIES = 30;
+	static const int ENTRIES = 100;
 	static const int DEPTH = 4096;
 	vector<Buffer*> queue;
 
@@ -36,9 +36,10 @@ private:
 	int back;
 	int entries;
 	int inc(int index);
-	void reallocate();
+	void max_size();
 
 public:
+	static int max;
 
 	WorkItem* work_item;
 	Queue(WorkItem* workItem);

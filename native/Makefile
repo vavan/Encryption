@@ -28,7 +28,7 @@ TARGET = $(addprefix $(BIN)/,$(APP))
 CPP := $(PREFIX)g++
 LD := $(PREFIX)g++
 MAJ_VERSION := 2
-MIN_VERSION := 6
+MIN_VERSION := 7
 
 ifeq ($(PROF), TRUE)
 CFLAGS += -pg
@@ -78,7 +78,7 @@ install:
 tar:
 	tar -czf $(APP).$(MAJ_VERSION).$(MIN_VERSION).tgz $(CPP_FILES) *.h Makefile 
 
-test:
-	cd ../test/pipe && ./run_tests.sh
+test: all
+	cd ../test/pipe && python -m unittest -v test_proxy
 
 
