@@ -31,7 +31,7 @@ Two implementation
       make
       (optional) mate test 
 ```
-*Instalation
+* Instalation
   * Use install script to generate requred self signed certificates and keys. 
     
     
