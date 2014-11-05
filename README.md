@@ -8,12 +8,12 @@ Applicable for protocols that do not replicate IP layer - does not incapsulate s
 does not inspect packets.
 
 Example of usage:
- <ssl-tunnel> <s>IP-listen-on <s>IP-send-to 
+ <ssl-tunnel> <s>sourceIP <s>destinationIP 
  where:
           <ssl-tunnel> - one of the two available implementations (see below)
-          <s>IP-listen-on - ip:port to listen for incoming connection 
+          <s>sourceIP - ip:port to listen for incoming connection 
                             (e.g. s0.0.0.0:443 as for secure or 0.0.0.0:80 for NONsecure)
-          <s>IP-send-to - same for descination ip:port
+          <s>destinationIP - same for descination ip:port
           
 Two implementation
 1. Python (python/ssl-tunnel.py). Easy to extend. No external dependency. Works on any platform with Python 2.7. 
